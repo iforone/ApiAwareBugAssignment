@@ -36,6 +36,8 @@ clone_projects() {
 }
 
 #clone all original works into original
+# obviously, you need to make an account in Eclipse foundation to be able to clone from their git
+# and then add your public key to it
 clone_projects jdt https://git.eclipse.org/r/jdt/eclipse.jdt.ui
 clone_projects swt https://git.eclipse.org/r/platform/eclipse.platform.swt.git
 

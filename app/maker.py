@@ -75,7 +75,7 @@ database.close()
 
 print(result)
 
-profiler = Profiler()
+profiler = Profiler(approach, project)
 # loop through each bug report
 for index, bug in result.iterrows():
     # run 3 modules
