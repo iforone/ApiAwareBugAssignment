@@ -3,7 +3,7 @@ API-aware Bug Assignment is a novel developer assigner technique inspired by BSB
 
 This work is uses Python environment and Docker.
 
-You need to have Python 3.8 installed and Docker running.
+You need Python 3.9 installed and Docker running.
 
 The rest of work is automatically handled by the boot shell file. This shell will download and create initial files that are needed only once if the database dump or data inputs are already provided to the folder it will ignore them and won't try to remake them. If you want to use a fresh copy again you have to remove contents of ./db and ./data/input folders and docker volumes.
 
