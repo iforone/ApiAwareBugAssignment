@@ -1,5 +1,6 @@
-# This script will only work if you run it from the main not within the process folder
-# this is a new version to initialization.sh from previous task
+# warning: please do not move this file
+# warning: this file is provided with no guarantees as how it performs in your machine
+# I ran it successfully on MacOS Monterey with Macbook Pro 2019
 
 # reactivate the env (if forgotten)
 deactivate
@@ -22,19 +23,21 @@ echo 'DONE'
 echo "Deleting temp files"
 #sudo rm -r 'data/temp/assignment2'
 
-# clone all original works into original
-#if [ -d "data/input/l2rp/" ]; then
-#    echo "Already exists -- skipped the cloning..."
-#else
-#  echo "Cloning initial original data; Please Wait..."
-#  cd  data/input
-#  mkdir "l2rp/"
-#  sudo chown -R "l2rp/"
-#  sudo chmod -R g+rw "l2rp/"
-#  cd "l2rp/"
-#  git clone https://github.com/damorimRG/msr4flakiness.git
-#  cd ../../../
-#fi
+clone_projects() {
+    echo "checking the project: $1"
+    if [ -d "data/input/$1/" ]; then
+      echo "Already exists -- skipped the cloning..."
+    else
+      echo "Cloning initial data; Please Wait..."
+      cd  data/input
+      git clone $2 $1
+      cd ../../
+    fi
+}
+
+#clone all original works into original
+clone_projects jdt https://git.eclipse.org/r/jdt/eclipse.jdt.ui
+clone_projects swt https://git.eclipse.org/r/platform/eclipse.platform.swt.git
 
 # bring docker up and running
 docker-compose up --detach
