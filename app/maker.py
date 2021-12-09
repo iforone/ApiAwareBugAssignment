@@ -10,12 +10,27 @@ def project_selector():
     import inquirer
     questions = [
         inquirer.List('project',
-                      message="What size do you need?",
+                      message="Which project should be selected?",
                       choices=['jdt', 'swt', 'birt', 'eclipse_platform_ui'],
                       ),
     ]
     answers = inquirer.prompt(questions)
     return answers['project']
+
+
+def approach_selector():
+    import inquirer
+    questions = [
+        inquirer.List('approach',
+                      message="Select extraction approach?",
+                      choices=[
+                          'direct - we use top APIs from developers that were assigned to similar bug reports',
+                          'indirect - we use top APIs extracted from commits that solved similar bug reports',
+                      ],
+                      ),
+    ]
+    answers = inquirer.prompt(questions)
+    return answers['approach'].split(' - ')[0]
 
 
 # connect to a selected database
@@ -32,12 +47,13 @@ def mysql_connection(project_name):
 def export_to_csv(data, project_name):
     print('exporting the results to csv')
     keys = ['bug_id', 'at_1', 'at_2', 'at_3', 'at_4', 'at_5', 'at_10']
-    data[keys].to_csv('./data/output/' + project_name + '.csv')
+    data[keys].to_csv('./data/output/' + project_name + '_' + approach + '.csv')
 
 
 print('Running maker')
 
 project = project_selector()
+approach = approach_selector()
 database = mysql_connection(project)
 
 # get all bugs for the project
