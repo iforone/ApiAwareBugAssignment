@@ -9,3 +9,4 @@ inquirer~=2.8.0
 pandas~=1.3.4
 numpy~=1.21.4
 GitPython
+python-dateutil~=2.8.2
