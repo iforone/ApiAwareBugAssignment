@@ -8,3 +8,4 @@ Werkzeug==2.0.2
 inquirer~=2.8.0
 pandas~=1.3.4
 numpy~=1.21.4
+GitPython
