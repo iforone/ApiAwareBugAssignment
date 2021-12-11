@@ -80,7 +80,7 @@ profiler = Profiler(approach, project)
 for index, bug in result.iterrows():
     # run 3 modules
     profiler.sync_history(bug)
-    profiler.sync_activity(bug)
+    #profiler.sync_activity(bug)
     profiler.sync_api(bug)
 
     # calculate ranking

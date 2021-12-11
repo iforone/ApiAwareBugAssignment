@@ -60,19 +60,25 @@ class Profiler:
     # sync developers API experience
     def sync_api(self, new_bug):
 
+        # before going further
+        file = open(
+            self.path + '/org.eclipse.jdt.ui/core refactoring/org/eclipse/jdt/internal/core/refactoring/code/StatementAnalyzer.java',
+            mode='r')
+        text = file.read()
+        file.close()
+        exit('xxx')
+
         for index, change in self.changes_df.iterrows():
             print(change['file'])
             repo = git.Repo.init(self.path)
             repo.git.checkout(change['hash'])
             # get all contents of the file:
-            # file = open(self.path + '/' + change['file'], mode='r')
-            file = open(self.path + '/' + change['file'], mode='r')
+            file = open(self.path + change['file'], mode='r')
+            file = open(self.path + '/org.eclipse.jdt.ui/core refactoring/org/eclipse/jdt/internal/core/refactoring/code/StatementAnalyzer.java', mode='r')
             text = file.read()
             file.close()
-
+            exit('sss')
             self.extract_apis()
-            # for api -> return the full original file
-            # repo.git.checkout(commit['hash'])
             # https://git.jetbrains.org/?p=idea/community.git;a=blob;f=java/java-analysis-impl/src/com/intellij/codeInspection/unusedImport/ImportsAreUsedVisitor.java;h=ed5bd45d15374c0ef96b149ef74bc79683eb52bf;hb=4954832e922ea51843cbca8ede89421f36bd7366
         exit('ok')
 
