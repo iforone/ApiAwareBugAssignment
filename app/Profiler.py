@@ -21,12 +21,23 @@ class Profiler:
         for index, commit in real_commits.iterrows():
             repo = git.Repo.init('./data/input/' + self.project)
             changes = repo.git.show(commit['hash'])
+            split_changes = changes.split('\ndiff')[1:]
+            changes_df = pd.DataFrame()
 
-            # changes in a string
-            # make this file by file
-            # ignore not java
-            # extract changes within each file
+            for split_change in split_changes:
+                split_change_lines = split_change.split('\n')
+                split_change_lines[2] = (split_change_lines[2]).rstrip()
+                split_change_lines[3] = (split_change_lines[3]).rstrip()
+                if (split_change_lines[2]).endswith('.java') or (split_change_lines[3]).endswith('.java'):
+                    # probably all 4 lines are important - split_change_lines[0:4]
+                    # probably all of the text is important - split_change_lines[4:]
+                    filtered_code = [x for x in split_change_lines[4:] if x.startswith('-') or x.startswith('+')]
+                    new = {'file': (split_change_lines[2])[5:], 'code': '\n'.join(filtered_code)}
+                    changes_df = changes_df.append(new, ignore_index=True)
 
+            # 'dca7e3c8'
+            #changes_df.to_csv('x.csv')
+            exit()
             # for api -> return the full original file
             repo.git.checkout(commit['hash'])
             #https://git.jetbrains.org/?p=idea/community.git;a=blob;f=java/java-analysis-impl/src/com/intellij/codeInspection/unusedImport/ImportsAreUsedVisitor.java;h=ed5bd45d15374c0ef96b149ef74bc79683eb52bf;hb=4954832e922ea51843cbca8ede89421f36bd7366
