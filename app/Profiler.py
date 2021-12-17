@@ -4,6 +4,7 @@ import subprocess
 import pandas as pd
 from dateutil import parser
 import git
+from Extractor import get_imports
 
 
 class Profiler:
@@ -59,14 +60,8 @@ class Profiler:
 
     # sync developers API experience
     def sync_api(self, new_bug):
+        get_imports(self.path + '/org.eclipse.jdt.ui/core refactoring/org/eclipse/jdt/internal/core/refactoring/code/StatementAnalyzer.java')
 
-        # before going further
-        file = open(
-            self.path + '/org.eclipse.jdt.ui/core refactoring/org/eclipse/jdt/internal/core/refactoring/code/StatementAnalyzer.java',
-            mode='r')
-        text = file.read()
-        file.close()
-        exit('xxx')
 
         for index, change in self.changes_df.iterrows():
             print(change['file'])
@@ -74,7 +69,6 @@ class Profiler:
             repo.git.checkout(change['hash'])
             # get all contents of the file:
             file = open(self.path + change['file'], mode='r')
-            file = open(self.path + '/org.eclipse.jdt.ui/core refactoring/org/eclipse/jdt/internal/core/refactoring/code/StatementAnalyzer.java', mode='r')
             text = file.read()
             file.close()
             exit('sss')
