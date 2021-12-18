@@ -8,6 +8,7 @@ from dateutil import parser
 import git
 from Extractor import get_imports, get_packages
 
+
 def write_to_text(file_name, text):
     text_file = open(file_name, 'w')
     text_file.write(text)
@@ -130,6 +131,7 @@ class Profiler:
             self.all_changes[len(self.all_changes)] = commit
         self.last_changes = {}
         self.previous = new_bug['report_time']  # now the present is the past
+        subprocess.run('cd ./data/input/' + self.project + ';git checkout master', capture_output=True, shell=True)
 
     def export(self):
         output = pd.DataFrame.from_dict(self.all_changes, orient='index')

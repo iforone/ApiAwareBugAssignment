@@ -75,7 +75,7 @@ database.close()
 
 profiler = Profiler(approach, project)
 # loop through each bug report
-for index, bug in result[1:10].iterrows():
+for index, bug in result[100:120].iterrows():
     # run 3 modules
     profiler.sync_history(bug)
     profiler.sync_activity(bug)
