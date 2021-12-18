@@ -1,6 +1,13 @@
 import mysql.connector
 import pandas as pd
 from Profiler import Profiler
+import os.path
+
+from DeepProcess import DeepProcessor
+
+data_folder = 'data'
+output_folder = data_folder + '/' + 'output'
+changes_file = 'changes'
 
 ks = [1, 2, 3, 4, 5, 10]
 
@@ -50,13 +57,28 @@ def export_to_csv(data, project_name):
     data[keys].to_csv('./data/output/' + project_name + '_' + approach + '.csv')
 
 
-print('Running maker')
+def deep_process(bugs_list, project_name):
+    change_file_name = output_folder + '/' + changes_file + '_' + project_name + '.csv'
 
+    if not os.path.exists(change_file_name):
+        print('⚠️ warning: since you miss the main data we are going to recalculate all of it')
+        deep_processor = DeepProcessor(project_name)
+
+        # loop through each bug report
+        for index_, bug_ in bugs_list[100:120].iterrows():
+            deep_processor.update(bug_)
+
+        deep_processor.export()
+
+    print('✅ changes file created / found!')
+
+
+print('Running maker')
 project = project_selector()
 approach = approach_selector()
-database = mysql_connection(project)
 
-# get all bugs for the project
+# database work
+database = mysql_connection(project)
 builder = database.cursor()
 builder.execute("""
     SELECT bug_and_files.*, assginee_mapper.assignees
@@ -68,32 +90,32 @@ builder.execute("""
         ) assginee_mapper on assginee_mapper.bug_id = bug_and_files.bug_id
     ORDER BY bug_and_files.report_time
 """)
-
-result = pd.DataFrame(builder.fetchall())
-result.columns = builder.column_names
+bugs = pd.DataFrame(builder.fetchall())
+bugs.columns = builder.column_names
 database.close()
 
+deep_process(bugs, project)
 profiler = Profiler(approach, project)
+
 # loop through each bug report
-for index, bug in result[100:120].iterrows():
+for index, bug in bugs[100:120].iterrows():
     # run 3 modules
     profiler.sync_history(bug)
     profiler.sync_activity(bug)
     profiler.sync_api(bug)
-    profiler.memorize(bug)
+
     # calculate ranking
     ranked_developers = profiler.rank_developers()
 
     # check against gold standard and save the result
     for k in ks:
-        result.at[index, 'at_' + str(k)] = 0
+        bugs.at[index, 'at_' + str(k)] = 0
 
         # if assignee was edited we consider the edit too
         assignees = bug['assignees'].split(',')
         for assignee in assignees:
             if assignee in ranked_developers[:k]:
-                result.at[index, 'at_' + str(k)] = 1
+                bugs.at[index, 'at_' + str(k)] = 1
 
-profiler.export()
-export_to_csv(result, project)
+export_to_csv(bugs, project)
 
