@@ -8,7 +8,6 @@ from dateutil import parser
 import git
 from Extractor import get_imports, get_packages
 
-
 def write_to_text(file_name, text):
     text_file = open(file_name, 'w')
     text_file.write(text)
