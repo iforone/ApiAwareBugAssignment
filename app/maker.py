@@ -73,14 +73,12 @@ result = pd.DataFrame(builder.fetchall())
 result.columns = builder.column_names
 database.close()
 
-print(result)
-
 profiler = Profiler(approach, project)
 # loop through each bug report
-for index, bug in result.iterrows():
+for index, bug in result[:10].iterrows():
     # run 3 modules
     profiler.sync_history(bug)
-    #profiler.sync_activity(bug)
+    profiler.sync_activity(bug)
     profiler.sync_api(bug)
 
     # calculate ranking
@@ -95,6 +93,8 @@ for index, bug in result.iterrows():
         for assignee in assignees:
             if assignee in ranked_developers[:k]:
                 result.at[index, 'at_' + str(k)] = 1
+profiler.export()
+
 
 export_to_csv(result, project)
 
