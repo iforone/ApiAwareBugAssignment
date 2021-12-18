@@ -12,8 +12,7 @@ class DeepProcessor:
         self.last_changes = {}
         self.project = project
         self.path = './data/input/' + self.project
-        # self.previous = '1999-01-01 00:00:00'
-        self.previous = '2001-10-10 22:53:38'
+        self.previous = '1999-01-01 00:00:00'
         self.all_changes = {}
 
     def update(self, new_bug):

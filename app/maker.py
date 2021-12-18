@@ -65,7 +65,7 @@ def deep_process(bugs_list, project_name):
         deep_processor = DeepProcessor(project_name)
 
         # loop through each bug report
-        for index_, bug_ in bugs_list[100:120].iterrows():
+        for index_, bug_ in bugs_list.iterrows():
             deep_processor.update(bug_)
 
         deep_processor.export()
@@ -98,7 +98,7 @@ deep_process(bugs, project)
 profiler = Profiler(approach, project)
 
 # loop through each bug report
-for index, bug in bugs[100:120].iterrows():
+for index, bug in bugs.iterrows():
     # run 3 modules
     profiler.sync_history(bug)
     profiler.sync_activity(bug)
