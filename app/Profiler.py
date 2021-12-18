@@ -22,7 +22,8 @@ class Profiler:
         self.approach = approach
         self.project = project
         self.path = './data/input/' + self.project
-        self.previous = '1999-01-01 00:00:00'
+        #self.previous = '1999-01-01 00:00:00'
+        self.previous = '2001-10-10 22:53:38'
         self.all_changes = {}
 
     def sync_history(self, new_bug):
@@ -133,5 +134,5 @@ class Profiler:
 
     def export(self):
         output = pd.DataFrame.from_dict(self.all_changes, orient='index')
-        output.to_csv('data/output/' + 'changes.csv')
+        output.to_csv('data/output/' + 'changes.csv', errors='replace')
         exit(1)
