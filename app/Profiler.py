@@ -18,11 +18,12 @@ def write_to_text(file_name, text):
 class Profiler:
     def __init__(self, approach, project):
         self.real_commits = {}
-        self.changes_df = {}
+        self.last_changes = {}
         self.approach = approach
         self.project = project
         self.path = './data/input/' + self.project
         self.previous = '1999-01-01 00:00:00'
+        self.all_changes = {}
 
     def sync_history(self, new_bug):
         pass
@@ -34,9 +35,6 @@ class Profiler:
         print(self.previous)
         for commit in commits.values():
             print(commit['hash'])
-
-        self.previous = new_bug['report_time']  # now the present is the past
-
 
         for index, commit in commits.items():
             repo = git.Repo.init(self.path)
@@ -68,7 +66,7 @@ class Profiler:
                            'code': '\n'.join(filtered_code),
                            'hash': commit['hash']
                            }
-                    self.changes_df[len(self.changes_df)] = new
+                    self.last_changes[len(self.last_changes)] = new
             # 'dca7e3c8'
             self.real_commits[len(self.real_commits)] = commit
 
@@ -78,12 +76,12 @@ class Profiler:
         # packages = get_packages(imports)
         # https://git.jetbrains.org/?p=idea/community.git;a=blob;f=java/java-analysis-impl/src/com/intellij/codeInspection/unusedImport/ImportsAreUsedVisitor.java;h=ed5bd45d15374c0ef96b149ef74bc79683eb52bf;hb=4954832e922ea51843cbca8ede89421f36bd7366
 
-        for index, change in self.changes_df.items():
+        for index, change in self.last_changes.items():
             repo = git.Repo.init(self.path)
             repo.git.checkout(change['hash'])
             imports = get_imports(self.path, change['file'], change['code'])
             packages = get_packages(imports, True)
-            self.changes_df[index]['packages'] = packages
+            self.last_changes[index]['packages'] = packages
 
     # find commits between a specific timeline
     def find_commits_between(self, end, start):
@@ -107,7 +105,7 @@ class Profiler:
                        'committed_at': str(parser.parse(line[2].replace('Date:   ', ''))),
                        'commit_message': line[4].replace('    ', '')
                        }
-            if ''  == new_row['username']:
+            if '' == new_row['username']:
                 continue
             commits_dict[len(commits_dict)] = new_row
         return commits_dict
@@ -127,7 +125,13 @@ class Profiler:
     def extract_apis(self):
         pass
 
+    def memorize(self, new_bug):
+        for index, commit in self.last_changes.items():
+            self.all_changes[len(self.all_changes)] = commit
+        self.last_changes = {}
+        self.previous = new_bug['report_time']  # now the present is the past
+
     def export(self):
-        output = pd.DataFrame.from_dict(self.changes_df, orient='index')
+        output = pd.DataFrame.from_dict(self.all_changes, orient='index')
         output.to_csv('data/output/' + 'changes.csv')
         exit(1)
