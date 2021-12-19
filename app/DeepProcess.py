@@ -24,12 +24,10 @@ class DeepProcessor:
     def extract_commits(self, new_bug):
         commits = self.find_commits_between(new_bug['report_time'], self.previous)
 
-        print(new_bug['report_time'])
-        print(self.previous)
-        for commit in commits.values():
-            print(commit['hash'])
+        print('commits - okay' + str(len(commits)))
 
         for index, commit in commits.items():
+            print(commit)
             repo = git.Repo.init(self.path)
             changes = repo.git.show(commit['hash'])
             split_changes = changes.split('\ndiff')[1:]
@@ -87,6 +85,9 @@ class DeepProcessor:
         commits_lines = commits_text.split('\ncommit')
 
         for commit in commits_lines:
+            if '' == commit:
+                continue
+
             new_row = {}
             line = commit.split('\n')
 
@@ -112,10 +113,16 @@ class DeepProcessor:
                 file1 = open("errors.txt", "w")
                 file1.write(commits_text)
                 file1.close()
-
                 exit(-1)
             except IndexError as error:
-                exit(str(error))
+                print('index error')
+                print(str(error))
+                print(start_)
+                print(end_)
+                file1 = open("errors.txt", "w")
+                file1.write(commits_text)
+                file1.close()
+                exit(-1)
 
             if '' == new_row['username']:
                 continue
