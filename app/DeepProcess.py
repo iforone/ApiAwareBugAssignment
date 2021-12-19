@@ -91,9 +91,17 @@ class DeepProcessor:
             begin = 6 * index
             end = 6 * index + 5
             line = commits_lines[begin:end]
+
+            author = (line[1].replace('Author: ', '').split('<')[0]).rstrip()
+
+            try:
+                username = line[1].replace('>', '').split('<')[1]
+            except IndexError:
+                username = author
+
             new_row = {'hash': line[0].replace('commit ', ''),
-                       'author': (line[1].replace('Author: ', '').split('<')[0]).rstrip(),
-                       'username': line[1].replace('>', '').split('<')[1],
+                       'author': author,
+                       'username': username,
                        # todo: timezone issue can become a problem -- ignore for now
                        'committed_at': str(parser.parse(line[2].replace('Date:   ', ''))),
                        'commit_message': line[4].replace('    ', '')
