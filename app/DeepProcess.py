@@ -3,6 +3,7 @@ import subprocess
 import pandas as pd
 from dateutil import parser
 import git
+from dateutil.parser import ParserError
 from Extractor import get_imports, get_packages
 
 
@@ -64,7 +65,6 @@ class DeepProcessor:
                            'commit_message': commit['commit_message']
                            }
                     self.last_changes[len(self.last_changes)] = new
-            # 'dca7e3c8'
             self.real_commits[len(self.real_commits)] = commit
 
     # sync developers API experience
@@ -77,35 +77,45 @@ class DeepProcessor:
             self.last_changes[index]['packages'] = packages
 
     # find commits between a specific timeline
-    def find_commits_between(self, end, start):
+    def find_commits_between(self, end_, start_):
         initial = 'cd ./data/input/' + self.project
         subprocess.run(initial + ';git checkout master', capture_output=True, shell=True)
-        command = initial + ';git log --after="' + str(start) + '" --before="' + str(end) + '"'
+        command = initial + ';git log --after="' + str(start_) + '" --before="' + str(end_) + '"'
         process = subprocess.run(command, capture_output=True, shell=True)
         commits_text = process.stdout.decode("utf-8")
-
         commits_dict = {}
-        commits_lines = commits_text.split('\n')
-        commits_counts = len(commits_lines) / 6
-        for index in range(int(commits_counts)):
-            begin = 6 * index
-            end = 6 * index + 5
-            line = commits_lines[begin:end]
+        commits_lines = commits_text.split('commit')
 
-            author = (line[1].replace('Author: ', '').split('<')[0]).rstrip()
+        for commit in commits_lines[1:]:
+            new_row = {}
+            line = commit.split('\n')
 
             try:
-                username = line[1].replace('>', '').split('<')[1]
-            except IndexError:
-                username = author
+                hash_ = (line[0]).lstrip().rstrip()
+                author = (line[1].replace('Author: ', '').split('<')[0]).rstrip()
+                try:
+                    username = line[1].replace('>', '').split('<')[1]
+                except IndexError:
+                    username = author
 
-            new_row = {'hash': line[0].replace('commit ', ''),
-                       'author': author,
-                       'username': username,
-                       # todo: timezone issue can become a problem -- ignore for now
-                       'committed_at': str(parser.parse(line[2].replace('Date:   ', ''))),
-                       'commit_message': line[4].replace('    ', '')
-                       }
+                new_row = {'hash': hash_,
+                           'author': author,
+                           'username': username,
+                           # todo: timezone issue can become a problem -- ignore for now
+                           'committed_at': str(parser.parse(line[2].replace('Date:   ', ''))),
+                           'commit_message': (' '.join(line[4:])).lstrip().rstrip()
+                           }
+            except ParserError as error:
+                print(str(error))
+                print(start_)
+                print(end_)
+                file1 = open("errors.txt", "w")
+                file1.write(commits_text)
+                file1.close()
+
+                exit(-1)
+            except IndexError as error:
+                exit(str(error))
             if '' == new_row['username']:
                 continue
             commits_dict[len(commits_dict)] = new_row
