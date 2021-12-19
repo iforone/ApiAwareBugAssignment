@@ -2,7 +2,6 @@ import mysql.connector
 import pandas as pd
 from Profiler import Profiler
 import os.path
-
 from DeepProcess import DeepProcessor
 
 data_folder = 'data'

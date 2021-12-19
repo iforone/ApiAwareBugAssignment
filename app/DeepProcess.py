@@ -84,14 +84,14 @@ class DeepProcessor:
         process = subprocess.run(command, capture_output=True, shell=True)
         commits_text = process.stdout.decode("utf-8")
         commits_dict = {}
-        commits_lines = commits_text.split('commit')
+        commits_lines = commits_text.split('\ncommit')
 
-        for commit in commits_lines[1:]:
+        for commit in commits_lines:
             new_row = {}
             line = commit.split('\n')
 
             try:
-                hash_ = (line[0]).lstrip().rstrip()
+                hash_ = (line[0]).replace('commit ', '').lstrip().rstrip()
                 author = (line[1].replace('Author: ', '').split('<')[0]).rstrip()
                 try:
                     username = line[1].replace('>', '').split('<')[1]
@@ -116,6 +116,7 @@ class DeepProcessor:
                 exit(-1)
             except IndexError as error:
                 exit(str(error))
+
             if '' == new_row['username']:
                 continue
             commits_dict[len(commits_dict)] = new_row
