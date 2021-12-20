@@ -4,6 +4,8 @@ import pandas as pd
 from dateutil import parser
 import git
 from dateutil.parser import ParserError
+from mysql.connector import ProgrammingError
+
 from Extractor import get_imports, get_packages
 
 
@@ -17,6 +19,7 @@ class DeepProcessor:
         self.database = database
 
     def update(self, new_bug):
+        # raw commits without considering bug is easier
         self.extract_commits(new_bug)
         self.extract_apis(new_bug)
         self.memorize(new_bug)
@@ -129,14 +132,21 @@ class DeepProcessor:
     def memorize(self, new_bug):
         subprocess.run('cd ./data/input/' + self.project + ';git checkout master', capture_output=True, shell=True)
         if 0 != len(self.last_changes):
-            a = ','.join(['file_name', 'codes', 'commit_hash', 'author', 'username', 'committed_at', 'commit_message', 'packages'])
+            a = ','.join(['file_name', 'codes', 'commit_hash', 'author', 'username', 'committed_at', 'commit_message',
+                          'packages'])
             b = ''
             for last_change in self.last_changes.values():
                 b += '(' + ','.join(f'"{w}"' for w in last_change.values()) + '),'
             b = b[:-1]
             query = "Insert IGNORE Into processed_code (%s) Values %s" % (a, b)
-            print(query)
-            self.builder.execute(query)
-            self.database.commit()
+            try:
+                self.builder.execute(query)
+                self.database.commit()
+            except:
+                f = open("query.txt", "a")
+                f.write(query)
+                f.close()
+                print(new_bug)
+
         self.last_changes = {}
         self.previous = new_bug['report_time']  # now the present is the past

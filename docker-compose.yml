@@ -9,7 +9,7 @@ services:
 #      - "5555:5000"
 
   db:
-    container_name: 'mysql'
+    container_name: 'mysql_db'
     image: mariadb
     command: --default-authentication-plugin=caching_sha2_password
     ports:
