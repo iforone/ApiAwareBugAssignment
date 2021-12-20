@@ -51,13 +51,13 @@ class DeepProcessor:
                     filtered_code = [x for x in split_change_lines[indexer + 2:] if
                                      x.startswith('-') or x.startswith('+')]
                     new = {'file': (split_change_lines[indexer + 1])[5:],
-                           'code': ('\n'.join(filtered_code)).replace('"', '\"'),
+                           'code': ('\n'.join(filtered_code)).replace('"', '""'),
                            # mix with the commit information
                            'hash': commit['hash'],
                            'author': commit['author'],
                            'username': commit['username'],
                            'committed_at': commit['committed_at'],
-                           'commit_message': commit['commit_message']
+                           'commit_message': (commit['commit_message']).replace('"', '""')
                            }
                     self.last_changes[len(self.last_changes)] = new
             break
@@ -134,11 +134,9 @@ class DeepProcessor:
             for last_change in self.last_changes.values():
                 b += '(' + ','.join(f'"{w}"' for w in last_change.values()) + '),'
             b = b[:-1]
-            self.builder.execute("Insert IGNORE Into processed_code (%s) Values %s" % (a, b))
+            query = "Insert IGNORE Into processed_code (%s) Values %s" % (a, b)
+            print(query)
+            self.builder.execute(query)
             self.database.commit()
         self.last_changes = {}
         self.previous = new_bug['report_time']  # now the present is the past
-
-    # def export(self):
-    #    output = pd.DataFrame.from_dict(self.all_changes, orient='index')
-    #    output.to_csv('data/output/' + 'changes' + '_' + self.project + '.csv', errors='replace')
