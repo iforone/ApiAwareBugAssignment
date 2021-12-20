@@ -50,18 +50,34 @@ def mysql_connection(project_name):
     )
 
 
+def make_process_table(builder_):
+    builder_.execute('''
+    CREATE TABLE IF NOT EXISTS `processed_code` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `file_name` text DEFAULT NULL,
+    `commit_hash` char(140) DEFAULT NULL,
+    `author` char(140) DEFAULT NULL,
+    `username` char(140) DEFAULT NULL,
+    `codes` longtext DEFAULT NULL,
+    `commit_message` text DEFAULT NULL,
+    `packages` text DEFAULT NULL,
+    `committed_at` datetime DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `processed_code_id_uindex` (`id`))
+    ''')
+
 def export_to_csv(data, project_name):
-    print('exporting the results to csv')
+    print('☁️ exporting the results to csv')
     keys = ['bug_id', 'at_1', 'at_2', 'at_3', 'at_4', 'at_5', 'at_10']
     data[keys].to_csv('./data/output/' + project_name + '_' + approach + '.csv')
 
 
-def deep_process(bugs_list, project_name):
+def deep_process(bugs_list, project_name, builder_, db_):
     change_file_name = output_folder + '/' + changes_file + '_' + project_name + '.csv'
 
     if not os.path.exists(change_file_name):
         print('⚠️ warning: since you miss the main data we are going to recalculate all of it')
-        deep_processor = DeepProcessor(project_name)
+        deep_processor = DeepProcessor(project_name, builder_, db_)
 
         # loop through each bug report
         for index_, bug_ in bugs_list.iterrows():
@@ -79,6 +95,7 @@ approach = approach_selector()
 # database work
 database = mysql_connection(project)
 builder = database.cursor()
+make_process_table(builder)
 builder.execute("""
     SELECT bug_and_files.*, assginee_mapper.assignees
     FROM bug_and_files
@@ -91,9 +108,8 @@ builder.execute("""
 """)
 bugs = pd.DataFrame(builder.fetchall())
 bugs.columns = builder.column_names
+deep_process(bugs, project, builder, database)
 database.close()
-
-deep_process(bugs, project)
 profiler = Profiler(approach, project)
 
 # loop through each bug report

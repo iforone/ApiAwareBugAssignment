@@ -8,13 +8,13 @@ from Extractor import get_imports, get_packages
 
 
 class DeepProcessor:
-    def __init__(self, project):
-        self.real_commits = {}
+    def __init__(self, project, builder, database):
         self.last_changes = {}
         self.project = project
         self.path = './data/input/' + self.project
         self.previous = '1999-01-01 00:00:00'
-        self.all_changes = {}
+        self.builder = builder
+        self.database = database
 
     def update(self, new_bug):
         self.extract_commits(new_bug)
@@ -24,10 +24,7 @@ class DeepProcessor:
     def extract_commits(self, new_bug):
         commits = self.find_commits_between(new_bug['report_time'], self.previous)
 
-        print('commits - okay' + str(len(commits)))
-
         for index, commit in commits.items():
-            print(commit)
             repo = git.Repo.init(self.path)
             changes = repo.git.show(commit['hash'])
             split_changes = changes.split('\ndiff')[1:]
@@ -54,7 +51,7 @@ class DeepProcessor:
                     filtered_code = [x for x in split_change_lines[indexer + 2:] if
                                      x.startswith('-') or x.startswith('+')]
                     new = {'file': (split_change_lines[indexer + 1])[5:],
-                           'code': '\n'.join(filtered_code),
+                           'code': ('\n'.join(filtered_code)).replace('"', '\"'),
                            # mix with the commit information
                            'hash': commit['hash'],
                            'author': commit['author'],
@@ -63,7 +60,7 @@ class DeepProcessor:
                            'commit_message': commit['commit_message']
                            }
                     self.last_changes[len(self.last_changes)] = new
-            self.real_commits[len(self.real_commits)] = commit
+            break
 
     # sync developers API experience
     def extract_apis(self, new_bug):
@@ -130,12 +127,18 @@ class DeepProcessor:
         return commits_dict
 
     def memorize(self, new_bug):
-        for index, commit in self.last_changes.items():
-            self.all_changes[len(self.all_changes)] = commit
+        subprocess.run('cd ./data/input/' + self.project + ';git checkout master', capture_output=True, shell=True)
+        if 0 != len(self.last_changes):
+            a = ','.join(['file_name', 'codes', 'commit_hash', 'author', 'username', 'committed_at', 'commit_message', 'packages'])
+            b = ''
+            for last_change in self.last_changes.values():
+                b += '(' + ','.join(f'"{w}"' for w in last_change.values()) + '),'
+            b = b[:-1]
+            self.builder.execute("Insert IGNORE Into processed_code (%s) Values %s" % (a, b))
+            self.database.commit()
         self.last_changes = {}
         self.previous = new_bug['report_time']  # now the present is the past
-        subprocess.run('cd ./data/input/' + self.project + ';git checkout master', capture_output=True, shell=True)
 
-    def export(self):
-        output = pd.DataFrame.from_dict(self.all_changes, orient='index')
-        output.to_csv('data/output/' + 'changes' + '_' + self.project + '.csv', errors='replace')
+    # def export(self):
+    #    output = pd.DataFrame.from_dict(self.all_changes, orient='index')
+    #    output.to_csv('data/output/' + 'changes' + '_' + self.project + '.csv', errors='replace')
