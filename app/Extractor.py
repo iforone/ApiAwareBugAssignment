@@ -15,7 +15,9 @@ def get_imports(path, file, fallback):
 
 
 def get_packages(imports, as_string=False):
-    imports = [w.replace('import', '').replace(' ', '') .replace('-import', 'import').replace('static', '').replace(';', '') for w in imports]
+    # why -import to import? reason: because sometimes we have code instead of original then it has + or - in the text
+    # beginning and it can only be negative because the code is deleted
+    imports = [w.replace('-import', 'import').replace('import', '').replace(' ', '').replace('static', '').replace(';', '') for w in imports]
     if as_string:
-        return ','.join(imports)
+        return (','.join(imports)).replace('"', '&quot;')
     return imports
