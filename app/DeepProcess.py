@@ -54,13 +54,13 @@ class DeepProcessor:
                     filtered_code = [x for x in split_change_lines[indexer + 2:] if
                                      x.startswith('-') or x.startswith('+')]
                     new = {'file': (split_change_lines[indexer + 1])[5:],
-                           'code': ('\n'.join(filtered_code)).replace('"', '""'),
+                           'code': '\n'.join(filtered_code),
                            # mix with the commit information
                            'hash': commit['hash'],
                            'author': commit['author'],
                            'username': commit['username'],
                            'committed_at': commit['committed_at'],
-                           'commit_message': (commit['commit_message']).replace('"', '""')
+                           'commit_message': commit['commit_message']
                            }
                     self.last_changes[len(self.last_changes)] = new
             break
@@ -132,21 +132,45 @@ class DeepProcessor:
     def memorize(self, new_bug):
         subprocess.run('cd ./data/input/' + self.project + ';git checkout master', capture_output=True, shell=True)
         if 0 != len(self.last_changes):
-            a = ','.join(['file_name', 'codes', 'commit_hash', 'author', 'username', 'committed_at', 'commit_message',
-                          'packages'])
-            b = ''
-            for last_change in self.last_changes.values():
-                b += '(' + ','.join(f'"{w}"' for w in last_change.values()) + '),'
-            b = b[:-1]
-            query = "Insert IGNORE Into processed_code (%s) Values %s" % (a, b)
+            query = '''
+            INSERT IGNORE INTO processed_code (file_name, codes, commit_hash, author, username, committed_at, commit_message, packages)
+            VALUES
+            '''
+            list_ = []
+            for x, last_change in self.last_changes.items():
+                query += '(%s,%s, %s, %s, %s, %s, %s, %s),'
+                list_.extend([last_change['file'].encode(encoding='UTF-8', errors='xmlcharrefreplace'),
+                              last_change['code'].encode(encoding='UTF-8', errors='xmlcharrefreplace'),
+                              last_change['hash'],
+                              last_change['author'],
+                              last_change['username'],
+                              last_change['committed_at'],
+                              last_change['commit_message'].encode(encoding='UTF-8', errors='xmlcharrefreplace'),
+                              last_change['packages'].encode(encoding='UTF-8', errors='xmlcharrefreplace'),
+                              ])
+            query = query[:-1]
             try:
-                self.builder.execute(query)
+                self.builder.execute(query, list_)
                 self.database.commit()
-            except:
+            except Exception as e:
+                print(str(e))
                 f = open("query.txt", "a")
                 f.write(query)
                 f.close()
                 print(new_bug)
-
+                f = open("values.txt", "a")
+                f.write(','.join(list_))
+                f.close()
+                exit(-1)
+            except:
+                print('query failed -- why?')
+                f = open("query.txt", "a")
+                f.write(query)
+                f.close()
+                print(new_bug)
+                f = open("values.txt", "a")
+                f.write(','.join(list_))
+                f.close()
+                exit(-1)
         self.last_changes = {}
         self.previous = new_bug['report_time']  # now the present is the past
