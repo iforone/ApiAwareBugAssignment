@@ -36,7 +36,7 @@ class DeepProcessor:
             repo = git.Repo.init(self.path)
             changes = repo.git.show(commit['hash'])
             split_changes = changes.split('\ndiff')
-            print('is ignored:' + split_changes[0])
+            # [0] is the commit but we already know it
             split_changes = split_changes[1:]
 
             for split_change in split_changes:
