@@ -19,7 +19,7 @@ class DeepProcessor:
         self.database = database
 
     def update(self, new_bug):
-        #if self.continue_ and str(new_bug['report_time']) != '2013-03-27 12:55:32':
+        # if self.continue_ and str(new_bug['report_time']) != '2013-03-27 12:55:32':
         #    self.previous = new_bug['report_time']
         #    return
 
@@ -54,26 +54,30 @@ class DeepProcessor:
                 split_change_lines[indexer] = (split_change_lines[indexer]).rstrip()
                 split_change_lines[indexer + 1] = (split_change_lines[indexer + 1]).rstrip()
 
-                if (split_change_lines[indexer]).endswith('.java') or \
-                        (split_change_lines[indexer + 1]).endswith('.java'):
-                    # probably all 4 lines are important - split_change_lines[0:4]
-                    # probably all of the text is important - split_change_lines[4:]
-                    filtered_code = [x for x in split_change_lines[indexer + 2:] if
-                                     x.startswith('-') or x.startswith('+')]
-                    new = {'file': (split_change_lines[indexer + 1])[5:],
-                           'code': '\n'.join(filtered_code),
-                           # mix with the commit information
-                           'hash': commit['hash'],
-                           'author': commit['author'],
-                           'username': commit['username'],
-                           'committed_at': commit['committed_at'],
-                           'commit_message': commit['commit_message']
-                           }
-                    self.last_changes[len(self.last_changes)] = new
+                # probably all 4 lines are important - split_change_lines[0:4]
+                # probably all of the text is important - split_change_lines[4:]
+                filtered_code = [x for x in split_change_lines[indexer + 2:] if
+                                 x.startswith('-') or x.startswith('+')]
+                new = {'file': (split_change_lines[indexer + 1])[5:],
+                       'code': '\n'.join(filtered_code),
+                       # mix with the commit information
+                       'hash': commit['hash'],
+                       'author': commit['author'],
+                       'username': commit['username'],
+                       'committed_at': commit['committed_at'],
+                       'commit_message': commit['commit_message'],
+                       'is_extractable': (split_change_lines[indexer]).endswith('.java') or (
+                       split_change_lines[indexer + 1]).endswith('.java')
+                       }
+                self.last_changes[len(self.last_changes)] = new
 
     # sync developers API experience
     def extract_apis(self, new_bug):
         for index, change in self.last_changes.items():
+            # only changes that are java file are considered for api usage detection\
+            # but all commits are storred for developer detection
+            if not change['is_extractable']:
+                continue
             repo = git.Repo.init(self.path)
             repo.git.checkout(change['hash'])
             imports = get_imports(self.path, change['file'], change['code'])
@@ -146,12 +150,12 @@ class DeepProcessor:
         subprocess.run('cd ./data/input/' + self.project + ';git checkout master', capture_output=True, shell=True)
         if 0 != len(self.last_changes):
             query = '''
-            INSERT IGNORE INTO processed_code (file_name, codes, commit_hash, author, username, committed_at, commit_message, packages)
+            INSERT IGNORE INTO processed_code (file_name, codes, commit_hash, author, username, committed_at, commit_message, packages, is_extractable)
             VALUES
             '''
             list_ = []
             for x, last_change in self.last_changes.items():
-                query += '(%s,%s, %s, %s, %s, %s, %s, %s),'
+                query += '(%s,%s, %s, %s, %s, %s, %s, %s, %s),'
                 list_.extend([last_change['file'].encode(encoding='UTF-8', errors='xmlcharrefreplace'),
                               last_change['code'].encode(encoding='UTF-8', errors='xmlcharrefreplace'),
                               last_change['hash'],
@@ -160,6 +164,7 @@ class DeepProcessor:
                               last_change['committed_at'],
                               last_change['commit_message'].encode(encoding='UTF-8', errors='xmlcharrefreplace'),
                               last_change['packages'].encode(encoding='UTF-8', errors='xmlcharrefreplace'),
+                              last_change['is_extractable'],
                               ])
             query = query[:-1]
             try:

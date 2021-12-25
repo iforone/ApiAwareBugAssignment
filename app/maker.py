@@ -60,6 +60,7 @@ def make_process_table(builder_):
     `codes` longtext DEFAULT NULL,
     `commit_message` text DEFAULT NULL,
     `packages` text DEFAULT NULL,
+    `is_extractable` tinyint(1) DEFAULT NULL,
     `committed_at` datetime DEFAULT NULL,
     PRIMARY KEY (`id`),
     UNIQUE KEY `processed_code_id_uindex` (`id`))
