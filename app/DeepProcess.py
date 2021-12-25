@@ -115,7 +115,6 @@ class DeepProcessor:
                 new_row = {'hash': hash_,
                            'author': author,
                            'username': username,
-                           # todo: timezone issue can become a problem -- ignore for now
                            # EST  = UTC - 5 hours
                            'committed_at': str(
                                parser.parse(line[2 + skipped].replace('Date:   ', '')).astimezone(pytz.timezone('utc'))
