@@ -6,7 +6,6 @@ from DeepProcess import DeepProcessor
 
 data_folder = 'data'
 output_folder = data_folder + '/' + 'output'
-changes_file = 'changes'
 
 ks = [1, 2, 3, 4, 5, 10]
 
@@ -73,19 +72,19 @@ def export_to_csv(data, project_name):
 
 
 def deep_process(bugs_list, project_name, builder_, db_):
-    change_file_name = output_folder + '/' + changes_file + '_' + project_name + '.csv'
+    change_file_name = output_folder + '/lock_' + project_name + '.txt'
 
     if not os.path.exists(change_file_name):
         print('⚠️ warning: since you miss the main data we are going to recalculate all of it')
         deep_processor = DeepProcessor(project_name, builder_, db_)
-
         # loop through each bug report
         for index_, bug_ in bugs_list.iterrows():
             deep_processor.update(bug_)
-        exit('end for now')
-
+        # lock the deep process
+        file = open(change_file_name, "w")
+        file.write('locked')
+        file.close()
     print('✅ changes file created / found!')
-
 
 print('Running maker')
 project = project_selector()
