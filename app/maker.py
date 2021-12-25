@@ -82,8 +82,7 @@ def deep_process(bugs_list, project_name, builder_, db_):
         # loop through each bug report
         for index_, bug_ in bugs_list.iterrows():
             deep_processor.update(bug_)
-
-        deep_processor.export()
+        exit('end for now')
 
     print('✅ changes file created / found!')
 

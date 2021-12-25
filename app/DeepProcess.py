@@ -1,6 +1,9 @@
+from time import timezone
+
 import numpy as np
 import subprocess
 import pandas as pd
+import pytz
 from dateutil import parser
 import git
 from dateutil.parser import ParserError
@@ -11,6 +14,7 @@ from Extractor import get_imports, get_packages
 
 class DeepProcessor:
     def __init__(self, project, builder, database):
+        self.continue_ = True
         self.last_changes = {}
         self.project = project
         self.path = './data/input/' + self.project
@@ -19,10 +23,14 @@ class DeepProcessor:
         self.database = database
 
     def update(self, new_bug):
+        #if self.continue_ and str(new_bug['report_time']) != '2013-03-27 12:55:32':
+        #    self.previous = new_bug['report_time']
+        #    return
         # raw commits without considering bug is easier
         self.extract_commits(new_bug)
         self.extract_apis(new_bug)
         self.memorize(new_bug)
+        self.continue_ = False
 
     def extract_commits(self, new_bug):
         commits = self.find_commits_between(new_bug['report_time'], self.previous)
@@ -63,8 +71,8 @@ class DeepProcessor:
                            'commit_message': commit['commit_message']
                            }
                     self.last_changes[len(self.last_changes)] = new
-            break
 
+        exit(self.last_changes)
     # sync developers API experience
     def extract_apis(self, new_bug):
         for index, change in self.last_changes.items():
@@ -78,7 +86,7 @@ class DeepProcessor:
     def find_commits_between(self, end_, start_):
         initial = 'cd ./data/input/' + self.project
         subprocess.run(initial + ';git checkout master', capture_output=True, shell=True)
-        command = initial + ';git log --after="' + str(start_) + '" --before="' + str(end_) + '"'
+        command = initial + ';git log --after="' + str(start_) + '-05:00" --before="' + str(end_) + '-05:00"'
         process = subprocess.run(command, capture_output=True, shell=True)
         commits_text = process.stdout.decode("utf-8")
         commits_dict = {}
@@ -93,9 +101,14 @@ class DeepProcessor:
 
             try:
                 hash_ = (line[0]).replace('commit ', '').lstrip().rstrip()
-                author = (line[1].replace('Author: ', '').split('<')[0]).rstrip()
+                skipped = 0
+                for each_line in line[1:]:
+                    if each_line.startswith('Author:'):
+                        break
+                    skipped = skipped + 1
+                author = (line[1 + skipped].replace('Author: ', '').split('<')[0]).rstrip()
                 try:
-                    username = line[1].replace('>', '').split('<')[1]
+                    username = line[1 + skipped].replace('>', '').split('<')[1]
                 except IndexError:
                     username = author
 
@@ -103,8 +116,11 @@ class DeepProcessor:
                            'author': author,
                            'username': username,
                            # todo: timezone issue can become a problem -- ignore for now
-                           'committed_at': str(parser.parse(line[2].replace('Date:   ', ''))),
-                           'commit_message': (' '.join(line[4:])).lstrip().rstrip()
+                           # EST  = UTC - 5 hours
+                           'committed_at': str(
+                               parser.parse(line[2 + skipped].replace('Date:   ', '')).astimezone(pytz.timezone('utc'))
+                           ),
+                           'commit_message': (' '.join(line[4 + skipped:])).lstrip().rstrip()
                            }
             except ParserError as error:
                 print(str(error))
