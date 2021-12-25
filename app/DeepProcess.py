@@ -1,14 +1,10 @@
 from time import timezone
 
-import numpy as np
 import subprocess
-import pandas as pd
 import pytz
 from dateutil import parser
 import git
 from dateutil.parser import ParserError
-from mysql.connector import ProgrammingError
-
 from Extractor import get_imports, get_packages
 
 
@@ -26,6 +22,7 @@ class DeepProcessor:
         #if self.continue_ and str(new_bug['report_time']) != '2013-03-27 12:55:32':
         #    self.previous = new_bug['report_time']
         #    return
+
         # raw commits without considering bug is easier
         self.extract_commits(new_bug)
         self.extract_apis(new_bug)
@@ -38,7 +35,9 @@ class DeepProcessor:
         for index, commit in commits.items():
             repo = git.Repo.init(self.path)
             changes = repo.git.show(commit['hash'])
-            split_changes = changes.split('\ndiff')[1:]
+            split_changes = changes.split('\ndiff')
+            print('is ignored:' + split_changes[0])
+            split_changes = split_changes[1:]
 
             for split_change in split_changes:
                 split_change_lines = split_change.split('\n')
@@ -72,7 +71,6 @@ class DeepProcessor:
                            }
                     self.last_changes[len(self.last_changes)] = new
 
-        exit(self.last_changes)
     # sync developers API experience
     def extract_apis(self, new_bug):
         for index, change in self.last_changes.items():

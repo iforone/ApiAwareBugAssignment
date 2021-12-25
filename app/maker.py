@@ -104,6 +104,7 @@ builder.execute("""
         ) assginee_mapper on assginee_mapper.bug_id = bug_and_files.bug_id
     ORDER BY bug_and_files.report_time
 """)
+
 bugs = pd.DataFrame(builder.fetchall())
 bugs.columns = builder.column_names
 deep_process(bugs, project, builder, database)
