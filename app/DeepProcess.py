@@ -77,7 +77,9 @@ class DeepProcessor:
             # only changes that are java file are considered for api usage detection\
             # but all commits are storred for developer detection
             if not change['is_extractable']:
+                self.last_changes[index]['packages'] = ''
                 continue
+
             repo = git.Repo.init(self.path)
             repo.git.checkout(change['hash'])
             imports = get_imports(self.path, change['file'], change['code'])
