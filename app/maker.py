@@ -87,6 +87,42 @@ def deep_process(bugs_list, project_name, builder_, db_):
         file.close()
     print('✅ changes file created / found!')
 
+
+# strangely, some of the imports required further cleanup
+def api_preprocess(builder_, project_name):
+    builder_.execute("""
+        SELECT packages 
+        FROM processed_code
+        WHERE 1
+    """)
+    all_imports = set()
+    changes = pd.DataFrame(builder_.fetchall())
+    for index_, change in changes.iterrows():
+        # 0 is -> package
+        temp_imports = change[0].replace('"', '').replace(')', '').replace('(', '').replace('\\n', '').split(',')
+        for temp_import in temp_imports:
+            if temp_import == '':
+                continue
+            if temp_import.startswith('.'):
+                continue
+            if '.' not in temp_import:
+                continue
+            corrected = temp_import.split('//', 1)[0].split('/*', 1)[0].split('packagepclass', 1)[0].split('classTest', 1)[0].split('publicclass', 1)[0].split('+class', 1)[0].split('{', 1)[0].split('+', 1)[0]
+            corrected_imports = corrected.replace('import', '\n').replace('\\r+', '\n')
+            corrected_imports_split = corrected_imports.split('\n')
+
+            for s in corrected_imports_split:
+                s = s.lstrip().rstrip().split('\\r', 1)[0]
+                if s.startswith('org.eclipse.' + project_name):
+                    continue
+                all_imports.add(s)
+
+    with open('all_imports.txt', 'w') as f:
+        for item in all_imports:
+            f.write("%s-amir\n" % item)
+    exit(1)
+
+
 print('Running maker')
 project = project_selector()
 approach = approach_selector()
@@ -109,6 +145,7 @@ builder.execute("""
 bugs = pd.DataFrame(builder.fetchall())
 bugs.columns = builder.column_names
 deep_process(bugs, project, builder, database)
+api_preprocess(builder, project)
 database.close()
 profiler = Profiler(approach, project)
 
