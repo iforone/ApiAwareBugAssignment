@@ -3,6 +3,8 @@ import pandas as pd
 from Profiler import Profiler
 import os.path
 from DeepProcess import DeepProcessor
+from APIScanner import APIScanner
+
 
 data_folder = 'data'
 output_folder = data_folder + '/' + 'output'
@@ -66,12 +68,14 @@ def make_process_table(builder_):
     UNIQUE KEY `processed_code_id_uindex` (`id`))
     ''')
 
+
 def export_to_csv(data, project_name):
     print('☁️ exporting the results to csv')
     keys = ['bug_id', 'at_1', 'at_2', 'at_3', 'at_4', 'at_5', 'at_10']
     data[keys].to_csv('./data/output/' + project_name + '_' + approach + '.csv')
 
 
+# process the commits to find line-by-line changes and imports of each file
 def deep_process(bugs_list, project_name, builder_, db_):
     change_file_name = output_folder + '/lock_' + project_name + '.txt'
 
@@ -86,41 +90,6 @@ def deep_process(bugs_list, project_name, builder_, db_):
         file.write('locked')
         file.close()
     print('✅ changes file created / found!')
-
-
-# strangely, some of the imports required further cleanup
-def api_preprocess(builder_, project_name):
-    builder_.execute("""
-        SELECT packages 
-        FROM processed_code
-        WHERE 1
-    """)
-    all_imports = set()
-    changes = pd.DataFrame(builder_.fetchall())
-    for index_, change in changes.iterrows():
-        # 0 is -> package
-        temp_imports = change[0].replace('"', '').replace(')', '').replace('(', '').replace('\\n', '').split(',')
-        for temp_import in temp_imports:
-            if temp_import == '':
-                continue
-            if temp_import.startswith('.'):
-                continue
-            if '.' not in temp_import:
-                continue
-            corrected = temp_import.split('//', 1)[0].split('/*', 1)[0].split('packagepclass', 1)[0].split('classTest', 1)[0].split('publicclass', 1)[0].split('+class', 1)[0].split('{', 1)[0].split('+', 1)[0]
-            corrected_imports = corrected.replace('import', '\n').replace('\\r+', '\n')
-            corrected_imports_split = corrected_imports.split('\n')
-
-            for s in corrected_imports_split:
-                s = s.lstrip().rstrip().split('\\r', 1)[0]
-                if s.startswith('org.eclipse.' + project_name):
-                    continue
-                all_imports.add(s)
-
-    with open('all_imports.txt', 'w') as f:
-        for item in all_imports:
-            f.write("%s-amir\n" % item)
-    exit(1)
 
 
 print('Running maker')
@@ -144,9 +113,23 @@ builder.execute("""
 
 bugs = pd.DataFrame(builder.fetchall())
 bugs.columns = builder.column_names
+
+# deeply explore the files
 deep_process(bugs, project, builder, database)
-api_preprocess(builder, project)
+
+# scan the dependencies/ imports and jars
+builder.execute("""
+    SELECT packages 
+    FROM processed_code
+    WHERE 1
+""")
+all_packages_in_files = pd.DataFrame(builder.fetchall())
+
+scanner = APIScanner()
+scanner.api_preprocess(all_packages_in_files, project)
 database.close()
+
+# create profiles for users
 profiler = Profiler(approach, project)
 
 # loop through each bug report
