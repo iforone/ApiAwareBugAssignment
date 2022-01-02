@@ -7,7 +7,7 @@ from mysql.connector import ProgrammingError
 
 
 class APIScanner:
-    def __init__(self):
+    def __init__(self, with_cleaning):
         # connect to api db
         self.database = mysql.connector.connect(
             host='localhost',
@@ -19,6 +19,7 @@ class APIScanner:
         self.builder = self.database.cursor()
         # make the table for import-to-jar-mapping
         self.make_table()
+        self.with_cleaning = with_cleaning
 
     def make_table(self):
         self.builder.execute('''
@@ -41,37 +42,59 @@ class APIScanner:
         except ProgrammingError:
             pass
 
-    def api_preprocess(self, changes, project_name):
+    def clean_and_process_imports(self, project_name, builder_, db_):
+        # get all package in changed files
+        builder_.execute("""
+            SELECT id, packages, cleaned_packages
+            FROM processed_code
+            WHERE 1
+        """)
+        changes = pd.DataFrame(builder_.fetchall())
         all_imports = set()
-        for index_, change in changes.iterrows():
-            # change[0] === package
-            # strangely, some of the imports required further cleanup
-            temp_imports = change[0].replace('"', '').replace(')', '').replace('(', '').replace('\\n', '').split(',')
-            for temp_import in temp_imports:
-                if temp_import == '':
-                    continue
-                if temp_import.startswith('.'):
-                    continue
-                if '.' not in temp_import:
-                    continue
-                corrected = \
-                    temp_import.split('//', 1)[0].split('/*', 1)[0].split('packagepclass', 1)[0].split('classTest', 1)[
-                        0].split('publicclass', 1)[0].split('+class', 1)[0].split('{', 1)[0].split('+', 1)[0]
-                corrected_imports = corrected.replace('import', '\n').replace('\\r+', '\n')
-                corrected_imports_split = corrected_imports.split('\n')
 
-                for s in corrected_imports_split:
-                    s = s.lstrip().rstrip().split('\\r', 1)[0]
-                    if s.startswith('org.eclipse.' + project_name) or s == '':
+        if self.with_cleaning == 'yes':
+            for index_, change in changes.iterrows():
+                all_local_imports = set()
+                # change[0] === id
+                # change[1] === packages
+                # change[2] === cleaned_packages
+                # strangely, some of the imports required further cleanup
+                temp_imports = change[1].replace('"', '').replace(')', '').replace('(', '').replace('\\n', '').split(',')
+                for temp_import in temp_imports:
+                    if temp_import == '':
                         continue
+                    if temp_import.startswith('.'):
+                        continue
+                    if '.' not in temp_import:
+                        continue
+                    corrected = temp_import.split('//', 1)[0].split('/*', 1)[0].split('packagepclass', 1)[0].split('classTest', 1)[0].split('publicclass', 1)[0].split('+class', 1)[0].split('{', 1)[0].split('+', 1)[0]
+                    corrected_imports = corrected.replace('import', '\n').replace('\\r+', '\n')
+                    corrected_imports_split = corrected_imports.split('\n')
+
+                    for s in corrected_imports_split:
+                        s = s.lstrip().rstrip().split('\\r', 1)[0]
+                        if s.startswith('org.eclipse.' + project_name) or s == '':
+                            continue
+                        all_imports.add(s)
+                        all_local_imports.add(s)
+
+                cleaned_packages = ','.join(all_local_imports)
+                builder_.execute("""update processed_code set cleaned_packages = %s WHERE id = %s """, [cleaned_packages, change[0]])
+                db_.commit()
+        else:
+            for index_, change in changes.iterrows():
+                corrected_imports_split = change[2].split(',')
+                for s in corrected_imports_split:
                     all_imports.add(s)
 
-        exit('1111')
+        self.process_imports(all_imports)
+
+    def process_imports(self, all_imports):
         for each_import in all_imports:
             if each_import.startswith('java'):
                 # read the files in Java SE and Java EE
                 continue
-            # elif :
+            #elif :
             # query for it
             # work within the jar file to extract items
             # else:

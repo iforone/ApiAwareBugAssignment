@@ -40,6 +40,18 @@ def approach_selector():
     return answers['approach'].split(' - ')[0]
 
 
+def with_cleaning():
+    import inquirer
+    questions = [
+        inquirer.List('cleaning',
+                      message="With Cleaning?",
+                      choices=['no', 'yes'],
+                      ),
+    ]
+    answers = inquirer.prompt(questions)
+    return answers['cleaning']
+
+
 # connect to a selected database
 def mysql_connection(project_name):
     return mysql.connector.connect(
@@ -62,6 +74,7 @@ def make_process_table(builder_):
     `codes` longtext DEFAULT NULL,
     `commit_message` text DEFAULT NULL,
     `packages` text DEFAULT NULL,
+    `cleaned_packages` text DEFAULT NULL,
     `is_extractable` tinyint(1) DEFAULT NULL,
     `committed_at` datetime DEFAULT NULL,
     PRIMARY KEY (`id`),
@@ -118,15 +131,8 @@ bugs.columns = builder.column_names
 deep_process(bugs, project, builder, database)
 
 # scan the dependencies/ imports and jars
-builder.execute("""
-    SELECT packages 
-    FROM processed_code
-    WHERE 1
-""")
-all_packages_in_files = pd.DataFrame(builder.fetchall())
-
-scanner = APIScanner()
-scanner.api_preprocess(all_packages_in_files, project)
+scanner = APIScanner(with_cleaning())
+scanner.clean_and_process_imports(project, builder, database)
 database.close()
 
 # create profiles for users
