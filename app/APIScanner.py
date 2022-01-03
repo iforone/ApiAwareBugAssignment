@@ -93,10 +93,17 @@ class APIScanner:
         for each_import in all_imports:
             if each_import.startswith('java'):
                 # read the files in Java SE and Java EE
+                # parse the data and save it to database
                 continue
-            #elif :
-            # query for it
-            # work within the jar file to extract items
-            # else:
-            # add it to the database
-        exit(1)
+            else:
+                self.builder.execute('SELECT jar,link, download_link'
+                                     ' FROM import_to_jar WHERE importie = %s', [each_import])
+                result = self.builder.fetchone()
+                if result is None:
+                    link = 'https://www.findjar.com/search?query=' + each_import + '&more=false'
+                    download_link = 'https://www.findjar.com/class/' + each_import.replace('.*', '').replace('.', '/') + '.html'
+                    self.builder.execute('INSERT INTO import_to_jar (importie, link, download_link) VALUE (%s, %s, %s)', [each_import, link, download_link])
+                    self.database.commit()
+                    continue
+                # work within the jar file to extract items
+        exit('OKAY')
