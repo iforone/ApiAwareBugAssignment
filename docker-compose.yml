@@ -1,13 +1,14 @@
 version: "3"
 services:
-#  app:
-#    build: ./app
-#    container_name: 'python'
-#    links:
-#      - db
-#    ports:
-#      - "5555:5000"
-
+  alpine:
+    container_name: 'my_little_alpine'
+    build: .
+    ports:
+      - "8122:81"
+    volumes:
+      - ./data/input:/input
+      - ./data/output:/output
+    command: tail -F /temp
   db:
     container_name: 'mysql_db'
     image: mariadb

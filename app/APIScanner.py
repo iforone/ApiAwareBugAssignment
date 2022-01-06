@@ -81,6 +81,17 @@ class APIScanner:
                 cleaned_packages = ','.join(all_local_imports)
                 builder_.execute("""update processed_code set cleaned_packages = %s WHERE id = %s """, [cleaned_packages, change[0]])
                 db_.commit()
+            # fh = open('all_imports_old.txt')
+            # ax = [line.rstrip() for line in fh.readlines()]
+            # fh.close()
+            # f = open("all_imports-6-jan.txt", "a")
+            # for elexx in ax:
+            #     if elexx in all_imports:
+            #         print('✅' + elexx)
+            #     else:
+            #         print('❓' + elexx)
+            #         f.write('NOT FOUND -' + elexx + '\n')
+            # f.close()
         else:
             for index_, change in changes.iterrows():
                 corrected_imports_split = change[2].split(',')
@@ -104,6 +115,9 @@ class APIScanner:
                     download_link = 'https://www.findjar.com/class/' + each_import.replace('.*', '').replace('.', '/') + '.html'
                     self.builder.execute('INSERT INTO import_to_jar (importie, link, download_link) VALUE (%s, %s, %s)', [each_import, link, download_link])
                     self.database.commit()
+                    print('⚠️ Warning: source code is using a package we could not track because Jar is not found!')
                     continue
                 # work within the jar file to extract items
+                exit(each_import)
         exit('OKAY')
+

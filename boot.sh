@@ -44,7 +44,7 @@ clone_projects swt https://git.eclipse.org/r/platform/eclipse.platform.swt.git
 # bring docker up and running
 docker-compose up --detach
 
-sleep 2
+sleep 3
 
 # create the table for all apis tracks
 docker exec -i mysql_db mysql -uroot -proot  <<< "SHOW DATABASES;CREATE DATABASE IF NOT EXISTS all_apis;"
