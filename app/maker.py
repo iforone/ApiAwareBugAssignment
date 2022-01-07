@@ -75,6 +75,7 @@ def make_process_table(builder_):
     `commit_message` text DEFAULT NULL,
     `packages` text DEFAULT NULL,
     `cleaned_packages` text DEFAULT NULL,
+    `used_apis` text DEFAULT NULL,
     `is_extractable` tinyint(1) DEFAULT NULL,
     `committed_at` datetime DEFAULT NULL,
     PRIMARY KEY (`id`),

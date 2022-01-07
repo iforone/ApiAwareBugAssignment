@@ -102,12 +102,14 @@ class APIScanner:
 
     def process_imports(self, all_imports):
         for each_import in all_imports:
+            if each_import == '':
+                continue
             if each_import.startswith('java'):
                 # read the files in Java SE and Java EE
                 # parse the data and save it to database
                 continue
             else:
-                self.builder.execute('SELECT jar,link, download_link'
+                self.builder.execute('SELECT jar'
                                      ' FROM import_to_jar WHERE importie = %s', [each_import])
                 result = self.builder.fetchone()
                 if result is None:
@@ -118,6 +120,26 @@ class APIScanner:
                     print('⚠️ Warning: source code is using a package we could not track because Jar is not found!')
                     continue
                 # work within the jar file to extract items
-                exit(each_import)
+                self.scan_jar(result[0], each_import)
+                exit('okay for now')
         exit('OKAY')
+
+    def scan_jar(self, jar, package):
+        # login to docker - java container
+        # run the javap -constnats
+        # how to just get constants
+        # 1- class or interface
+        # 2- methods
+        # 3- constants
+
+        # tokenize
+
+        # check against the code
+
+        # add to used_api
+
+
+        # later: add a table all_apis.cached_api
+
+        pass
 
