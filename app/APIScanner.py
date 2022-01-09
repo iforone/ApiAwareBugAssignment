@@ -98,6 +98,11 @@ class APIScanner:
                 for s in corrected_imports_split:
                     all_imports.add(s)
 
+        f = open("all-imports.txt", "a")
+        for i in all_imports:
+            f.write(i + '\n')
+        f.close()
+
         self.process_imports(all_imports)
 
     def process_imports(self, all_imports):
@@ -126,11 +131,11 @@ class APIScanner:
 
     def scan_jar(self, jar, package):
         # login to docker - java container
-        # run the javap -constnats
+        # run javap -constants -cp sax-2.0.1.jar org.xml.sax.InputSource
         # how to just get constants
-        # 1- class or interface
-        # 2- methods
-        # 3- constants
+        # 1- Classifier - class or interface or EnumType (like a type of enum)
+        # 2- ✅ Metohds method names
+        # 3- Enumconstants - constants or constant values of an enum
 
         # tokenize
 
