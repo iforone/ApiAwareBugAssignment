@@ -5,7 +5,6 @@ import os.path
 from DeepProcess import DeepProcessor
 from APIScanner import APIScanner
 
-
 data_folder = 'data'
 output_folder = data_folder + '/' + 'output'
 

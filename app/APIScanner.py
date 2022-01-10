@@ -182,6 +182,7 @@ class APIScanner:
                 print('so -*' + relevant_package + '*\n')
             return
 
+        print('> checking now ' + importie + '\n')
         classifiers = set()
         methods = set()
         constants = set()
@@ -209,7 +210,7 @@ class APIScanner:
                 method_ = class_line.split('(')[0].split(' ')[-1]
 
                 methods.add(method_)
-                print('method: ' + method_)
+                # print('method: ' + method_)
             # is enum
             elif class_line.startswith('public static final ' + class_name):
                 enum_type = class_name
@@ -218,13 +219,13 @@ class APIScanner:
                 constants.add(class_name.split('.')[-1].replace('$', '.') + '.' + const_)
                 constants.add(class_name.replace('$', '.').split('.')[-1] + '.' + const_)
                 constants.add(const_)
-                print('enum of' + enum_type + '--' + const_)
+                # print('enum of' + enum_type + '--' + const_)
             # is constant
             elif class_line.endswith(';') and '{' not in class_line and '}' not in class_line:
                 const_ = class_line.split(' ')[-1][:-1]
 
                 constants.add(const_)
-                print('constant: ' + const_)
+                # print('constant: ' + const_)
 
         self.builder.execute(
             'INSERT INTO scans (importie, jar, api, classifiers, methods, constants, full_resolution)'
