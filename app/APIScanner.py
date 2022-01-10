@@ -1,9 +1,16 @@
 # this class is used to find, save, scan and parse APIs and API-related tokens
+import re
 import mysql.connector
 import pandas as pd
-import os.path
+import subprocess
 
 from mysql.connector import ProgrammingError
+
+
+def run_java(c):
+    command = "docker exec -i my_little_alpine bash -c \"" + c + "\""
+    process = subprocess.run(command, capture_output=True, shell=True)
+    return process.stdout.decode("utf-8")
 
 
 class APIScanner:
@@ -18,10 +25,28 @@ class APIScanner:
         )
         self.builder = self.database.cursor()
         # make the table for import-to-jar-mapping
-        self.make_table()
+        self.make_api_table()
+        self.make_scanner_table()
         self.with_cleaning = with_cleaning
 
-    def make_table(self):
+    def make_scanner_table(self):
+        self.builder.execute('''
+            create table IF NOT EXISTS scans
+            (
+                id int auto_increment,
+                importie char(255) null,
+                jar char(255) null,
+                api char(255) null,
+                classifiers text null,
+                methods text null,
+                constants text null,
+                full_resolution longtext null,
+                constraint scans_pk
+                    primary key (id)
+            );
+        ''')
+
+    def make_api_table(self):
         self.builder.execute('''
             create table IF NOT EXISTS import_to_jar
             (
@@ -59,7 +84,8 @@ class APIScanner:
                 # change[1] === packages
                 # change[2] === cleaned_packages
                 # strangely, some of the imports required further cleanup
-                temp_imports = change[1].replace('"', '').replace(')', '').replace('(', '').replace('\\n', '').split(',')
+                temp_imports = change[1].replace('"', '').replace(')', '').replace('(', '').replace('\\n', '').split(
+                    ',')
                 for temp_import in temp_imports:
                     if temp_import == '':
                         continue
@@ -67,7 +93,10 @@ class APIScanner:
                         continue
                     if '.' not in temp_import:
                         continue
-                    corrected = temp_import.split('//', 1)[0].split('/*', 1)[0].split('packagepclass', 1)[0].split('classTest', 1)[0].split('publicclass', 1)[0].split('+class', 1)[0].split('{', 1)[0].split('+', 1)[0]
+                    corrected = \
+                        temp_import.split('//', 1)[0].split('/*', 1)[0].split('packagepclass', 1)[0].split('classTest',
+                                                                                                           1)[
+                            0].split('publicclass', 1)[0].split('+class', 1)[0].split('{', 1)[0].split('+', 1)[0]
                     corrected_imports = corrected.replace('import', '\n').replace('\\r+', '\n')
                     corrected_imports_split = corrected_imports.split('\n')
 
@@ -79,7 +108,8 @@ class APIScanner:
                         all_local_imports.add(s)
 
                 cleaned_packages = ','.join(all_local_imports)
-                builder_.execute("""update processed_code set cleaned_packages = %s WHERE id = %s """, [cleaned_packages, change[0]])
+                builder_.execute("""update processed_code set cleaned_packages = %s WHERE id = %s """,
+                                 [cleaned_packages, change[0]])
                 db_.commit()
             # fh = open('all_imports_old.txt')
             # ax = [line.rstrip() for line in fh.readlines()]
@@ -119,23 +149,89 @@ class APIScanner:
                 result = self.builder.fetchone()
                 if result is None:
                     link = 'https://www.findjar.com/search?query=' + each_import + '&more=false'
-                    download_link = 'https://www.findjar.com/class/' + each_import.replace('.*', '').replace('.', '/') + '.html'
-                    self.builder.execute('INSERT INTO import_to_jar (importie, link, download_link) VALUE (%s, %s, %s)', [each_import, link, download_link])
+                    download_link = 'https://www.findjar.com/class/' + each_import.replace('.*', '').replace('.',
+                                                                                                             '/') + '.html'
+                    self.builder.execute('INSERT INTO import_to_jar (importie, link, download_link) VALUE (%s, %s, %s)',
+                                         [each_import, link, download_link])
                     self.database.commit()
                     print('⚠️ Warning: source code is using a package we could not track because Jar is not found!')
                     continue
                 # work within the jar file to extract items
-                self.scan_jar(result[0], each_import)
-                exit('okay for now')
+                self.scan_jar(each_import, result[0])
         exit('OKAY')
 
-    def scan_jar(self, jar, package):
-        # login to docker - java container
-        # run javap -constants -cp sax-2.0.1.jar org.xml.sax.InputSource
-        # how to just get constants
-        # 1- Classifier - class or interface or EnumType (like a type of enum)
-        # 2- ✅ Metohds method names
-        # 3- Enumconstants - constants or constant values of an enum
+    # how to just get constants -> just run constants and look for Enum or final
+    # 1- ✅ Classifier - class or interface or EnumType (like a type of enum)
+    # 2- ✅ Methods method names
+    # 3- ✅ Enum constants - constants or constant values of an enum
+    def scan_jar(self, importie, jar=None):
+        if jar is None:
+            return
+        if jar == 'none':
+            return
+        if importie.endswith('.*'):
+            return
+            # we need this because of the wildcard or star imports
+            # this might be useful for all scenarios
+            package = importie.replace('.*', '').replace('.', '/')
+            answer = run_java('cd input/jars && jar -tf "' + jar + '" ' + package)
+            relevant_packages = answer.split('\n')
+
+            for relevant_package in relevant_packages:
+                relevant_importie = relevant_package.replace('/', '.').replace('$', '.')
+                print('so -*' + relevant_package + '*\n')
+            return
+
+        classifiers = set()
+        methods = set()
+        constants = set()
+
+        relevant_importie = importie
+        all_class_text = run_java('cd input/jars && javap -cp "' + jar + '" ' + relevant_importie).rstrip()
+        class_lines = all_class_text.split('\n')
+
+        class_name_not_good = class_lines[1]
+        class_index = class_name_not_good.find('class')
+        if class_index != -1:
+            class_name = class_name_not_good[class_index + 5:].lstrip().split()[0].rstrip().lstrip()
+        else:
+            class_name = class_name_not_good[class_name_not_good.find('interface') + 9:].lstrip().split()[0].rstrip().lstrip()
+
+        classifiers.add(class_name)
+        classifiers.add(class_name.replace('$', '.'))
+        classifiers.add(class_name.split('.')[-1].replace('$', '.'))
+        classifiers.add(class_name.replace('$', '.').split('.')[-1])
+
+        for class_line in class_lines[2:]:
+            class_line = class_line.lstrip()
+            # is method
+            if '(' in class_line:
+                method_ = class_line.split('(')[0].split(' ')[-1]
+
+                methods.add(method_)
+                print('method: ' + method_)
+            # is enum
+            elif class_line.startswith('public static final ' + class_name):
+                enum_type = class_name
+                const_ = class_line.split(' ')[-1][:-1]
+
+                constants.add(class_name.split('.')[-1].replace('$', '.') + '.' + const_)
+                constants.add(class_name.replace('$', '.').split('.')[-1] + '.' + const_)
+                constants.add(const_)
+                print('enum of' + enum_type + '--' + const_)
+            # is constant
+            elif class_line.endswith(';') and '{' not in class_line and '}' not in class_line:
+                const_ = class_line.split(' ')[-1][:-1]
+
+                constants.add(const_)
+                print('constant: ' + const_)
+
+        self.builder.execute(
+            'INSERT INTO scans (importie, jar, api, classifiers, methods, constants, full_resolution)'
+            ' VALUE (%s, %s, %s, %s, %s, %s, %s)',
+            [importie, jar, '', ','.join(classifiers), ','.join(methods), ','.join(constants), all_class_text])
+        self.database.commit()
+        exit('OKAY')
 
         # tokenize
 
@@ -144,7 +240,4 @@ class APIScanner:
         # add to used_api
 
 
-        # later: add a table all_apis.cached_api
-
         pass
-
