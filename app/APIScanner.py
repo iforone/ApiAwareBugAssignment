@@ -197,7 +197,8 @@ class APIScanner:
         if class_index != -1:
             class_name = class_name_not_good[class_index + 5:].lstrip().split()[0].rstrip().lstrip()
         else:
-            class_name = class_name_not_good[class_name_not_good.find('interface') + 9:].lstrip().split()[0].rstrip().lstrip()
+            class_name = class_name_not_good[class_name_not_good.find('interface') + 9:].lstrip().split()[
+                0].rstrip().lstrip()
 
         classifiers.add(class_name)
         classifiers.add(class_name.replace('$', '.'))
@@ -224,7 +225,8 @@ class APIScanner:
                 constants.add(const_)
                 # print('enum of' + enum_type + '--' + const_)
             # is constant
-            elif 'final ' in class_line and class_line.endswith(';') and '{' not in class_line and '}' not in class_line:
+            elif 'final ' in class_line and class_line.endswith(
+                    ';') and '{' not in class_line and '}' not in class_line:
                 const_ = class_line.split(' ')[-1][:-1]
 
                 constants.add(const_)
@@ -235,13 +237,8 @@ class APIScanner:
             ' VALUE (%s, %s, %s, %s, %s, %s, %s)',
             [importie, jar, '', ','.join(classifiers), ','.join(methods), ','.join(constants), all_class_text])
         self.database.commit()
-        exit('OKAY')
 
         # tokenize
-
         # check against the code
-
         # add to used_api
-
-
         pass
