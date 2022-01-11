@@ -189,7 +189,7 @@ class APIScanner:
 
         relevant_importie = importie
         # check whether the public is sufficient
-        all_class_text = run_java('cd input/jars && javap -package -cp "' + jar + '" ' + relevant_importie).rstrip()
+        all_class_text = run_java('cd input/jars && javap -public -cp "' + jar + '" ' + relevant_importie).rstrip()
         class_lines = all_class_text.split('\n')
 
         class_name_not_good = class_lines[1]
