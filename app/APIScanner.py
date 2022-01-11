@@ -188,7 +188,8 @@ class APIScanner:
         constants = set()
 
         relevant_importie = importie
-        all_class_text = run_java('cd input/jars && javap -cp "' + jar + '" ' + relevant_importie).rstrip()
+        # check whether the public is sufficient
+        all_class_text = run_java('cd input/jars && javap -package -cp "' + jar + '" ' + relevant_importie).rstrip()
         class_lines = all_class_text.split('\n')
 
         class_name_not_good = class_lines[1]
@@ -202,6 +203,8 @@ class APIScanner:
         classifiers.add(class_name.replace('$', '.'))
         classifiers.add(class_name.split('.')[-1].replace('$', '.'))
         classifiers.add(class_name.replace('$', '.').split('.')[-1])
+        # this is the constructor method - if not already there
+        methods.add(class_name.replace('$', '.').split('.')[-1])
 
         for class_line in class_lines[2:]:
             class_line = class_line.lstrip()
@@ -212,16 +215,16 @@ class APIScanner:
                 methods.add(method_)
                 # print('method: ' + method_)
             # is enum
-            elif class_line.startswith('public static final ' + class_name):
+            elif 'final ' + class_name in class_line:
                 enum_type = class_name
                 const_ = class_line.split(' ')[-1][:-1]
 
-                constants.add(class_name.split('.')[-1].replace('$', '.') + '.' + const_)
-                constants.add(class_name.replace('$', '.').split('.')[-1] + '.' + const_)
+                constants.add(enum_type.split('.')[-1].replace('$', '.') + '.' + const_)
+                constants.add(enum_type.replace('$', '.').split('.')[-1] + '.' + const_)
                 constants.add(const_)
                 # print('enum of' + enum_type + '--' + const_)
             # is constant
-            elif class_line.endswith(';') and '{' not in class_line and '}' not in class_line:
+            elif 'final ' in class_line and class_line.endswith(';') and '{' not in class_line and '}' not in class_line:
                 const_ = class_line.split(' ')[-1][:-1]
 
                 constants.add(const_)
