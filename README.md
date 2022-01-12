@@ -32,9 +32,7 @@ s.scan_jar('org.eclipse.swt.widgets.Table', 'macosx-3.3.0-v3346.jar')
 
 ```shell
 # list all files 
-javac -d build recreation/junit/tests/WasRun.java recre
-ation/junit/util/Version.java
-
+javac -d build recreation/junit/tests/WasRun.java recreation/junit/util/Version.java
 cd build
 jar cvf YourJar.jar *
 ```
@@ -43,5 +41,5 @@ jar cvf YourJar.jar *
 ```shell
 javac -d ./build *.java
 cd build
-jar cvf YourJar.jar *
+jar cvf recreation .jar *
 ```

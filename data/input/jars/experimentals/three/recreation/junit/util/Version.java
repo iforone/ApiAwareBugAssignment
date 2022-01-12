@@ -1,4 +1,4 @@
-package junit.runner;
+package junit.util;
 
 /**
  * This class defines the current version of JUnit
