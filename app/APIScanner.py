@@ -40,6 +40,7 @@ class APIScanner:
                 classifiers text null,
                 methods text null,
                 constants text null,
+                note char(255) null,
                 full_resolution longtext null,
                 constraint scans_pk
                     primary key (id)
@@ -166,6 +167,8 @@ class APIScanner:
     # 3- ✅ Enum constants - constants or constant values of an enum
     def scan_jar(self, importie, jar=None):
         relevant_importie = importie
+        note = ''
+
         if jar == 'none':
             return
         # this does not work for now
@@ -190,7 +193,12 @@ class APIScanner:
             # totally normal imports:
             # check whether the public is sufficient
             all_class_text = run_java('cd input/jars && javap -public -cp "' + jar + '" ' + relevant_importie).rstrip()
-
+            if all_class_text == '':
+                # edge case - sometimes it is a sub element imported incorrectly
+                # org.junit.Assert.fail -> is actually a method in org.junit.Assert
+                note = 'INTERNAL'
+                all_class_text = run_java(
+                    'cd input/jars && javap -public -cp "' + jar + '" ' + relevant_importie.rsplit('.', 1)[0]).rstrip()
         classifiers = set()
         methods = set()
         constants = set()
@@ -222,7 +230,6 @@ class APIScanner:
                     method_ = class_line.split('(')[0].split(' ')[-1]
 
                     methods.add(method_)
-                    # print('method: ' + method_)
                 # is enum
                 elif 'final ' + class_name in class_line:
                     enum_type = class_name
@@ -231,19 +238,39 @@ class APIScanner:
                     constants.add(enum_type.split('.')[-1].replace('$', '.') + '.' + const_)
                     constants.add(enum_type.replace('$', '.').split('.')[-1] + '.' + const_)
                     constants.add(const_)
-                    # print('enum of' + enum_type + '--' + const_)
                 # is constant
                 elif 'final ' in class_line and class_line.endswith(
                         ';') and '{' not in class_line and '}' not in class_line:
                     const_ = class_line.split(' ')[-1][:-1]
 
                     constants.add(const_)
-                    # print('constant: ' + const_)
 
-            self.builder.execute(
-                'INSERT INTO scans (importie, jar, api, classifiers, methods, constants, full_resolution)'
-                ' VALUE (%s, %s, %s, %s, %s, %s, %s)',
-                [importie, jar, '', ','.join(classifiers), ','.join(methods), ','.join(constants), all_class_text])
+            if note == 'INTERNAL':
+                internal_element = relevant_importie.rsplit('.', 1)[1]
+
+                if internal_element in classifiers:
+                    internal_as_classifier = internal_element
+                else:
+                    internal_as_classifier = ''
+
+                if internal_element in methods:
+                    internal_as_method = internal_element
+                else:
+                    internal_as_method = ''
+
+                if internal_element in constants:
+                    internal_as_constant = internal_element
+                else:
+                    internal_as_constant = ''
+                self.builder.execute(
+                    'INSERT INTO scans (importie, jar, api, classifiers, methods, constants, full_resolution, note)'
+                    ' VALUE (%s, %s, %s, %s, %s, %s, %s, %s)',
+                    [importie, jar, '', internal_as_classifier, internal_as_method, internal_as_constant, all_class_text, note])
+            else:
+                self.builder.execute(
+                    'INSERT INTO scans (importie, jar, api, classifiers, methods, constants, full_resolution)'
+                    ' VALUE (%s, %s, %s, %s, %s, %s, %s)',
+                    [importie, jar, '', ','.join(classifiers), ','.join(methods), ','.join(constants), all_class_text])
             self.database.commit()
         except:
             print('this failed unfortunately')

@@ -19,11 +19,29 @@ zsh boot.sh
 ```
 
 
-Some extra notes:
+Helpful notes:
 
-- Just running the API scanner:
+- Running the API scanner (separately):
 
 ```python
 s = APIScanner('no')
 s.scan_jar('org.eclipse.swt.widgets.Table', 'macosx-3.3.0-v3346.jar')
+```
+
+- Compiling a Java directory:
+
+```shell
+# list all files 
+javac -d build recreation/junit/tests/WasRun.java recre
+ation/junit/util/Version.java
+
+cd build
+jar cvf YourJar.jar *
+```
+- Compiling single Java file or files in one folder
+
+```shell
+javac -d ./build *.java
+cd build
+jar cvf YourJar.jar *
 ```

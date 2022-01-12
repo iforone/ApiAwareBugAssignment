@@ -2,9 +2,9 @@
 
                             This is a test Java file
                 after making the file make a folder called build
-                then run javac -d ./build *.java
+                then run: javac -d ./build *.java
                 then go to the directory
-                then run jar cvf YourJar.jar *
+                then run: jar cvf YourJar.jar *
                 -----
                 jar -tf YourJar.jar
 
