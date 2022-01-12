@@ -165,10 +165,10 @@ class APIScanner:
     # 2- ✅ Methods method names
     # 3- ✅ Enum constants - constants or constant values of an enum
     def scan_jar(self, importie, jar=None):
-        if jar is None:
-            return
+        relevant_importie = importie
         if jar == 'none':
             return
+        # this does not work for now
         if importie.endswith('.*'):
             return
             # we need this because of the wildcard or star imports
@@ -177,28 +177,36 @@ class APIScanner:
             answer = run_java('cd input/jars && jar -tf "' + jar + '" ' + package)
             relevant_packages = answer.split('\n')
 
-            for relevant_package in relevant_packages:
-                relevant_importie = relevant_package.replace('/', '.').replace('$', '.')
-                print('so -*' + relevant_package + '*\n')
-            return
+        if jar is None or jar is 'JAVA':
+            all_class_text = run_java('cd input/jars && javap -public ' + relevant_importie).rstrip()
+        elif jar == 'JAVA_PURE':
+            # it is part of java but is mis-categorised
+            all_class_text = run_java('cd input/jars && javap -public java.' + relevant_importie).rstrip()
+        elif jar == 'CONSIDER':
+            # this is a dummy we consider the api of this anyways due limited special cases
+            # such as the api does not exist in a runnable version anymore or it does not impact due few commits
+            all_class_text = 'class ' + importie + '\n\n'
+        else:
+            # totally normal imports:
+            # check whether the public is sufficient
+            all_class_text = run_java('cd input/jars && javap -public -cp "' + jar + '" ' + relevant_importie).rstrip()
 
-        # normal imports:
         classifiers = set()
         methods = set()
         constants = set()
         try:
-            relevant_importie = importie
-            # check whether the public is sufficient
-            all_class_text = run_java('cd input/jars && javap -public -cp "' + jar + '" ' + relevant_importie).rstrip()
             class_lines = all_class_text.split('\n')
 
-            class_name_not_good = class_lines[1]
+            # some compiles do not start with the message
+            index_addition = int(class_lines[0].lstrip().startswith('Compiled from'))
+
+            class_name_not_good = class_lines[0 + index_addition]
             class_index = class_name_not_good.find('class')
             if class_index != -1:
-                class_name = class_name_not_good[class_index + 5:].lstrip().split()[0].rstrip().lstrip()
+                class_name = class_name_not_good[class_index + 5:].lstrip().split()[0].split('<')[0].rstrip().lstrip()
             else:
                 class_name = class_name_not_good[class_name_not_good.find('interface') + 9:].lstrip().split()[
-                    0].rstrip().lstrip()
+                    0].split('<')[0].rstrip().lstrip()
 
             classifiers.add(class_name)
             classifiers.add(class_name.replace('$', '.'))
@@ -207,7 +215,7 @@ class APIScanner:
             # this is the constructor method - if not already there
             methods.add(class_name.replace('$', '.').split('.')[-1])
 
-            for class_line in class_lines[2:]:
+            for class_line in class_lines[1 + index_addition:]:
                 class_line = class_line.lstrip()
                 # is method
                 if '(' in class_line:
