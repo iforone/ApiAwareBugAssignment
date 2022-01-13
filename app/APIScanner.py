@@ -2,7 +2,6 @@
 import mysql.connector
 import pandas as pd
 import subprocess
-
 from mysql.connector import ProgrammingError
 
 main_dir = './'
@@ -20,16 +19,17 @@ def run_java(c):
     return process.stdout.decode("utf-8")
 
 
+# find all subclasses for a wildcard import from Java SE based on the docker container running it
 def get_subclasses(import_):
     print('subclasses of: ' + import_ + ' in Java')
     corrected_import_ = import_.replace('.*', '')
-    # JAVA SE:
     all_classes = read_all_file(main_dir + javase_directory + javase_tree_file)
-    result = filter(lambda x: x.startswith(corrected_import_), all_classes)
+    result = list(filter(lambda x: x.startswith(corrected_import_), all_classes))
 
-    return list(result)
+    return result
 
 
+# find all subclasses for a wildcard import from a jar based on a version we could find for it
 def get_jar_subclasses(each_import_, jar):
     print('subclasses of: ' + each_import_ + ' in ' + jar)
     result = run_java('cd input/jars && jar -tf ' + jar + ' ' + each_import_.replace('/'))
@@ -50,6 +50,9 @@ def read_all_file(filename):
     return list_
 
 
+# class APIScanner uses javap to grep the class files from jar or java source code
+# it tokenizes classifiers, methods and constants
+# if an import uses wildcard it considers all possible classes or subclasses that start with the name
 class APIScanner:
     def __init__(self, with_cleaning):
         # connect to api db
@@ -74,10 +77,10 @@ class APIScanner:
                 importie char(255) null,
                 jar char(255) null,
                 api char(255) null,
-                classifiers text null,
-                methods text null,
-                constants text null,
-                note char(255) null,
+                classifiers longtext null,
+                methods longtext null,
+                constants longtext null,
+                note text null,
                 full_resolution longtext null,
                 constraint scans_pk
                     primary key (id)
@@ -160,31 +163,34 @@ class APIScanner:
 
     def process_imports(self, all_imports):
         for each_import in all_imports:
+            # empty import
             if each_import == '':
                 continue
-            # it is in Java SE or Java EE
+
+            # it is in Java SE or Java EE?
             if each_import.startswith('java'):
                 if each_import.endswith('.*'):
                     self.scan_java_class_with_sub_classes(each_import)
                 else:
                     self.scan_jar(each_import, None)
                 continue
-            # it is from a jar
+
+            # it is from a JAR?
             else:
-                self.builder.execute('SELECT jar'
-                                     ' FROM import_to_jar WHERE importie = %s', [each_import])
+                self.builder.execute('SELECT jar FROM import_to_jar WHERE importie = %s', [each_import])
                 result = self.builder.fetchone()
+                # result[0] = jar name
+
+                # if the jar is missing -> it should be discovered
                 if result is None:
-                    link = 'https://www.findjar.com/search?query=' + each_import + '&more=false'
-                    download_link = 'https://www.findjar.com/class/' + each_import.replace('.*', '').replace('.',
-                                                                                                             '/') + '.html'
-                    self.builder.execute('INSERT INTO import_to_jar (importie, link, download_link) VALUE (%s, %s, %s)',
-                                         [each_import, link, download_link])
-                    self.database.commit()
-                    print('⚠️ Warning: source code is using a package we could not track because Jar is not found!')
+                    self.make_request_for_missing_import(each_import)
                     continue
                 # work within the jar file to extract items
-                self.scan_jar(each_import, result[0])
+                if each_import.endswith('.*'):
+                    self.scan_jar_class_with_sub_classes(each_import, result[0])
+                else:
+                    self.scan_jar(each_import, result[0])
+
         exit('OKAY')
 
     # how to just get constants -> just run constants and look for Enum or final
@@ -192,7 +198,14 @@ class APIScanner:
     # 2- ✅ Methods method names
     # 3- ✅ Enum constants - constants or constant values of an enum
     # functionality: parse the data and save it to database
-    def scan_jar(self, importie, jar=None, save_=True):
+    # parameters:
+    # importie: this is a specific class from a jar or java se source
+    # jar: either none or None or a real jar file located in jars/ folder
+    # save: boolean to decide if you want to save the result of tokenization to database or return as list
+    #       by default we save but for subclasses from a wildcard import it is false
+    # force_consider: do you want to force this class to be considered without any further consideration
+    #       it is only triggered if machine tries to find the class and fails
+    def scan_jar(self, importie, jar=None, save_=True, force_consider=False):
         relevant_importie = importie
         note = ''
 
@@ -223,7 +236,7 @@ class APIScanner:
         elif jar == 'JAVA_PURE':
             # it is part of java but is mis-categorised
             all_class_text = run_java('cd input/jars && javap -public java.' + relevant_importie).rstrip()
-        elif jar == 'CONSIDER':
+        elif jar == 'CONSIDER' or force_consider:
             # this is a dummy we consider the api of this anyways due limited special cases
             # such as the api does not exist in a runnable version anymore or it does not impact due few commits
             all_class_text = 'class ' + importie + '\n\n'
@@ -324,9 +337,6 @@ class APIScanner:
         except:
             print('this failed unfortunately')
             print('cd input/jars && javap -public -cp "' + str(jar) + '" ' + importie)
-        # tokenize
-        # check against the code
-        # add to used_api
         pass
 
     def scan_jar_class_with_sub_classes(self, each_import_, jar):
@@ -338,21 +348,33 @@ class APIScanner:
         all_texts = set()
         all_notes = set()
 
-        for subclass in subclasses:
-            subclass = subclass.replace('/', '.').split('<')[0].split('(')[0]
-            [temp_cl, temp_m, temp_co, temp_a, temp_n] = self.scan_jar(subclass, jar, False)
+        if 0 == len(subclasses):
+            # edge case 3: due very limited usage just CONSIDER these imports
+            # this class does not exist anymore in its original jar
+            # I can't remake the jar due copyright or similar issues
+
+            [temp_cl, temp_m, temp_co, temp_a, temp_n] = self.scan_jar(each_import_, jar, False, True)
             classifiers.update(temp_cl)
             methods.update(temp_m)
             constants.update(temp_co)
             all_texts.add(temp_a)
             all_notes.add(temp_n)
+        else:
+            for subclass in subclasses:
+                subclass = subclass.replace('/', '.').split('<')[0].split('(')[0]
+                [temp_cl, temp_m, temp_co, temp_a, temp_n] = self.scan_jar(subclass, jar, False)
+                classifiers.update(temp_cl)
+                methods.update(temp_m)
+                constants.update(temp_co)
+                all_texts.add(temp_a)
+                all_notes.add(temp_n)
 
         self.builder.execute(
             'INSERT INTO scans (importie, jar, api, classifiers, methods, constants, full_resolution, note)'
             ' VALUE (%s, %s, %s, %s, %s, %s, %s, %s)',
-            [each_import_, None, '', ','.join(classifiers), ','.join(methods), ','.join(constants), '<========== '
-                                                                                                    'SEPARATOR '
-                                                                                                    '==========>'.join(
+            [each_import_, jar, '', ','.join(classifiers), ','.join(methods), ','.join(constants), '<========== '
+                                                                                                   'SEPARATOR '
+                                                                                                   '==========>'.join(
                 all_texts), ','.join(all_notes)])
         self.database.commit()
 
@@ -365,14 +387,25 @@ class APIScanner:
         all_texts = set()
         all_notes = set()
 
-        for subclass in subclasses:
-            subclass = subclass.split('<')[0].split('(')[0]
-            [temp_cl, temp_m, temp_co, temp_a, temp_n] = self.scan_jar(subclass, None, False)
+        if 0 == len(subclasses):
+            # edge case 3: due very limited usage just CONSIDER these imports
+            # this is from JAVA EE
+            # I can't remake the jar due copyright or similar issues
+            [temp_cl, temp_m, temp_co, temp_a, temp_n] = self.scan_jar(each_import_, None, False, True)
             classifiers.update(temp_cl)
             methods.update(temp_m)
             constants.update(temp_co)
             all_texts.add(temp_a)
             all_notes.add(temp_n)
+        else:
+            for subclass in subclasses:
+                subclass = subclass.split('<')[0].split('(')[0]
+                [temp_cl, temp_m, temp_co, temp_a, temp_n] = self.scan_jar(subclass, None, False)
+                classifiers.update(temp_cl)
+                methods.update(temp_m)
+                constants.update(temp_co)
+                all_texts.add(temp_a)
+                all_notes.add(temp_n)
 
         self.builder.execute(
             'INSERT INTO scans (importie, jar, api, classifiers, methods, constants, full_resolution, note)'
@@ -382,3 +415,13 @@ class APIScanner:
                                                                                                     '==========>'.join(
                 all_texts), ','.join(all_notes)])
         self.database.commit()
+
+    def make_request_for_missing_import(self, each_import_):
+        link = 'https://www.findjar.com/search?query=' + each_import_ + '&more=false'
+        download_link = 'https://www.findjar.com/class/' + each_import_.replace('.*', '').replace('.', '/') + '.html'
+        self.builder.execute('INSERT INTO import_to_jar (importie, link, download_link) VALUE (%s, %s, %s)',
+                             [each_import_, link, download_link])
+        self.database.commit()
+        print('⚠️ Warning: source code is using a package we could not track because Jar is not found!')
+
+        return

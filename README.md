@@ -27,7 +27,14 @@ Helpful notes:
 pip3 freeze > requirements.txt
 ```
 
-- Running the API scanner (separately):
+- Running the API scanner for an import:
+```python
+s = APIScanner('no')
+# this will automatically find whether it is from a jar or java or is it a subclass, etc
+s.process_imports(['xx.xxx.xxxx'])
+```
+
+- Running the API scanner (separately) for an import from a jar:
 
 ```python
 s = APIScanner('no')
