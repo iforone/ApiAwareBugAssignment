@@ -186,7 +186,9 @@ class APIScanner:
                     self.make_request_for_missing_import(each_import)
                     continue
                 # work within the jar file to extract items
-                if each_import.endswith('.*'):
+                if result[0] == 'none':
+                    continue
+                elif each_import.endswith('.*'):
                     self.scan_jar_class_with_sub_classes(each_import, result[0])
                 else:
                     self.scan_jar(each_import, result[0])
@@ -316,6 +318,11 @@ class APIScanner:
                     internal_as_constant = internal_element
                 else:
                     internal_as_constant = ''
+
+                # edge case 4 - if the internal is not found at all
+                if internal_as_classifier == '' and internal_as_constant == '' and internal_as_method == '':
+                    internal_as_method = ','.join(set([importie, importie.split('.')[-1]]))
+                    note = 'INTERNAL,PROBLEMATIC'
 
                 if save_:
                     self.builder.execute(
