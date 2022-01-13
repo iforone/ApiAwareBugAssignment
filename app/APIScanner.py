@@ -21,7 +21,6 @@ def run_java(c):
 
 # find all subclasses for a wildcard import from Java SE based on the docker container running it
 def get_subclasses(import_):
-    print('subclasses of: ' + import_ + ' in Java')
     corrected_import_ = import_.replace('.*', '')
     all_classes = read_all_file(main_dir + javase_directory + javase_tree_file)
     result = list(filter(lambda x: x.startswith(corrected_import_), all_classes))
@@ -31,7 +30,6 @@ def get_subclasses(import_):
 
 # find all subclasses for a wildcard import from a jar based on a version we could find for it
 def get_jar_subclasses(each_import_, jar):
-    print('subclasses of: ' + each_import_ + ' in ' + jar)
     result = run_java('cd input/jars && jar -tf ' + jar + ' ' + each_import_.replace('.*', '').replace('.', '/'))
 
     return result.split('\n')
@@ -234,7 +232,7 @@ class APIScanner:
                             0]).rstrip()
                 if all_class_text == '':
                     # this is not a real import
-                    print('⚠️ could not find such class in Java SE and JAVA EE: ' + relevant_importie + '\n')
+                    print('⚠️ Warning - not in Java SE: ' + relevant_importie + '\n')
                     return [set(), set(), set(), '', 'CONSIDER']
         elif jar == 'JAVA':
             all_class_text = run_java('cd input/jars && javap -public ' + relevant_importie).rstrip()
@@ -345,8 +343,7 @@ class APIScanner:
                 else:
                     return [classifiers, methods, constants, all_class_text, note]
         except:
-            print('this failed unfortunately')
-            print('cd input/jars && javap -public -cp "' + str(jar) + '" ' + importie)
+            print('⚠️ warning - broken import: cd input/jars && javap -public -cp "' + str(jar) + '" ' + importie)
             return [set(), set(), set(), '', '']
 
     def scan_jar_class_with_sub_classes(self, each_import_, jar):
@@ -435,6 +432,6 @@ class APIScanner:
         self.builder.execute('INSERT INTO import_to_jar (importie, link, download_link) VALUE (%s, %s, %s)',
                              [each_import_, link, download_link])
         self.database.commit()
-        print('⚠️ Warning: source code is using a package we could not track because Jar is not found!')
+        print('⚠️ Warning - jar missing: source code is using a package we could not track because Jar is not found!')
 
         return
