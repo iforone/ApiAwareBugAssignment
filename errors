@@ -1,0 +1,34 @@
+# errors in imports for JDT:
+⚠️ Warning - not in Java SE: javax.servlet.*
+JAVA EE
+⚠️ Warning - not in Java SE: javax.servlet.jsp.tagext.TagLibraryInfo
+JAVA EE
+⚠️ Warning - not in Java SE: javax.servlet.jsp.*
+JAVA EE
+⚠️ Warning - not in Java SE: java.util.ListclassX
+wrong class
+⚠️ Warning - not in Java SE: java.x.Socket
+wrong class
+⚠️ Warning - not in Java SE: javax.servlet.jsp.tagext.TagInfo
+JAVA EE
+⚠️ warning - broken import: cd input/jars && javap -public -cp "junit-3.7.jar" junit.runner.excluded.properties
+not java
+⚠️ warning - broken import: cd input/jars && javap -public -cp "junit-3.7.jar" junit.runner.logo.gif
+not java
+⚠️ warning - broken import: cd input/jars && javap -public -cp "junit-3.7.jar" junit.runner.smalllogo.gif
+not java
+⚠️ Warning - not in Java SE: javax.servlet.http.*
+JAVA EE
+⚠️ Warning - not in Java SE: java.io.Exception
+wrong import
+⚠️ Warning - not in Java SE: java.net
+wrong import
+⚠️ Warning - not in Java SE: java.util.Map$
+wrong import
+
+# steps from now:
+0- check quickly if scans make sense ✅
+1- copy all data we have
+2- verify all imports
+3- set apis for all of the
+4- set a lock for whole APIScanner
