@@ -43,3 +43,19 @@ javac -d ./build *.java
 cd build
 jar cvf recreation .jar *
 ```
+
+- Get all imports in source code (unique) in a file:
+
+```python
+    fh = open('all_imports_old.txt')
+    ax = [line.rstrip() for line in fh.readlines()]
+    fh.close()
+    f = open("all_imports-6-jan.txt", "a")
+    for elexx in ax:
+        if elexx in all_imports:
+            print('✅' + elexx)
+        else:
+            print('❓' + elexx)
+            f.write('NOT FOUND -' + elexx + '\n')
+    f.close()
+```

@@ -1,5 +1,4 @@
 # this class is used to find, save, scan and parse APIs and API-related tokens
-import re
 import mysql.connector
 import pandas as pd
 import subprocess
@@ -11,6 +10,11 @@ def run_java(c):
     command = "docker exec -i my_little_alpine bash -c \"" + c + "\""
     process = subprocess.run(command, capture_output=True, shell=True)
     return process.stdout.decode("utf-8")
+
+
+def r_replace(s, old, new, occurrence):
+    li = s.rsplit(old, occurrence)
+    return new.join(li)
 
 
 class APIScanner:
@@ -112,17 +116,7 @@ class APIScanner:
                 builder_.execute("""update processed_code set cleaned_packages = %s WHERE id = %s """,
                                  [cleaned_packages, change[0]])
                 db_.commit()
-            # fh = open('all_imports_old.txt')
-            # ax = [line.rstrip() for line in fh.readlines()]
-            # fh.close()
-            # f = open("all_imports-6-jan.txt", "a")
-            # for elexx in ax:
-            #     if elexx in all_imports:
-            #         print('✅' + elexx)
-            #     else:
-            #         print('❓' + elexx)
-            #         f.write('NOT FOUND -' + elexx + '\n')
-            # f.close()
+
         else:
             for index_, change in changes.iterrows():
                 corrected_imports_split = change[2].split(',')
@@ -175,6 +169,7 @@ class APIScanner:
             return
         # this does not work for now
         if importie.endswith('.*'):
+            print('this is a jar wildcard ' + importie + '\n')
             return
             # we need this because of the wildcard or star imports
             # this might be useful for all scenarios
@@ -183,7 +178,12 @@ class APIScanner:
             relevant_packages = answer.split('\n')
 
         if jar is None:
-            all_class_text = run_java('cd input/jars && javap -public ' + relevant_importie).rstrip()
+            if relevant_importie.endswith('classA'):
+                relevant_importie_temp = r_replace(relevant_importie, 'classA', '', 1)
+            else:
+                relevant_importie_temp = relevant_importie
+
+            all_class_text = run_java('cd input/jars && javap -public ' + relevant_importie_temp).rstrip()
             if all_class_text == '':
                 if all_class_text == '':
                     # edge case 1- sometimes it is a sub element imported incorrectly
@@ -195,10 +195,10 @@ class APIScanner:
                 if all_class_text == '':
                     # edge case 2 - this class is a Java EE (we are running a Java SE node)
                     note = 'JAVAEE'
-                    print('did not work: ' + relevant_importie + '\n')
                     return
                 if all_class_text == '':
                     # this is not a real import
+                    print('⚠️ could not find such class in Java SE and JAVA EE: ' + relevant_importie + '\n')
                     return
         elif jar == 'JAVA':
             all_class_text = run_java('cd input/jars && javap -public ' + relevant_importie).rstrip()
@@ -285,7 +285,8 @@ class APIScanner:
                 self.builder.execute(
                     'INSERT INTO scans (importie, jar, api, classifiers, methods, constants, full_resolution, note)'
                     ' VALUE (%s, %s, %s, %s, %s, %s, %s, %s)',
-                    [importie, jar, '', internal_as_classifier, internal_as_method, internal_as_constant, all_class_text, note])
+                    [importie, jar, '', internal_as_classifier, internal_as_method, internal_as_constant,
+                     all_class_text, note])
             else:
                 self.builder.execute(
                     'INSERT INTO scans (importie, jar, api, classifiers, methods, constants, full_resolution)'
