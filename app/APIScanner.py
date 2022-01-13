@@ -142,7 +142,7 @@ class APIScanner:
                 continue
             if each_import.startswith('java'):
                 # read the files in Java SE and Java EE
-                # parse the data and save it to database
+                self.scan_jar(each_import, None)
                 continue
             else:
                 self.builder.execute('SELECT jar'
@@ -165,11 +165,13 @@ class APIScanner:
     # 1- ✅ Classifier - class or interface or EnumType (like a type of enum)
     # 2- ✅ Methods method names
     # 3- ✅ Enum constants - constants or constant values of an enum
+    # functionality: parse the data and save it to database
     def scan_jar(self, importie, jar=None):
         relevant_importie = importie
         note = ''
 
         if jar == 'none':
+            # this is not a real import
             return
         # this does not work for now
         if importie.endswith('.*'):
@@ -180,7 +182,25 @@ class APIScanner:
             answer = run_java('cd input/jars && jar -tf "' + jar + '" ' + package)
             relevant_packages = answer.split('\n')
 
-        if jar is None or jar is 'JAVA':
+        if jar is None:
+            all_class_text = run_java('cd input/jars && javap -public ' + relevant_importie).rstrip()
+            if all_class_text == '':
+                if all_class_text == '':
+                    # edge case 1- sometimes it is a sub element imported incorrectly
+                    # org.junit.Assert.fail -> is actually a method in org.junit.Assert
+                    note = 'INTERNAL'
+                    all_class_text = run_java(
+                        'cd input/jars && javap -public ' + relevant_importie.rsplit('.', 1)[
+                            0]).rstrip()
+                if all_class_text == '':
+                    # edge case 2 - this class is a Java EE (we are running a Java SE node)
+                    note = 'JAVAEE'
+                    print('did not work: ' + relevant_importie + '\n')
+                    return
+                if all_class_text == '':
+                    # this is not a real import
+                    return
+        elif jar == 'JAVA':
             all_class_text = run_java('cd input/jars && javap -public ' + relevant_importie).rstrip()
         elif jar == 'JAVA_PURE':
             # it is part of java but is mis-categorised
@@ -194,7 +214,7 @@ class APIScanner:
             # check whether the public is sufficient
             all_class_text = run_java('cd input/jars && javap -public -cp "' + jar + '" ' + relevant_importie).rstrip()
             if all_class_text == '':
-                # edge case - sometimes it is a sub element imported incorrectly
+                # edge case 1- sometimes it is a sub element imported incorrectly
                 # org.junit.Assert.fail -> is actually a method in org.junit.Assert
                 note = 'INTERNAL'
                 all_class_text = run_java(
