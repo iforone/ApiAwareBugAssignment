@@ -32,7 +32,7 @@ def get_subclasses(import_):
 # find all subclasses for a wildcard import from a jar based on a version we could find for it
 def get_jar_subclasses(each_import_, jar):
     print('subclasses of: ' + each_import_ + ' in ' + jar)
-    result = run_java('cd input/jars && jar -tf ' + jar + ' ' + each_import_.replace('/'))
+    result = run_java('cd input/jars && jar -tf ' + jar + ' ' + each_import_.replace('.', '/'))
 
     return result.split('\n')
 
