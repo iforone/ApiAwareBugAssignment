@@ -214,7 +214,7 @@ class APIScanner:
         relevant_importie = importie
         note = ''
 
-        if jar == 'none' or relevant_importie == '' or relevant_importie is None:
+        if jar == 'none' or relevant_importie == '' or relevant_importie is None or relevant_importie.endswith('.'):
             # this is not a real import
             return [set(), set(), set(), '', '']
         if jar is None:
@@ -235,7 +235,7 @@ class APIScanner:
                 if all_class_text == '':
                     # this is not a real import
                     print('⚠️ could not find such class in Java SE and JAVA EE: ' + relevant_importie + '\n')
-                    return [set(), set(), set(), '', '']
+                    return [set(), set(), set(), '', 'CONSIDER']
         elif jar == 'JAVA':
             all_class_text = run_java('cd input/jars && javap -public ' + relevant_importie).rstrip()
         elif jar == 'JAVA_PURE':
@@ -373,7 +373,7 @@ class APIScanner:
                 # jar classes from jar -tf usually end with the .class:
                 if subclass.endswith('.class'):
                     subclass = r_replace(subclass, '.class', '', 1)
-                subclass = subclass.replace('/', '.').split('<')[0].split('(')[0]
+                subclass = subclass.replace('/', '.').split('<')[0].split('(')[0].replace('$', '.')
 
                 [temp_cl, temp_m, temp_co, temp_a, temp_n] = self.scan_jar(subclass, jar, False)
                 classifiers.update(temp_cl)
