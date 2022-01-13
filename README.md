@@ -21,6 +21,12 @@ zsh boot.sh
 
 Helpful notes:
 
+- Freeze requirements of a virtual python:
+
+```python
+pip3 freeze > requirements.txt
+```
+
 - Running the API scanner (separately):
 
 ```python

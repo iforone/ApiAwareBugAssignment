@@ -5,16 +5,49 @@ import subprocess
 
 from mysql.connector import ProgrammingError
 
+main_dir = './'
+input_directory = 'data/input/'
+javase_directory = input_directory + 'javase/'
+javaee_directory = input_directory + 'javaee/'
+javase_tree_file = 'javase.txt'
+javaee_tree_file = 'javaee.txt'
+
 
 def run_java(c):
     command = "docker exec -i my_little_alpine bash -c \"" + c + "\""
     process = subprocess.run(command, capture_output=True, shell=True)
+
     return process.stdout.decode("utf-8")
+
+
+def get_subclasses(import_):
+    print('subclasses of: ' + import_ + ' in Java')
+    corrected_import_ = import_.replace('.*', '')
+    # JAVA SE:
+    all_classes = read_all_file(main_dir + javase_directory + javase_tree_file)
+    result = filter(lambda x: x.startswith(corrected_import_), all_classes)
+
+    return list(result)
+
+
+def get_jar_subclasses(each_import_, jar):
+    print('subclasses of: ' + each_import_ + ' in ' + jar)
+    result = run_java('cd input/jars && jar -tf ' + jar + ' ' + each_import_.replace('/'))
+
+    return result.split('\n')
 
 
 def r_replace(s, old, new, occurrence):
     li = s.rsplit(old, occurrence)
+
     return new.join(li)
+
+
+def read_all_file(filename):
+    with open(filename) as f:
+        list_ = f.read().splitlines()
+
+    return list_
 
 
 class APIScanner:
@@ -123,21 +156,20 @@ class APIScanner:
                 for s in corrected_imports_split:
                     all_imports.add(s)
 
-        f = open("all-imports.txt", "a")
-        for i in all_imports:
-            f.write(i + '\n')
-        f.close()
-
         self.process_imports(all_imports)
 
     def process_imports(self, all_imports):
         for each_import in all_imports:
             if each_import == '':
                 continue
+            # it is in Java SE or Java EE
             if each_import.startswith('java'):
-                # read the files in Java SE and Java EE
-                self.scan_jar(each_import, None)
+                if each_import.endswith('.*'):
+                    self.scan_java_class_with_sub_classes(each_import)
+                else:
+                    self.scan_jar(each_import, None)
                 continue
+            # it is from a jar
             else:
                 self.builder.execute('SELECT jar'
                                      ' FROM import_to_jar WHERE importie = %s', [each_import])
@@ -160,23 +192,13 @@ class APIScanner:
     # 2- ✅ Methods method names
     # 3- ✅ Enum constants - constants or constant values of an enum
     # functionality: parse the data and save it to database
-    def scan_jar(self, importie, jar=None):
+    def scan_jar(self, importie, jar=None, save_=True):
         relevant_importie = importie
         note = ''
 
         if jar == 'none':
             # this is not a real import
             return
-        # this does not work for now
-        if importie.endswith('.*'):
-            print('this is a jar wildcard ' + importie + '\n')
-            return
-            # we need this because of the wildcard or star imports
-            # this might be useful for all scenarios
-            package = importie.replace('.*', '').replace('.', '/')
-            answer = run_java('cd input/jars && jar -tf "' + jar + '" ' + package)
-            relevant_packages = answer.split('\n')
-
         if jar is None:
             if relevant_importie.endswith('classA'):
                 relevant_importie_temp = r_replace(relevant_importie, 'classA', '', 1)
@@ -192,10 +214,6 @@ class APIScanner:
                     all_class_text = run_java(
                         'cd input/jars && javap -public ' + relevant_importie.rsplit('.', 1)[
                             0]).rstrip()
-                if all_class_text == '':
-                    # edge case 2 - this class is a Java EE (we are running a Java SE node)
-                    note = 'JAVAEE'
-                    return
                 if all_class_text == '':
                     # this is not a real import
                     print('⚠️ could not find such class in Java SE and JAVA EE: ' + relevant_importie + '\n')
@@ -282,21 +300,85 @@ class APIScanner:
                     internal_as_constant = internal_element
                 else:
                     internal_as_constant = ''
-                self.builder.execute(
-                    'INSERT INTO scans (importie, jar, api, classifiers, methods, constants, full_resolution, note)'
-                    ' VALUE (%s, %s, %s, %s, %s, %s, %s, %s)',
-                    [importie, jar, '', internal_as_classifier, internal_as_method, internal_as_constant,
-                     all_class_text, note])
+
+                if save_:
+                    self.builder.execute(
+                        'INSERT INTO scans (importie, jar, api, classifiers, methods, constants, full_resolution, note)'
+                        ' VALUE (%s, %s, %s, %s, %s, %s, %s, %s)',
+                        [importie, jar, '', internal_as_classifier, internal_as_method, internal_as_constant,
+                         all_class_text, note])
+                    self.database.commit()
+                else:
+                    return [set(internal_as_classifier), set(internal_as_method), set(internal_as_constant),
+                            all_class_text, note]
             else:
-                self.builder.execute(
-                    'INSERT INTO scans (importie, jar, api, classifiers, methods, constants, full_resolution)'
-                    ' VALUE (%s, %s, %s, %s, %s, %s, %s)',
-                    [importie, jar, '', ','.join(classifiers), ','.join(methods), ','.join(constants), all_class_text])
-            self.database.commit()
+                if save_:
+                    self.builder.execute(
+                        'INSERT INTO scans (importie, jar, api, classifiers, methods, constants, full_resolution, note)'
+                        ' VALUE (%s, %s, %s, %s, %s, %s, %s, %s)',
+                        [importie, jar, '', ','.join(classifiers), ','.join(methods), ','.join(constants),
+                         all_class_text, note])
+                    self.database.commit()
+                else:
+                    return [classifiers, methods, constants, all_class_text, note]
         except:
             print('this failed unfortunately')
-            print('cd input/jars && javap -public -cp "' + jar + '" ' + importie)
+            print('cd input/jars && javap -public -cp "' + str(jar) + '" ' + importie)
         # tokenize
         # check against the code
         # add to used_api
         pass
+
+    def scan_jar_class_with_sub_classes(self, each_import_, jar):
+        subclasses = get_jar_subclasses(each_import_, jar)
+
+        classifiers = set()
+        methods = set()
+        constants = set()
+        all_texts = set()
+        all_notes = set()
+
+        for subclass in subclasses:
+            subclass = subclass.replace('/', '.').split('<')[0].split('(')[0]
+            [temp_cl, temp_m, temp_co, temp_a, temp_n] = self.scan_jar(subclass, jar, False)
+            classifiers.update(temp_cl)
+            methods.update(temp_m)
+            constants.update(temp_co)
+            all_texts.add(temp_a)
+            all_notes.add(temp_n)
+
+        self.builder.execute(
+            'INSERT INTO scans (importie, jar, api, classifiers, methods, constants, full_resolution, note)'
+            ' VALUE (%s, %s, %s, %s, %s, %s, %s, %s)',
+            [each_import_, None, '', ','.join(classifiers), ','.join(methods), ','.join(constants), '<========== '
+                                                                                                    'SEPARATOR '
+                                                                                                    '==========>'.join(
+                all_texts), ','.join(all_notes)])
+        self.database.commit()
+
+    def scan_java_class_with_sub_classes(self, each_import_):
+        subclasses = get_subclasses(each_import_)
+
+        classifiers = set()
+        methods = set()
+        constants = set()
+        all_texts = set()
+        all_notes = set()
+
+        for subclass in subclasses:
+            subclass = subclass.split('<')[0].split('(')[0]
+            [temp_cl, temp_m, temp_co, temp_a, temp_n] = self.scan_jar(subclass, None, False)
+            classifiers.update(temp_cl)
+            methods.update(temp_m)
+            constants.update(temp_co)
+            all_texts.add(temp_a)
+            all_notes.add(temp_n)
+
+        self.builder.execute(
+            'INSERT INTO scans (importie, jar, api, classifiers, methods, constants, full_resolution, note)'
+            ' VALUE (%s, %s, %s, %s, %s, %s, %s, %s)',
+            [each_import_, None, '', ','.join(classifiers), ','.join(methods), ','.join(constants), '<========== '
+                                                                                                    'SEPARATOR '
+                                                                                                    '==========>'.join(
+                all_texts), ','.join(all_notes)])
+        self.database.commit()
