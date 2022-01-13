@@ -205,6 +205,9 @@ class APIScanner:
     #       by default we save but for subclasses from a wildcard import it is false
     # force_consider: do you want to force this class to be considered without any further consideration
     #       it is only triggered if machine tries to find the class and fails
+    # for each package:
+    # classifier -> classes, interfaces, enum types / we can see what else is available
+    # interface summary, class summary, enum summary, exception summary, reference summary?
     def scan_jar(self, importie, jar=None, save_=True, force_consider=False):
         relevant_importie = importie
         note = ''
