@@ -322,7 +322,7 @@ class APIScanner:
                 # edge case 4 - if the internal is not found at all
                 if internal_as_classifier == '' and internal_as_constant == '' and internal_as_method == '':
                     internal_as_method = ','.join(set([importie, importie.split('.')[-1]]))
-                    note = 'INTERNAL,PROBLEMATIC'
+                    note = 'INTERNAL-PROBLEMATIC'
 
                 if save_:
                     self.builder.execute(
