@@ -32,7 +32,7 @@ def get_subclasses(import_):
 # find all subclasses for a wildcard import from a jar based on a version we could find for it
 def get_jar_subclasses(each_import_, jar):
     print('subclasses of: ' + each_import_ + ' in ' + jar)
-    result = run_java('cd input/jars && jar -tf ' + jar + ' ' + each_import_.replace('.', '/'))
+    result = run_java('cd input/jars && jar -tf ' + jar + ' ' + each_import_.replace('.*', '').replace('.', '/'))
 
     return result.split('\n')
 
@@ -214,9 +214,9 @@ class APIScanner:
         relevant_importie = importie
         note = ''
 
-        if jar == 'none':
+        if jar == 'none' or relevant_importie == '' or relevant_importie is None:
             # this is not a real import
-            return
+            return [set(), set(), set(), '', '']
         if jar is None:
             if relevant_importie.endswith('classA'):
                 relevant_importie_temp = r_replace(relevant_importie, 'classA', '', 1)
@@ -235,7 +235,7 @@ class APIScanner:
                 if all_class_text == '':
                     # this is not a real import
                     print('⚠️ could not find such class in Java SE and JAVA EE: ' + relevant_importie + '\n')
-                    return
+                    return [set(), set(), set(), '', '']
         elif jar == 'JAVA':
             all_class_text = run_java('cd input/jars && javap -public ' + relevant_importie).rstrip()
         elif jar == 'JAVA_PURE':
@@ -332,7 +332,7 @@ class APIScanner:
                          all_class_text, note])
                     self.database.commit()
                 else:
-                    return [set(internal_as_classifier), set(internal_as_method), set(internal_as_constant),
+                    return [set([internal_as_classifier]), set([internal_as_method]), set([internal_as_constant]),
                             all_class_text, note]
             else:
                 if save_:
@@ -347,7 +347,7 @@ class APIScanner:
         except:
             print('this failed unfortunately')
             print('cd input/jars && javap -public -cp "' + str(jar) + '" ' + importie)
-        pass
+            return [set(), set(), set(), '', '']
 
     def scan_jar_class_with_sub_classes(self, each_import_, jar):
         subclasses = get_jar_subclasses(each_import_, jar)
@@ -362,7 +362,6 @@ class APIScanner:
             # edge case 3: due very limited usage just CONSIDER these imports
             # this class does not exist anymore in its original jar
             # I can't remake the jar due copyright or similar issues
-
             [temp_cl, temp_m, temp_co, temp_a, temp_n] = self.scan_jar(each_import_, jar, False, True)
             classifiers.update(temp_cl)
             methods.update(temp_m)
@@ -371,7 +370,11 @@ class APIScanner:
             all_notes.add(temp_n)
         else:
             for subclass in subclasses:
+                # jar classes from jar -tf usually end with the .class:
+                if subclass.endswith('.class'):
+                    subclass = r_replace(subclass, '.class', '', 1)
                 subclass = subclass.replace('/', '.').split('<')[0].split('(')[0]
+
                 [temp_cl, temp_m, temp_co, temp_a, temp_n] = self.scan_jar(subclass, jar, False)
                 classifiers.update(temp_cl)
                 methods.update(temp_m)

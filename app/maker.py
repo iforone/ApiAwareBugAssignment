@@ -11,6 +11,10 @@ output_folder = data_folder + '/' + 'output'
 ks = [1, 2, 3, 4, 5, 10]
 
 
+s = APIScanner('no')
+s.process_imports(['junit.framework.*'])
+exit(1)
+
 # select which project to check
 def project_selector():
     import inquirer
