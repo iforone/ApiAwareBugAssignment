@@ -175,6 +175,7 @@ class APIScanner:
         file = open(change_file_name, "w")
         file.write('locked')
         file.close()
+        exit('OKAY FOR NOW')
 
     def process_imports(self, all_imports):
         for each_import in all_imports:
@@ -207,8 +208,6 @@ class APIScanner:
                     self.scan_jar_class_with_sub_classes(each_import, result[0])
                 else:
                     self.scan_jar(each_import, result[0])
-
-        exit('OKAY')
 
     # how to just get constants -> just run constants and look for Enum or final
     # 1- ✅ Classifier - class or interface or EnumType (like a type of enum)
