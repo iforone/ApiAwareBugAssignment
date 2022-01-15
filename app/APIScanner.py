@@ -464,6 +464,7 @@ class APIScanner:
 
         return
 
+    # set API level (api) for each package in scans table when it is empty
     def update_apis(self):
         self.builder.execute(""" SELECT id, importie FROM scans WHERE api = '' """)
         scans = pd.DataFrame(self.builder.fetchall())
@@ -482,3 +483,34 @@ class APIScanner:
 
             self.builder.execute("""update scans set api = %s WHERE id = %s """, [api, str(id_)])
             self.database.commit()
+
+    # check each row of the processed_code in the selected project for the usage of tokens related to any API
+    def mark_api_usage_in_code(self, project_name, builder_, db_):
+        change_file_name = output_folder + 'lock_' + project_name + '_api.txt'
+        if os.path.exists(change_file_name):
+            print('✅ Scanner is locked. - import_to_jar and scanner table already exist')
+            return
+
+        builder_.execute("""
+            SELECT id, codes, cleaned_packages, used_apis, api_usage_details
+            FROM processed_code
+            WHERE 1
+        """)
+        changes = pd.DataFrame(builder_.fetchall())
+        # 0 - id
+        # 1 - codes
+        # 2 - cleaned_packages
+        # 3 - used_apis - this is empty initially since we are calculating it
+        # 4 - api_usage_details - exactly what is matched - this is empty initially since we are calculating it
+        for index_, change in changes.iterrows():
+            # get the cleaned pacakges
+            # split on comma
+            # query all
+            # match
+            # update the database
+            pass
+        # lock the scanner
+        file = open(change_file_name, "w")
+        file.write('locked')
+        file.close()
+

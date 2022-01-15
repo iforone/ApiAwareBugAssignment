@@ -134,6 +134,7 @@ deep_process(bugs, project, builder, database)
 scanner = APIScanner(with_cleaning())
 scanner.clean_and_process_imports(project, builder, database)
 scanner.update_apis()
+scanner.mark_api_usage_in_code(project, builder, database)
 database.close()
 exit('OKAY FOR NOW')
 
