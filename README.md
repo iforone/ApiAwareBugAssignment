@@ -30,10 +30,10 @@ pip3 freeze > requirements.txt
 - Write a file:
 
 ```python
-    f = open('all_imports-missing.txt', 'w')
-    for index_ in all_imports:
-        f.write(index_ + '\n')
-    f.close()
+    f = open('data/output/validations/all_imports-missing.txt', 'w')
+for index_ in all_imports:
+    f.write(index_ + '\n')
+f.close()
 ```
 
 - Running the API scanner for an import:
@@ -71,16 +71,16 @@ jar cvf recreation .jar *
 
 ```python
     # python read all imports old
-    old_imports_file = open('all_imports_old.txt')
-    old_imports = [line.rstrip() for line in old_imports_file.readlines()]
-    old_imports_file.close()
-    f = open('all_imports-missing.txt', 'w')
-    for old_import in old_imports:
-        self.builder.execute("SELECT id FROM scans WHERE importie =  %s", [old_import])
-        result = pd.DataFrame(self.builder.fetchall())
-        if result.empty:
-            f.write(old_import + '\n')
-    f.close()
+old_imports_file = open('data/output/validations/all_imports_old.txt')
+old_imports = [line.rstrip() for line in old_imports_file.readlines()]
+old_imports_file.close()
+f = open('data/output/validations/all_imports-missing.txt', 'w')
+for old_import in old_imports:
+    self.builder.execute("SELECT id FROM scans WHERE importie =  %s", [old_import])
+    result = pd.DataFrame(self.builder.fetchall())
+    if result.empty:
+        f.write(old_import + '\n')
+f.close()
 ```
 
 - Some APIs consider 2 levels of import and some consider 3 levels of pacage name as API:

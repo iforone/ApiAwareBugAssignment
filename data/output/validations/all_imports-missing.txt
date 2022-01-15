@@ -1,0 +1,476 @@
+
+p.another.Messages
+newWorkspaceModifyOperation
+p.A.X
+action
+		actionBars.setGlobalActionHandleractionID
+test0.PrimaryContainer
+test1.Base
+SWT.NULL
+		buttons.setLayoutDatanewGridDataGridData.VERTICAL_ALIGN_BEGINNING
+		layout=newGridLayout
+		layout.marginHeight=0
+		layout.marginWidth=0
+		buttons.setLayoutlayout
+
+		fAddButton=newButtonbuttons
+pack1.Rectangle
+IStatus.ERROR
+p.parameters.TestImportAddTopLevelParameter
+pack0.B
+test3.*
+com.pack.ToStringBuilder
+pack0.MyEnum.A
+ITextEditorActionConstants.COPY
+otherwisethiswillnotbecalled
+		IVMInstallvm=IVMInstallselection.getFirstElement
+		editVMvm
+	}
+
+	privatevoideditVMIVMInstallvm
+p.Third
+Stringname
+test2.C
+p.p.Ref
+p3.N1.N2
+test1.C
+test0.ae.H
+p.SnippetY.Test.bar
+q.A
+r.Third.B
+p.A.Inner
+static_in.TestStaticImportReadWrite.x
+p.A.Inner2
+q.B
+pack0.Parent.Inner
+test2.E1
+my.pack.C
+p.A.TWO
+pack.B.NotThere
+p1.Outer.Inner2
+p1.C
+s1.j.l.S.*
+test2.A.A1.A2.A3
+p2.*
+test2.A.B1
+p.Class1
+pack0.E
+s1.java.lang.S.*
+LauncherMessages.getStringvmPreferencePage.error.exception
+JavaPlugin.getPluginId
+SWT.PUSH
+		fAddButton.setLayoutDatagetButtonGridDatafAddButton
+		fAddButton.setTextLauncherMessages.getStringvmPreferencePage.add
+test1.E.SomeType
+position
+					ifposition!=-1
+IJavaHelpContextIds.DISPLAY_VIEW
+	}
+p.Main.I
+newClass[0]
+xy.MyConstants.*
+pack.A.NotThere
+SWT.NULL
+		l.setTextJavaRuntime.JRELIB_VARIABLE
+		l.setLayoutDatanewGridData
+
+		fJreLib=newTextjreVarsContainer
+test3.A
+p1.Outer.Inner1
+static_out.TestStaticImportReadWrite.getX
+Test.Element
+other.A
+p1.*
+selection.getLength
+my.Other
+p.Inner.*
+q.A.*
+p2.C
+p.Foo.Bar.FooBar
+pack.B
+IllegalAccessException
+p.ATest
+otherPackage.A
+pack.A.Inner
+statementismissing.
+test3.E
+my.b.B
+SWT.NULL
+		column2.setTextLauncherMessages.getStringvmPreferencePage.jreName
+p.A.bar
+experiments.*
+SWT.NULL
+		l.setTextJavaRuntime.JRESRC_VARIABLE
+		l.setLayoutDatanewGridData
+
+		fJreSource=newTextjreVarsContainer
+pack.B.Inner
+p.A.F
+p.p.A
+com.packt.DingsDa
+ITextEditorActionConstants.SELECT_ALL
+experiments.AbstractFieldRefactoring
+static_in.TestStaticImportWrite.x
+pack0.MyAnnot1
+p.p.A.*
+q.ToQ
+e.E
+null
+		Classclazz=cl.loadClassorg.eclipse.jdt.internal.ui.snippeteditor.ScrapbookMain1
+q.Consts.I
+foo.Bar
+newClass[]
+p.A.abc
+start
+		}catchBadLocationExceptionble
+p.*
+p1.B
+action
+	}
+invalidSelection.*
+pack1.ClusterSingletonStepped.SingletonStep
+a.A
+static_in.TestStaticImportNone.x
+p.TestImportAddEnclosing.FooParameter
+someOtherPackage.OtherClass
+SWT.READ_ONLY|SWT.BORDER
+		fPkgRoot.setLayoutDatanewGridDatagd.FILL_HORIZONTAL
+
+		fVMList.setInputJavaRuntime.getVMInstallTypes
+		initDefaultVMfVMStandins
+		enableButtons
+		WorkbenchHelp.setHelpparent
+SWT.NULL
+		jreVarsContainer.setLayoutDatanewGridDataGridData.FILL_BOTH
+		GridLayoutjreLayout=newGridLayout
+		jreLayout.numColumns=2
+		jreVarsContainer.setLayoutjreLayout
+
+		Labell=newLabeljreVarsContainer
+p.A.Stat
+contents
+				intnumberOfLines=doc.getNumberOfLines
+				StringlineDelimiter
+				forinti=1i<numberOfLinesi
+mylib.Foo
+com.packt.*
+q.S
+IMementomementothrowsPartInitException
+static_out.TestStaticImportWrite.setX
+classes.Target2
+test2.InterImpl
+p3.*
+\t
+				}catchBadLocationExceptionble
+pack.List2
+source.A
+SWT.NULL
+		GridLayoutlayout=newGridLayout
+		layout.numColumns=2
+		parent.setLayoutlayout
+
+		fVMList=newCheckboxTableViewerparent
+q.Consts.III
+fSourceViewer
+
+		getSite.setSelectionProviderfSourceViewer.getSelectionProvider
+
+		WorkbenchHelp.setHelpfSourceViewer.getTextWidget
+q.UsedClass
+SWT.BORDER|SWT.MULTI|SWT.FULL_SELECTION
+		GridDatagd=newGridDataGridData.FILL_BOTH
+		gd.widthHint=convertWidthInCharsToPixels80
+		fVMList.getTable.setLayoutDatagd
+
+		fVMList.setSorternewViewerSorter
+experiments.ReorderParametersRefactoring
+p.Test1
+p.Inner.InnerInner.*
+r.B
+com.misc.Class5
+org.Default
+q.T
+org.another.pack.AnotherToStringCreator
+p.Accessor
+pack0.MyAnnot3
+value
+			}catchBadLocationExceptionble
+r.*
+computationwithalltypecache:
+pack0.E.A
+pack0.Parent.Tag
+source.BaseClass
+com.something.Foo
+static_out.TestStaticImportRead.getX
+a.b.c.A.ARunner
+source.Color
+test1.A.foo
+b.BclassC
+q.Consts
+pack.Referer
+test.ExternalClass
+0
+			fSourceViewer.revealRangeoffset
+Objecte2
+pack1.AX
+p.Color.RED
+com.foreigncompany.Class2
+test1.Container
+p.B.SomeEnum
+IActionaction
+fSourceViewer.COPY
+		action.setTextDisplayMessages.getStringDisplayView.Copy.label
+IJavaHelpContextIds.JRE_PREFERENCE_PAGE
+
+		returnparent
+	}
+
+	privateGridDatagetButtonGridDataButtonbutton
+pack0.Parent
+pack1.ClusterSingletonStepped
+p.ATest.ATestI
+xy.MyConstants
+p.p.ATest
+static_in.TestStaticImportRead.x
+my.a.ATest
+null
+		dialog.setTitleLauncherMessages.getStringvmPreferencePage.addJRE.title
+p.A.*
+p3.N1.N2.N3
+position
+						position
+test1.C.C1.C2
+pack0.List1
+length
+		}
+	}
+
+	protectedIDataDisplayfDataDisplay=newDataDisplay
+
+	protectedSourceViewerfSourceViewer
+	protectedIActionfClearDisplayAction
+	protectedDisplayActionfDisplayAction
+	protectedInspectActionfInspectAction
+	protectedIActionfContentAssistAction
+
+	protectedMapfGlobalActions=newHashMap4
+	protectedListfSelectionActions=newArrayList4
+
+	protectedStringfRestoredContents=null
+junit.util.StringUtil
+action
+
+		fSelectionActions.addITextEditorActionConstants.CUT
+		fSelectionActions.addITextEditorActionConstants.COPY
+		fSelectionActions.addITextEditorActionConstants.PASTE
+
+		fContentAssistAction=newDisplayViewActionthis
+p0.Foo
+q.Other
+test2.I1
+p1.A.B
+p.Outer.Inner
+com.foreigncompany.Class3
+test2.Inter
+p.p.A.CONST
+p1.Other
+p.A.ARunner
+p2.Outer
+org.model.*
+false
+		updateEvalActions
+
+		IActionBarsactionBars=getViewSite.getActionBars
+		IActionaction
+
+		action=newDisplayViewActionthis
+DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_BEFORE_IMPORTS
+q.A.CONST
+other.C
+fSourceViewer.CUT
+		action.setTextDisplayMessages.getStringDisplayView.Cut.label
+org.model.Engine
+p1.Declarer
+p1.A
+p.A.X.Inner
+p.A.Inner.InnerInner.*
+p.Inner
+pack.Namesake
+p.A.Inner2.Inner2Inner
+fSourceViewer.PASTE
+		action.setTextDisplayMessages.getStringDisplayView.Paste.label
+SWT.READ_ONLY|SWT.BORDER
+		fJreSource.setLayoutDatanewGridDatagd.FILL_HORIZONTAL
+
+		l=newLabeljreVarsContainer
+expression
+				fSourceViewer.setSelectedRangeoffset
+test0.Other
+p1.Outer
+other.SuppressWarnings
+test2.A.A1
+test1.E2
+p2.Outer.Inner1
+p.Foo.Inner.MoreInner
+com.simple.pack.ToStringBuilder
+pack0.MyInterface.MyInnerInterface
+a.b.c.B.BRunner
+order<code>'java.utiljava.net#java.util.Math
+test0.Test
+xx.MyConstants.SIZE
+LauncherMessages.getStringvmPreferencePage.error.title
+newObject[]
+pack.OrderedRunner.Order
+status
+	}
+test2.E3
+your.b.B
+test2.A.B1.B2
+ISourceViewer.CONTENTASSIST_PROPOSALS
+		fContentAssistAction.setTextCo&ntentAssist@Ctrl
+q.State
+pack.Bar
+test2.*
+pack0.Test1
+pack.A
+p.A.SomeInner
+SWT.READ_ONLY|SWT.BORDER
+		fJreLib.setLayoutDatanewGridDatagd.FILL_HORIZONTAL
+
+		l=newLabeljreVarsContainer
+p2.A
+monitor
+					}catchCoreExceptione
+test1.Test1
+couldnotsetclasspathvariables.
+		}
+	}
+
+	privateIVMInstallgetCurrentDefaultVM
+SWT.NULL
+		column3.setTextLauncherMessages.getStringvmPreferencePage.jreLocation
+fSourceViewer.SELECT_ALL
+		action.setTextDisplayMessages.getStringDisplayView.SelectAll.label
+pack1.C.CONST
+p.A.Inner.*
+pack2.Foo
+pack0.MyEnum
+newObject[0]
+b.Parent
+0
+				fSourceViewer.revealRangeoffset
+IVMInstallright
+p.A.Inner.InnerInner
+pack.List
+pack0.A.AX
+p1.Nestor
+fVMStandins
+
+		fVMList.addSelectionChangedListenernewISelectionChangedListener
+p2.Messages
+q.Consts.constant
+a.b.c.A
+p3.B
+ID_DISPLAY_VIEW
+def.A
+p3.C
+p.A.getCount2
+your.a.ATest
+org.test.Reference
+test2.A.A1.A2
+ITextEditorActionConstants.CUT
+p.B.BRunner
+doc.getLegalLineDelimiters[0]
+				}catchBadLocationExceptionble
+expression.length
+			}catchBadLocationExceptionble
+classes.BinEnum
+p.A.m
+p.subPack.PackEx
+fRestoredContents
+		}
+	}
+DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_AFTER_IMPORTS
+rewrite.
+otherPackage.*
+SWT.PUSH
+		fEditButton.setLayoutDatagetButtonGridDatafEditButton
+		fEditButton.setTextLauncherMessages.getStringvmPreferencePage.edit
+static_out.TestStaticImportReadWrite.setX
+test2.A
+test1.A
+org.eclipse.search.ui.IWorkingSet
+p.A.PI
+p.ATest.ATestI.ATestIIb
+classes.Target
+com.mycompany.Class4
+pA.A
+vm
+			updateJREVariablesvm
+	}
+
+	privatevoidupdateJREVariablesIVMInstalldefaultVM
+p.A_VisibleType
+p.Third.B
+test1.E1
+vm
+		dialog.setTitleLauncherMessages.getStringvmPreferencePage.editJRE.title
+null
+		reportErrorstatus
+	}
+
+	protectedvoidreportErrorIStatusstatus
+p.A
+this
+		fSourceViewer.addSelectionChangedListenerthis
+		IDocumentdoc=null
+		iffRestoredContents!=null
+pack0.MyAnnot2
+p1.Nestor.Nestee
+your.pack.C
+pack2.Bar
+p.p.*
+realDefault
+p.Inner.InnerInner
+p.r.*
+p.A.k
+pack.*
+source.sub.InSubPack
+p.B.*
+p1.Bar
+p3.N1
+pack.A.B.C
+p.B.TWO
+p.B.k
+computationwithsearch:
+pack0.MyEnum.*
+p0.Bar
+q.*
+source.Color.*
+p2.Outer.Inner2
+doc.getLineOffseti-correction
+					}catchBadLocationExceptionble
+p.B
+org.junit.Assert.*
+_use.List
+r.r.*
+p2.B
+SWT.NULL
+		l.setTextJavaRuntime.JRESRCROOT_VARIABLE
+		l.setLayoutDatanewGridData
+
+		fPkgRoot=newTextjreVarsContainer
+pack1.A
+SWT.PUSH
+		fRemoveButton.setLayoutDatagetButtonGridDatafRemoveButton
+		fRemoveButton.setTextLauncherMessages.getStringvmPreferencePage.remove
+ITextEditorActionConstants.PASTE
+Stringproperty
+test.foo.TestMessages
+r.Third
+com.mycompany.Class1
+p.A.e
+styles
+		JavaTextToolstextTools=JavaPlugin.getDefault.getJavaTextTools
+		fSourceViewer.configurenewDisplayViewerConfigurationtextTools
+p.A.OtherInner
