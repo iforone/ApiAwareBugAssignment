@@ -135,6 +135,7 @@ scanner = APIScanner(with_cleaning())
 scanner.clean_and_process_imports(project, builder, database)
 scanner.update_apis()
 database.close()
+exit('OKAY FOR NOW')
 
 # create profiles for users
 profiler = Profiler(approach, project)

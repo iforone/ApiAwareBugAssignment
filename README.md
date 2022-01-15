@@ -82,3 +82,14 @@ jar cvf recreation .jar *
             f.write(old_import + '\n')
     f.close()
 ```
+
+- Some APIs consider 2 levels of import and some consider 3 levels of pacage name as API:
+```sql
+# 3 levels of pacakge name as API  com.eclipse.jdt.xxx
+SELECT FROM scans 
+WHERE not (importie like  'java%' or importie like 'junit%' or importie like  'sun%')
+
+# 2 levels of pacakge name as API : java.sql.xxxx
+SELECT FROM scans 
+WHERE importie like  'java%' or importie like 'junit%' or importie like  'sun%'
+```

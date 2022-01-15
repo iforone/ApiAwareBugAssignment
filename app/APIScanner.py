@@ -45,6 +45,11 @@ def r_replace(s, old, new, occurrence):
     return new.join(li)
 
 
+def split_after(string_, sep, pos):
+    string_ = string_.split(sep)
+    return sep.join(string_[:pos]), sep.join(string_[pos:])
+
+
 def read_all_file(filename):
     with open(filename) as f:
         list_ = f.read().splitlines()
@@ -149,6 +154,29 @@ class APIScanner:
     def clean_and_process_imports(self, project_name, builder_, db_):
         change_file_name = output_folder + 'lock_' + project_name + '_scanner.txt'
 
+        builder_.execute("""
+            SELECT id, packages, cleaned_packages
+            FROM processed_code
+            WHERE 1
+        """)
+        changes = pd.DataFrame(builder_.fetchall())
+        all_imports = set()
+        for index_, change in changes.iterrows():
+            corrected_imports_split = change[2].split(',')
+            for s in corrected_imports_split:
+                all_imports.add(s)
+        # python read all imports old
+        old_imports_file = open('all_imports_old.txt')
+        old_imports = [line.rstrip() for line in old_imports_file.readlines()]
+        old_imports_file.close()
+        f = open('all_imports-missing.txt', 'w')
+        for old_import in old_imports:
+            self.builder.execute("SELECT id FROM scans WHERE importie =  %s", [old_import])
+            result = pd.DataFrame(self.builder.fetchall())
+            if result.empty:
+                f.write(old_import + '\n')
+        f.close()
+
         if os.path.exists(change_file_name):
             print('✅ Scanner is locked. - import_to_jar and scanner table already exist')
             return
@@ -176,7 +204,6 @@ class APIScanner:
         file = open(change_file_name, "w")
         file.write('locked')
         file.close()
-        exit('OKAY FOR NOW')
 
     def process_imports(self, all_imports):
         for each_import in all_imports:
@@ -253,7 +280,7 @@ class APIScanner:
                         self.builder.execute(
                             'INSERT INTO scans'
                             ' (importie, jar, api, classifiers, methods, constants, full_resolution, note)'
-                            ' VALUE (%s, %s, %s, %s, %s, %s, %s, %s)',[importie, jar, '', '', '', '', '', 'CONSIDER']
+                            ' VALUE (%s, %s, %s, %s, %s, %s, %s, %s)', [importie, jar, '', '', '', '', '', 'CONSIDER']
                         )
                         self.database.commit()
                     print('⚠️ Warning - not in Java SE: ' + relevant_importie + '\n')
@@ -461,4 +488,20 @@ class APIScanner:
         return
 
     def update_apis(self):
-        pass
+        self.builder.execute(""" SELECT id, importie FROM scans WHERE api = '' """)
+        scans = pd.DataFrame(self.builder.fetchall())
+
+        for index_, scan in scans.iterrows():
+            id_ = scan[0]  # 0 = id
+            import_ = scan[1]  # 1 : importie
+
+            if import_.startswith('util'):
+                import_ = 'java.' + import_
+
+            if import_.startswith('java') or import_.startswith('junit') or import_.startswith('sun'):
+                api = split_after(import_, '.', 2)[0]
+            else:
+                api = split_after(import_, '.', 3)[0]
+
+            self.builder.execute("""update scans set api = %s WHERE id = %s """, [api, str(id_)])
+            self.database.commit()
