@@ -5,10 +5,11 @@ import mysql.connector
 import pandas as pd
 import subprocess
 from mysql.connector import ProgrammingError
-from maker import output_folder
 
 main_dir = './'
-input_directory = 'data/input/'
+data_folder = 'data'
+input_directory = data_folder + '/' + 'input/'
+output_folder = data_folder + '/' + 'output/'
 javase_directory = input_directory + 'javase/'
 javaee_directory = input_directory + 'javaee/'
 javase_tree_file = 'javase.txt'
@@ -146,7 +147,7 @@ class APIScanner:
             pass
 
     def clean_and_process_imports(self, project_name, builder_, db_):
-        change_file_name = output_folder + '/lock_' + project_name + '_scanner.txt'
+        change_file_name = output_folder + 'lock_' + project_name + '_scanner.txt'
 
         if os.path.exists(change_file_name):
             print('✅ Scanner is locked. - import_to_jar and scanner table already exist')
