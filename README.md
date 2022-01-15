@@ -93,3 +93,29 @@ WHERE not (importie like  'java%' or importie like 'junit%' or importie like  's
 SELECT FROM scans 
 WHERE importie like  'java%' or importie like 'junit%' or importie like  'sun%'
 ```
+
+keep this:
+```python
+builder_.execute("""
+            SELECT id, packages, cleaned_packages
+            FROM processed_code
+            WHERE 1
+        """)
+        changes = pd.DataFrame(builder_.fetchall())
+        all_imports = set()
+        for index_, change in changes.iterrows():
+            corrected_imports_split = change[2].split(',')
+            for s in corrected_imports_split:
+                all_imports.add(s)
+        # python read all imports old
+        old_imports_file = open('all_imports_old.txt')
+        old_imports = [line.rstrip() for line in old_imports_file.readlines()]
+        old_imports_file.close()
+        f = open('all_imports-missing.txt', 'w')
+        for old_import in old_imports:
+            self.builder.execute("SELECT id FROM scans WHERE importie =  %s", [old_import])
+            result = pd.DataFrame(self.builder.fetchall())
+            if result.empty:
+                f.write(old_import + '\n')
+        f.close()
+```

@@ -154,29 +154,6 @@ class APIScanner:
     def clean_and_process_imports(self, project_name, builder_, db_):
         change_file_name = output_folder + 'lock_' + project_name + '_scanner.txt'
 
-        builder_.execute("""
-            SELECT id, packages, cleaned_packages
-            FROM processed_code
-            WHERE 1
-        """)
-        changes = pd.DataFrame(builder_.fetchall())
-        all_imports = set()
-        for index_, change in changes.iterrows():
-            corrected_imports_split = change[2].split(',')
-            for s in corrected_imports_split:
-                all_imports.add(s)
-        # python read all imports old
-        old_imports_file = open('all_imports_old.txt')
-        old_imports = [line.rstrip() for line in old_imports_file.readlines()]
-        old_imports_file.close()
-        f = open('all_imports-missing.txt', 'w')
-        for old_import in old_imports:
-            self.builder.execute("SELECT id FROM scans WHERE importie =  %s", [old_import])
-            result = pd.DataFrame(self.builder.fetchall())
-            if result.empty:
-                f.write(old_import + '\n')
-        f.close()
-
         if os.path.exists(change_file_name):
             print('✅ Scanner is locked. - import_to_jar and scanner table already exist')
             return
