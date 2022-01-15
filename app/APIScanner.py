@@ -1,8 +1,11 @@
 # this class is used to find, save, scan and parse APIs and API-related tokens
+import os
+
 import mysql.connector
 import pandas as pd
 import subprocess
 from mysql.connector import ProgrammingError
+from maker import output_folder
 
 main_dir = './'
 input_directory = 'data/input/'
@@ -46,6 +49,42 @@ def read_all_file(filename):
         list_ = f.read().splitlines()
 
     return list_
+
+
+def clean_imports(project_name, builder_, db_, changes, all_imports):
+    for index_, change in changes.iterrows():
+        all_local_imports = set()
+        # change[0] === id
+        # change[1] === packages
+        # change[2] === cleaned_packages
+        # strangely, some of the imports required further cleanup
+        temp_imports = change[1].replace('"', '').replace(')', '').replace('(', '').replace('\\n', '').split(
+            ',')
+        for temp_import in temp_imports:
+            if temp_import == '':
+                continue
+            if temp_import.startswith('.'):
+                continue
+            if '.' not in temp_import:
+                continue
+            corrected = \
+                temp_import.split('//', 1)[0].split('/*', 1)[0].split('packagepclass', 1)[0].split('classTest',
+                                                                                                   1)[
+                    0].split('publicclass', 1)[0].split('+class', 1)[0].split('{', 1)[0].split('+', 1)[0]
+            corrected_imports = corrected.replace('import', '\n').replace('\\r+', '\n')
+            corrected_imports_split = corrected_imports.split('\n')
+
+            for s in corrected_imports_split:
+                s = s.lstrip().rstrip().split('\\r', 1)[0]
+                if s.startswith('org.eclipse.' + project_name) or s == '':
+                    continue
+                all_imports.add(s)
+                all_local_imports.add(s)
+
+        cleaned_packages = ','.join(all_local_imports)
+        builder_.execute("""update processed_code set cleaned_packages = %s WHERE id = %s """,
+                         [cleaned_packages, change[0]])
+        db_.commit()
 
 
 # class APIScanner uses javap to grep the class files from jar or java source code
@@ -107,6 +146,12 @@ class APIScanner:
             pass
 
     def clean_and_process_imports(self, project_name, builder_, db_):
+        change_file_name = output_folder + '/lock_' + project_name + '_scanner.txt'
+
+        if os.path.exists(change_file_name):
+            print('✅ Scanner is locked. - import_to_jar and scanner table already exist')
+            return
+
         # get all package in changed files
         builder_.execute("""
             SELECT id, packages, cleaned_packages
@@ -117,60 +162,19 @@ class APIScanner:
         all_imports = set()
 
         if self.with_cleaning == 'yes':
-            for index_, change in changes.iterrows():
-                all_local_imports = set()
-                # change[0] === id
-                # change[1] === packages
-                # change[2] === cleaned_packages
-                # strangely, some of the imports required further cleanup
-                temp_imports = change[1].replace('"', '').replace(')', '').replace('(', '').replace('\\n', '').split(
-                    ',')
-                for temp_import in temp_imports:
-                    if temp_import == '':
-                        continue
-                    if temp_import.startswith('.'):
-                        continue
-                    if '.' not in temp_import:
-                        continue
-                    corrected = \
-                        temp_import.split('//', 1)[0].split('/*', 1)[0].split('packagepclass', 1)[0].split('classTest',
-                                                                                                           1)[
-                            0].split('publicclass', 1)[0].split('+class', 1)[0].split('{', 1)[0].split('+', 1)[0]
-                    corrected_imports = corrected.replace('import', '\n').replace('\\r+', '\n')
-                    corrected_imports_split = corrected_imports.split('\n')
-
-                    for s in corrected_imports_split:
-                        s = s.lstrip().rstrip().split('\\r', 1)[0]
-                        if s.startswith('org.eclipse.' + project_name) or s == '':
-                            continue
-                        all_imports.add(s)
-                        all_local_imports.add(s)
-
-                cleaned_packages = ','.join(all_local_imports)
-                builder_.execute("""update processed_code set cleaned_packages = %s WHERE id = %s """,
-                                 [cleaned_packages, change[0]])
-                db_.commit()
-
+            clean_imports(project_name, builder_, db_, changes, all_imports)
         else:
             for index_, change in changes.iterrows():
                 corrected_imports_split = change[2].split(',')
                 for s in corrected_imports_split:
                     all_imports.add(s)
 
-        # # python read all imports old
-        # old_imports_file = open('all_imports_old.txt')
-        # old_imports = [line.rstrip() for line in old_imports_file.readlines()]
-        # old_imports_file.close()
-        # f = open('all_imports-missing.txt', 'w')
-        # for old_import in old_imports:
-        #     self.builder.execute("SELECT id FROM scans WHERE importie =  %s", [old_import])
-        #     result = pd.DataFrame(self.builder.fetchall())
-        #     if result.empty:
-        #         f.write(old_import + '\n')
-        # f.close()
-        # exit('1')
-
         self.process_imports(all_imports)
+
+        # lock the scanner
+        file = open(change_file_name, "w")
+        file.write('locked')
+        file.close()
 
     def process_imports(self, all_imports):
         for each_import in all_imports:
@@ -455,3 +459,6 @@ class APIScanner:
         print('⚠️ Warning - jar missing: source code is using a package we could not track because Jar is not found!')
 
         return
+
+    def update_apis(self):
+        pass

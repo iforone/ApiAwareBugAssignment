@@ -133,6 +133,7 @@ deep_process(bugs, project, builder, database)
 # scan the dependencies/ imports and jars
 scanner = APIScanner(with_cleaning())
 scanner.clean_and_process_imports(project, builder, database)
+scanner.update_apis()
 database.close()
 
 # create profiles for users

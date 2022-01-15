@@ -70,15 +70,16 @@ jar cvf recreation .jar *
 - Get all imports in source code (unique) in a file:
 
 ```python
-    fh = open('all_imports_old.txt')
-    ax = [line.rstrip() for line in fh.readlines()]
-    fh.close()
-    f = open("all_imports-6-jan.txt", "a")
-    for elexx in ax:
-        if elexx in all_imports:
-            print('✅' + elexx)
-        else:
-            print('❓' + elexx)
-            f.write('NOT FOUND -' + elexx + '\n')
+    # python read all imports old
+    old_imports_file = open('all_imports_old.txt')
+    old_imports = [line.rstrip() for line in old_imports_file.readlines()]
+    old_imports_file.close()
+    f = open('all_imports-missing.txt', 'w')
+    for old_import in old_imports:
+        self.builder.execute("SELECT id FROM scans WHERE importie =  %s", [old_import])
+        result = pd.DataFrame(self.builder.fetchall())
+        if result.empty:
+            f.write(old_import + '\n')
     f.close()
+    exit('1')
 ```
