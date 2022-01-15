@@ -81,5 +81,4 @@ jar cvf recreation .jar *
         if result.empty:
             f.write(old_import + '\n')
     f.close()
-    exit('1')
 ```

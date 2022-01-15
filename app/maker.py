@@ -43,7 +43,7 @@ def with_cleaning():
     import inquirer
     questions = [
         inquirer.List('cleaning',
-                      message="With Cleaning?",
+                      message="Should clean the imports? (it cleans up the imports in processed_code table)",
                       choices=['no', 'yes'],
                       ),
     ]
