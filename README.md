@@ -19,7 +19,7 @@ zsh boot.sh
 ```
 
 
-Helpful notes:
+🆘 Helpful notes (for me):
 
 - Freeze requirements of a virtual python:
 
@@ -27,7 +27,17 @@ Helpful notes:
 pip3 freeze > requirements.txt
 ```
 
+- Write a file:
+
+```python
+    f = open('all_imports-missing.txt', 'w')
+    for index_ in all_imports:
+        f.write(index_ + '\n')
+    f.close()
+```
+
 - Running the API scanner for an import:
+
 ```python
 s = APIScanner('no')
 # this will automatically find whether it is from a jar or java or is it a subclass, etc

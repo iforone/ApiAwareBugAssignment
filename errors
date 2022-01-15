@@ -28,7 +28,7 @@ wrong import
 
 # steps from now:
 0- check quickly if scans make sense ✅
-1- copy all data we have
+1- copy all data we have ✅
 2- verify all imports
 3- set apis for all of the
 4- set a lock for whole APIScanner
