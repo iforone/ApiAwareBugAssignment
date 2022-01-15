@@ -157,6 +157,19 @@ class APIScanner:
                 for s in corrected_imports_split:
                     all_imports.add(s)
 
+        # # python read all imports old
+        # old_imports_file = open('all_imports_old.txt')
+        # old_imports = [line.rstrip() for line in old_imports_file.readlines()]
+        # old_imports_file.close()
+        # f = open('all_imports-missing.txt', 'w')
+        # for old_import in old_imports:
+        #     self.builder.execute("SELECT id FROM scans WHERE importie =  %s", [old_import])
+        #     result = pd.DataFrame(self.builder.fetchall())
+        #     if result.empty:
+        #         f.write(old_import + '\n')
+        # f.close()
+        # exit('1')
+
         self.process_imports(all_imports)
 
     def process_imports(self, all_imports):
@@ -228,10 +241,17 @@ class APIScanner:
                     # org.junit.Assert.fail -> is actually a method in org.junit.Assert
                     note = 'INTERNAL'
                     all_class_text = run_java(
-                        'cd input/jars && javap -public ' + relevant_importie.rsplit('.', 1)[
-                            0]).rstrip()
+                        'cd input/jars && javap -public ' + relevant_importie.rsplit('.', 1)[0]
+                    ).rstrip()
                 if all_class_text == '':
                     # this is not a real import
+                    if save_:
+                        self.builder.execute(
+                            'INSERT INTO scans'
+                            ' (importie, jar, api, classifiers, methods, constants, full_resolution, note)'
+                            ' VALUE (%s, %s, %s, %s, %s, %s, %s, %s)',[importie, jar, '', '', '', '', '', 'CONSIDER']
+                        )
+                        self.database.commit()
                     print('⚠️ Warning - not in Java SE: ' + relevant_importie + '\n')
                     return [set(), set(), set(), '', 'CONSIDER']
         elif jar == 'JAVA':
