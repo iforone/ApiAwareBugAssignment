@@ -514,9 +514,14 @@ class APIScanner:
             filtered_words = [word for word in tokens if word not in self.stop_words]
 
             for api in apis:
-                self.builder.execute('SELECT ,api FROM scans JOIN  WHERE importie = %s', [api])
+                self.builder.execute('''
+                    SELECT api, CONCAT(classifiers, ',',  methods, ',', constants, ','), note, jar 
+                    FROM scans 
+                    WHERE importie = %s''',
+                                     [api])
                 result = self.builder.fetchone()
-
+                # check and see how many times each word occured
+                # update database
 
             # get the cleaned packages
             # split on comma
