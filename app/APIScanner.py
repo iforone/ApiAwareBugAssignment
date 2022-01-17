@@ -1,6 +1,6 @@
 # this class is used to find, save, scan and parse APIs and API-related tokens
 import os
-
+from nltk.tokenize import word_tokenize
 import mysql.connector
 import pandas as pd
 import subprocess
@@ -112,6 +112,10 @@ class APIScanner:
         self.make_scanner_table()
         self.with_cleaning = with_cleaning
 
+        # java keywords are base stopwords
+        stopwords_file = open(input_directory + 'java_stopwords.txt')
+        self.stop_words = [line.rstrip() for line in stopwords_file.readlines()]
+        stopwords_file.close()
     def make_scanner_table(self):
         self.builder.execute('''
             create table IF NOT EXISTS scans
@@ -492,9 +496,9 @@ class APIScanner:
             return
 
         builder_.execute("""
-            SELECT id, codes, cleaned_packages, used_apis, api_usage_details
-            FROM processed_code
-            WHERE 1
+            SELECT id, codes, cleaned_packages, used_apis
+            FROM   processed_code
+            WHERE  cleaned_packages != ''
         """)
         changes = pd.DataFrame(builder_.fetchall())
         # 0 - id
@@ -503,7 +507,18 @@ class APIScanner:
         # 3 - used_apis - this is empty initially since we are calculating it
         # 4 - api_usage_details - exactly what is matched - this is empty initially since we are calculating it
         for index_, change in changes.iterrows():
-            # get the cleaned pacakges
+            codes = change[1]
+            apis = change[2].split(',')
+
+            tokens = word_tokenize(codes)
+            filtered_words = [word for word in tokens if word not in self.stop_words]
+
+            for api in apis:
+                self.builder.execute('SELECT ,api FROM scans JOIN  WHERE importie = %s', [api])
+                result = self.builder.fetchone()
+
+
+            # get the cleaned packages
             # split on comma
             # query all
             # match
@@ -513,4 +528,3 @@ class APIScanner:
         file = open(change_file_name, "w")
         file.write('locked')
         file.close()
-

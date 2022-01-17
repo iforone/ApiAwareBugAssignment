@@ -119,3 +119,11 @@ builder_.execute("""
                 f.write(old_import + '\n')
         f.close()
 ```
+
+Try tokenizer:
+
+```python
+tokens = word_tokenize('public static main() { okay(string int =231 ); x= x +1; r!;}')
+filtered_words = [word for word in tokens if word not in self.stop_words]
+exit(filtered_words)
+```
