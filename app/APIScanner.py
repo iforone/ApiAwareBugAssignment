@@ -8,15 +8,7 @@ import mysql.connector
 import pandas as pd
 import subprocess
 from mysql.connector import ProgrammingError
-
-main_dir = './'
-data_folder = 'data'
-input_directory = data_folder + '/' + 'input/'
-output_folder = data_folder + '/' + 'output/'
-javase_directory = input_directory + 'javase/'
-javaee_directory = input_directory + 'javaee/'
-javase_tree_file = 'javase.txt'
-javaee_tree_file = 'javaee.txt'
+from base import main_dir, javase_tree_file, input_directory, output_folder, javase_directory
 
 
 def run_java(c):

@@ -4,11 +4,11 @@ from Profiler import Profiler
 import os.path
 from DeepProcess import DeepProcessor
 from APIScanner import APIScanner
+from CodeScanner import CodeScanner
+from base import output_folder, ks
 
-data_folder = 'data'
-output_folder = data_folder + '/' + 'output'
-
-ks = [1, 2, 3, 4, 5, 10]
+code_scanner = CodeScanner()
+code_scanner.analyze_code('this is a sample text main() {System.out(x); as is } import x')
 
 
 # select which project to check
@@ -92,7 +92,7 @@ def export_to_csv(data, project_name):
 
 # process the commits to find line-by-line changes and imports of each file
 def deep_process(bugs_list, project_name, builder_, db_):
-    change_file_name = output_folder + '/lock_' + project_name + '.txt'
+    change_file_name = output_folder + 'lock_' + project_name + '.txt'
 
     if not os.path.exists(change_file_name):
         print('⚠️ warning: since you miss the main data we are going to recalculate all of it')
