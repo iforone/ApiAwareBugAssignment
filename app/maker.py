@@ -71,6 +71,7 @@ def make_process_table(builder_):
     `author` char(140) DEFAULT NULL,
     `username` char(140) DEFAULT NULL,
     `codes` longtext DEFAULT NULL,
+    `codes_bag_of_words` longtext DEFAULT NULL,
     `commit_message` text DEFAULT NULL,
     `packages` text DEFAULT NULL,
     `cleaned_packages` text DEFAULT NULL,
