@@ -75,6 +75,7 @@ def make_process_table(builder_):
     `packages` text DEFAULT NULL,
     `cleaned_packages` text DEFAULT NULL,
     `used_apis` text DEFAULT NULL,
+    `api_usage_details` text DEFAULT NULL,
     `is_extractable` tinyint(1) DEFAULT NULL,
     `committed_at` datetime DEFAULT NULL,
     PRIMARY KEY (`id`),

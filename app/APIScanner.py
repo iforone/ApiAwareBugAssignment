@@ -1,5 +1,8 @@
 # this class is used to find, save, scan and parse APIs and API-related tokens
+import collections
 import os
+import re
+import json
 from nltk.tokenize import word_tokenize
 import mysql.connector
 import pandas as pd
@@ -116,6 +119,7 @@ class APIScanner:
         stopwords_file = open(input_directory + 'java_stopwords.txt')
         self.stop_words = [line.rstrip() for line in stopwords_file.readlines()]
         stopwords_file.close()
+
     def make_scanner_table(self):
         self.builder.execute('''
             create table IF NOT EXISTS scans
@@ -492,13 +496,13 @@ class APIScanner:
     def mark_api_usage_in_code(self, project_name, builder_, db_):
         change_file_name = output_folder + 'lock_' + project_name + '_api.txt'
         if os.path.exists(change_file_name):
-            print('✅ Scanner is locked. - import_to_jar and scanner table already exist')
+            print('✅ api usage is locked. - used_apis already labeled')
             return
 
         builder_.execute("""
             SELECT id, codes, cleaned_packages, used_apis
             FROM   processed_code
-            WHERE  cleaned_packages != ''
+            WHERE  cleaned_packages != '' and is_extractable = 1  and id != 122458
         """)
         changes = pd.DataFrame(builder_.fetchall())
         # 0 - id
@@ -507,28 +511,76 @@ class APIScanner:
         # 3 - used_apis - this is empty initially since we are calculating it
         # 4 - api_usage_details - exactly what is matched - this is empty initially since we are calculating it
         for index_, change in changes.iterrows():
+            id_ = change[0]
             codes = change[1]
-            apis = change[2].split(',')
+            imports = change[2].split(',')
 
-            tokens = word_tokenize(codes)
+            tokens = re.findall(r"[\w']+", codes)  # tokens = word_tokenize(codes)
             filtered_words = [word for word in tokens if word not in self.stop_words]
+            filtered_words_collection = collections.Counter(filtered_words)
 
-            for api in apis:
+            api_usage_counts = {}  # count of each api token
+            # this can be a float number when a token is shared between multiple APIs
+            # reservie : is the key we use for apis with CONSIDER anyways note
+            apis = {}  # all true apis not imports but due imports
+            all_tokens = []  # all tokens are used for duplicate suppression
+
+            # prepare:
+            for importie in imports:
                 self.builder.execute('''
-                    SELECT api, CONCAT(classifiers, ',',  methods, ',', constants, ','), note, jar 
+                    SELECT api, CONCAT(classifiers, ',',  methods, ',', constants, ','), jar, note 
                     FROM scans 
-                    WHERE importie = %s''',
-                                     [api])
-                result = self.builder.fetchone()
-                # check and see how many times each word occured
-                # update database
+                    WHERE importie = %s''', [importie])
 
-            # get the cleaned packages
-            # split on comma
-            # query all
-            # match
-            # update the database
-            pass
+                result = self.builder.fetchone()
+                if result is None:
+                    continue
+                # make a row for each IMPORTIE
+                apis[importie] = {
+                    'name': result[0],
+                    'jar': result[2],
+                    'note': (result[2] == 'CONSIDER' or (result[3] is not None and 'CONSIDER' in result[3])),
+                    'all_api_tokens': set([word for word in result[1].split(',') if word not in ['', None, ' ']]),
+
+                }
+
+                # make a count row for each API
+                if apis[importie]['name'] not in api_usage_counts:
+                    api_usage_counts[apis[importie]['name']] = {}
+
+                # add all elements of API to a full list to count and suppress repeated elements
+                all_tokens.extend(apis[importie]['all_api_tokens'])
+
+            # count all tokens between imports
+            all_tokens_collection = collections.Counter(all_tokens)
+
+            # process:
+            for importie in imports:
+                api_name = apis[importie]['name']
+                all_api_tokens = apis[importie]['all_api_tokens']
+                if apis[importie]['note']:
+                    api_usage_counts[api_name].update({
+                        'reservie': 1 + api_usage_counts[api_name].get('reservie', 0)
+                    })
+
+                for api_token in all_api_tokens:
+                    if api_token in filtered_words:
+                        api_usage_counts[api_name].update({
+                            api_token: (filtered_words_collection[api_token] / all_tokens_collection[api_token]) + api_usage_counts[api_name].get(api_token, 0)
+                        })
+
+            api_true_counts = []
+            for key in api_usage_counts.keys():
+                api_true_counts.append(key + ':' + str(sum(api_usage_counts[key].values())))
+
+            # save to database:
+            api_true_counts_string = ','.join(api_true_counts)
+            api_usage_details_string = json.dumps(api_usage_counts)
+            builder_.execute("""update processed_code set used_apis = %s, api_usage_details = %s WHERE id = %s """,
+                             [api_true_counts_string, api_usage_details_string, id_])
+            db_.commit()
+
+        pass
         # lock the scanner
         file = open(change_file_name, "w")
         file.write('locked')
