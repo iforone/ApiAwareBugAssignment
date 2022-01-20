@@ -127,3 +127,20 @@ tokens = word_tokenize('public static main() { okay(string int =231 ); x= x +1; 
 filtered_words = [word for word in tokens if word not in self.stop_words]
 exit(filtered_words)
 ```
+
+
+---
+API usage statistics for Eclipse JDT project:
+
+⚠️ Currently, I calculate the api usage only on code and NOT on the commit message but that might be helpful info as well.
+
+```sql
+SELECT api FROM scans WHERE 1 group by api; # JDT -> we have 51 unique apis from ± 502 imports 
+
+
+
+How many times each api is used only on the codes in JDT?
+
+{'java.util': 278294.1653, 'com.sun.jdi': 436.8666, 'java.io': 43854.46950000001, 'org.w3c.dom': 3816.000400000003, 'java.net': 5863.2192000000005, 'java.lang': 5570.5895999999975, 'java.text': 5353.537999999993, 'org.xml.sax': 1357.6837, 'javax.xml': 2542.9994999999985, 'org.apache.xml': 243.0, 'junit.framework': 28028.110000000044, 'sun.awt': 8.0, 'junit.extensions': 978.5216999999999, 'org.eclipse.jface': 312.9, 'org.eclipse.core': 334.0334, 'org.eclipse.swt': 505.90009999999995, 'org.eclipse.ui': 111.0, 'junit.textui': 398.7926, 'java.awt': 840.6444000000001, 'junit.util': 6.0, 'javax.swing': 463.2278, 'java.security': 139.42860000000002, 'javax.naming': 1.0, 'org.omg.CORBA': 6.0, 'org.eclipse.debug': 23.0, 'sun.security': 16.0, 'org.apache.xerces': 6.0, 'org.eclipse.search': 3.0, 'java.beans': 1.0, 'java.math': 71.49999999999999, 'java.x': 43.0, 'java.applet': 2.0, 'org.apache.jasper': 163.0, 'javax.servlet': 10.0, 'junit.awtui': 27.0, 'org.osgi.framework': 707.7166, 'java.sql': 343.6666, 'java.nio': 90.9834, 'org.osgi.service': 122.49999999999999, 'com.ibm.icu': 821.2001, 'org.junit.runner': 232.0, 'junit.tests': 23.0, 'junit.runner': 469.3429, 'org.junit.runners': 64.0, 'org.junit.Test': 47.0, 'org.junit.Ignore': 2.0, 'org.junit.Assert': 289.0, 'org.springframework.core': 472.5, 'org.apache.commons': 485.5, 'org.junit.Before': 2.0}
+
+```

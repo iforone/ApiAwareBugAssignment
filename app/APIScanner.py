@@ -556,6 +556,9 @@ class APIScanner:
 
             # process:
             for importie in imports:
+                if importie not in apis:
+                    continue
+
                 api_name = apis[importie]['name']
                 all_api_tokens = apis[importie]['all_api_tokens']
                 if apis[importie]['note']:
@@ -571,7 +574,10 @@ class APIScanner:
 
             api_true_counts = []
             for key in api_usage_counts.keys():
-                api_true_counts.append(key + ':' + str(sum(api_usage_counts[key].values())))
+                temp_usage_count = round(sum(api_usage_counts[key].values()), 4)
+                if 0 == temp_usage_count:
+                    continue
+                api_true_counts.append(str(key) + ':' + str(temp_usage_count))
 
             # save to database:
             api_true_counts_string = ','.join(api_true_counts)
@@ -585,3 +591,23 @@ class APIScanner:
         file = open(change_file_name, "w")
         file.write('locked')
         file.close()
+
+    def count_used_apis(self, builder_):
+        builder_.execute("""
+                    SELECT
+                    used_apis
+                    FROM
+                    processed_code
+                    WHERE
+                    used_apis != '' and used_apis is not null
+                """)
+        changes = pd.DataFrame(builder_.fetchall())
+
+        all_imports = {}
+        for index_, change in changes.iterrows():
+            each_imports = change[0].split(',')
+            for each_import in each_imports:
+                n = each_import.split(':')[0]
+                c = each_import.split(':')[1]
+                all_imports[n] = float(c) + all_imports.get(n, 0)
+        print(all_imports)
