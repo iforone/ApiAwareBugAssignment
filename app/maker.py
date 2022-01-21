@@ -8,7 +8,7 @@ from CodeScanner import CodeScanner
 from base import output_folder, ks
 
 code_scanner = CodeScanner()
-code_scanner.analyze_code('this is a sample text main() {System.out(x); as is } import x')
+code_scanner.analyze_code('this is a sample text main() {System.out(x); as is } import x', 'babu x')
 
 
 # select which project to check
