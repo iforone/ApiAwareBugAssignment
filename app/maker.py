@@ -8,7 +8,56 @@ from CodeScanner import CodeScanner
 from base import output_folder, ks
 
 code_scanner = CodeScanner()
-code_scanner.analyze_code('this is a sample text main() {System.out(x); as is } import x', 'babu x')
+code_scanner.analyze_commit_message('[41451]Something [Bug 213] copyrights (312) (1242).')
+exit(1)
+code_scanner.analyze_commit_message('[41451]Something copyrights.')
+exit(1)
+
+code_scanner.analyze_code(
+    '''
+    -/*
+- * (c) Copyright IBM Corp. 2000, 2001.
+- * All Rights Reserved.
+- */
+-package org.eclipse.jdt.internal.ui.refactoring.sef;
+-
+-import org.eclipse.jface.viewers.IStructuredSelection;
+-import org.eclipse.jface.wizard.WizardDialog;
+-
+-import org.eclipse.jdt.core.Flags;
+-import org.eclipse.jdt.core.IField;
+-
+-import org.eclipse.jdt.core.JavaModelException;
+-import org.eclipse.jdt.internal.ui.JavaPlugin;
+-import org.eclipse.jdt.internal.ui.refactoring.RefactoringWizardDialog;
+-import org.eclipse.jdt.internal.ui.refactoring.actions.RefactoringAction;
+-import org.eclipse.jdt.internal.ui.refactoring.actions.StructuredSelectionProvider;
+-import org.eclipse.jdt.internal.ui.util.SelectionUtil;
+-
+-public class SelfEncapsulateFieldAction extends RefactoringAction {
+-
+-	public SelfEncapsulateFieldAction(StructuredSelectionProvider provider) {
+-		super("Self Encapsulate", provider);
+-	}
+-	jasper-1; jasper_2; XML x; sa$s; t124; 2ds23; X= CSPO % 211;
+-	public void run() {
+-		IField field= (IField)SelectionUtil.getSingleElement(getStructuredSelection());
+-		SelfEncapsulateFieldWizard wizard= new SelfEncapsulateFieldWizard(field,
+-			JavaPlugin.getDefault().getCompilationUnitDocumentProvider());
+-		WizardDialog dialog= new RefactoringWizardDialog(JavaPlugin.getActiveWorkbenchShell(), wizard);
+-		dialog.open();		
+-	}
+-	
+-	public boolean canOperateOn(IStructuredSelection selection) {
+-		Object o= SelectionUtil.getSingleElement(selection);
+-		if (o instanceof IField)
+-			return true;
+-		return false;
+-	}	
+-}
+-
+    '''
+)
 
 
 # select which project to check
@@ -152,6 +201,7 @@ for index, bug in bugs.iterrows():
     profiler.sync_api(bug)
 
     # calculate ranking
+    # TODO: remove 30 most common words from bug reports in VSM
     ranked_developers = profiler.rank_developers()
 
     # check against gold standard and save the result

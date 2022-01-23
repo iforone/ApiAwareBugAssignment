@@ -46,11 +46,16 @@ class CodeScanner:
 
     def analyze_commit_message(self, all_text_):
         # TODO: check for the bug ids pattern
-        ids = []
+        pattern_bug_ids = re.compile(r"\[(\d+)\]")
+        pattern_bug_ids_mentioning_bug = re.compile(r"\[Bug (\d+)\]")
+
+        id_matches = pattern_bug_ids.findall(all_text_)
+        id_matches.extend(pattern_bug_ids_mentioning_bug.findall(all_text_))
+        id_matches = set(id_matches)
         tokens = self.analyze_code(all_text_)
 
         return {
-            'ids': ids,
+            'ids': id_matches,
             'tokens': tokens,
         }
 
