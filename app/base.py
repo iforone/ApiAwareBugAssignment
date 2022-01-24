@@ -9,4 +9,7 @@ javase_tree_file = 'javase.txt'
 javaee_tree_file = 'javaee.txt'
 stop_words_file = 'java_stopwords.txt'
 
+validation_folder = output_folder + 'validations/'
+validation_of_vcs_jdt = validation_folder + 'jdt_vcs_log.txt'
+
 ks = [1, 2, 3, 4, 5, 10]

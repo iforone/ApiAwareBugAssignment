@@ -1,6 +1,8 @@
 from time import timezone
 
 import subprocess
+import base
+import pandas as pd
 import pytz
 from dateutil import parser
 import git
@@ -17,6 +19,41 @@ class DeepProcessor:
         self.previous = '1999-01-01 00:00:00'
         self.builder = builder
         self.database = database
+
+    def re_evaluate(self):
+        log_file = open(base.validation_of_vcs_jdt)
+        all_commits_in_vcs = [line.rstrip() for line in log_file.readlines()]
+        all_commits_in_vcs = [x for x in all_commits_in_vcs if x.startswith('commit ')]
+        all_commits_in_vcs = [x.replace('commit ', '') for x in all_commits_in_vcs]
+        log_file.close()
+
+        commits = self.find_commits_between('2014-01-05 00:00:00', '1999-01-01 00:00:00')
+
+        # for commit_in_vcs in all_commits_in_vcs:
+        #     found = False
+        #     for key, commit in commits.items():
+        #         if commit['hash'] == commit_in_vcs:
+        #             found = True
+        #             break
+        #
+        #     if not found:
+        #         print(commit_in_vcs)
+
+        self.builder.execute("""
+            SELECT commit_hash
+            FROM processed_code
+            ORDER BY commit_hash
+        """)
+
+        all_commit_hashes = pd.DataFrame(self.builder.fetchall(), columns={'hash'})
+        for key, commit in commits.items():
+            if commit['hash'] not in all_commit_hashes.values:
+                # back up all databases
+                # try again their file
+                # try again their imports
+                # try again their scan
+                pass
+        exit('OKAY for now')
 
     def update(self, new_bug):
         # if self.continue_ and str(new_bug['report_time']) != '2013-03-27 12:55:32':
@@ -143,9 +180,11 @@ class DeepProcessor:
                 file1.close()
                 exit(-1)
 
-            if '' == new_row['username']:
+            # the only commits we do not consider are automatic ones from cvs
+            if 'cvs' == new_row['author']:
                 continue
             commits_dict[len(commits_dict)] = new_row
+
         return commits_dict
 
     def memorize(self, new_bug):
