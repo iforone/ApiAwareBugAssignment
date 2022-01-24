@@ -103,6 +103,11 @@ def deep_process(bugs_list, project_name, builder_, db_):
         file = open(change_file_name, "w")
         file.write('locked')
         file.close()
+    # else:
+    #     deep_processor = DeepProcessor(project_name, builder_, db_)
+    #     commits = deep_processor.re_evaluate()
+    #     exit(commits)
+
     print('✅ changes file created / found!')
 
 

@@ -177,3 +177,60 @@ report time of the last bug.
 ```SQL
 SELECT author, count(*) as number_of_changes, username FROM processed_code group by author
 ```
+
+- Make a log for validating VCS commit history:
+ git log --before='2014-01-05 00:00:00' --after='1999-01-01 00:00:00' >> log.txt
+ and then use revaluate() function in DeepProcess class to make sure no commit was missed
+
+
+# code_scanner = CodeScanner()
+# code_scanner.analyze_commit_message('[41451]Something [Bug 213] copyrights (312) (1242).')
+# exit(1)
+# code_scanner.analyze_commit_message('[41451]Something copyrights.')
+# exit(1)
+#
+# code_scanner.analyze_code(
+#     '''
+#     -/*
+# - * (c) Copyright IBM Corp. 2000, 2001.
+# - * All Rights Reserved.
+# - */
+# -package org.eclipse.jdt.internal.ui.refactoring.sef;
+# -
+# -import org.eclipse.jface.viewers.IStructuredSelection;
+# -import org.eclipse.jface.wizard.WizardDialog;
+# -
+# -import org.eclipse.jdt.core.Flags;
+# -import org.eclipse.jdt.core.IField;
+# -
+# -import org.eclipse.jdt.core.JavaModelException;
+# -import org.eclipse.jdt.internal.ui.JavaPlugin;
+# -import org.eclipse.jdt.internal.ui.refactoring.RefactoringWizardDialog;
+# -import org.eclipse.jdt.internal.ui.refactoring.actions.RefactoringAction;
+# -import org.eclipse.jdt.internal.ui.refactoring.actions.StructuredSelectionProvider;
+# -import org.eclipse.jdt.internal.ui.util.SelectionUtil;
+# -
+# -public class SelfEncapsulateFieldAction extends RefactoringAction {
+# -
+# -	public SelfEncapsulateFieldAction(StructuredSelectionProvider provider) {
+# -		super("Self Encapsulate", provider);
+# -	}
+# -	jasper-1; jasper_2; XML x; sa$s; t124; 2ds23; X= CSPO % 211;
+# -	public void run() {
+# -		IField field= (IField)SelectionUtil.getSingleElement(getStructuredSelection());
+# -		SelfEncapsulateFieldWizard wizard= new SelfEncapsulateFieldWizard(field,
+# -			JavaPlugin.getDefault().getCompilationUnitDocumentProvider());
+# -		WizardDialog dialog= new RefactoringWizardDialog(JavaPlugin.getActiveWorkbenchShell(), wizard);
+# -		dialog.open();
+# -	}
+# -
+# -	public boolean canOperateOn(IStructuredSelection selection) {
+# -		Object o= SelectionUtil.getSingleElement(selection);
+# -		if (o instanceof IField)
+# -			return true;
+# -		return false;
+# -	}
+# -}
+# -
+#     '''
+# )
