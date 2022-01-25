@@ -1,3 +1,5 @@
+import re
+
 import mysql.connector
 import pandas as pd
 from Profiler import Profiler
@@ -142,7 +144,12 @@ scanner.clean_and_process_imports(project, builder, database)
 scanner.update_apis()
 scanner.mark_api_usage_in_code(project, builder, database)
 scanner.count_used_apis(builder)
+
+# tokenize all codes and commit messages
+code_scanner = CodeScanner()
+code_scanner.analyze_codes(project, builder, database)
 database.close()
+
 exit('OKAY FOR NOW')
 
 # create profiles for users

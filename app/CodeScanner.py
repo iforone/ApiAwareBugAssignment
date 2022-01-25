@@ -1,9 +1,11 @@
 # class CodeScanner a given java code snippet and finds meaningful identifiers in it
+import os
 import re
 
+import pandas as pd
 from nltk import PorterStemmer
 from nltk.corpus import stopwords
-from base import input_directory, stop_words_file
+from base import input_directory, stop_words_file, output_folder
 
 
 def camel_case_decomposed_list(identifier):
@@ -61,9 +63,9 @@ class CodeScanner:
         return id_matches
 
     def analyze_commit_message(self, all_text_):
-        return self.analyze_code(all_text_)
+        return self.analyze_code(all_text_, True)
 
-    def analyze_code(self, all_text_, with_lexicon_analysis=False):
+    def analyze_code(self, all_text_, with_simple_split=False, with_lexicon_analysis=False):
         if with_lexicon_analysis:
             exit('failed!')
 
@@ -93,15 +95,52 @@ class CodeScanner:
 
             all_tokens.extend(temp_tokens)
 
+        if with_simple_split:
+            simple_spits = all_text_.split()
+            for simple_spit in simple_spits:
+                if simple_spit not in all_tokens:
+                    all_tokens.append(simple_spit)
+
         # remove java stopwords
         all_tokens = [word for word in all_tokens if word not in self.stop_words]
         # to lowercase everything
         all_tokens = [x.lower() for x in all_tokens]
+        all_tokens = [x.replace(',', '') for x in all_tokens]
         # remove english stopwords
         all_tokens = [word for word in all_tokens if word not in self.english_stop_words]
 
-        # TODO: remove punctuations - seems okay 22-Jan-2022 ✅
+        # TODO: maybe remove punctuations
         stemmer = PorterStemmer()
         all_tokens = [stemmer.stem(word) for word in all_tokens]
-        print(all_tokens)
+
         return all_tokens
+
+    def analyze_codes(self, project_name, builder_, db_):
+        change_file_name = output_folder + 'lock_' + project_name + '_code.txt'
+
+        if os.path.exists(change_file_name):
+            print('✅ Code Scanner is locked. - already tokenized')
+            return
+
+        # get all package in changed files
+        builder_.execute("""
+            SELECT id, codes, commit_message
+            FROM processed_code
+            WHERE 1
+        """)
+        changes = pd.DataFrame(builder_.fetchall())
+
+        for index, change in changes.iterrows():
+            # 0 - id
+            # 1 - code
+            # 2 - commit message
+            tokenized_code = self.analyze_code(change[1])
+            tokenized_message = self.analyze_commit_message(change[2])
+
+            builder_.execute("""UPDATE processed_code SET codes_bag_of_words = %s , commit_bag_of_words = %s WHERE id = %s """,
+                             [','.join(tokenized_code), ','.join(tokenized_message), change[0]])
+            db_.commit()
+        # lock the scanner
+        file = open(change_file_name, "w")
+        file.write('locked')
+        file.close()
