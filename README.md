@@ -183,6 +183,41 @@ SELECT author, count(*) as number_of_changes, username FROM processed_code group
  and then use revaluate() function in DeepProcess class to make sure no commit was missed
 
 
+- DeepProcess re-evaluation:
+```python
+    deep_processor = DeepProcessor(project_name, builder_, db_)
+    commits = deep_processor.re_evaluate()
+    
+    # definition of function
+    def re_evaluate(self):
+        # log_file = open(base.validation_of_vcs_jdt)
+        # all_commits_in_vcs = [line.rstrip() for line in log_file.readlines()]
+        # all_commits_in_vcs = [x for x in all_commits_in_vcs if x.startswith('commit ')]
+        # all_commits_in_vcs = [x.replace('commit ', '') for x in all_commits_in_vcs]
+        # log_file.close()
+        # for commit_in_vcs in all_commits_in_vcs:
+        #     found = False
+        #     for key, commit in commits.items():
+        #         if commit['hash'] == commit_in_vcs:
+        #             found = True
+        #             break
+        #
+        #     if not found:
+        #         print(commit_in_vcs)
+
+        commits = self.find_commits_between('2014-01-05 00:00:00', '1999-01-01 00:00:00')
+        self.builder.execute("""
+            SELECT commit_hash
+            FROM processed_code
+            ORDER BY commit_hash
+        """)
+
+        all_commit_hashes = pd.DataFrame(self.builder.fetchall(), columns={'hash'})
+        for key, commit in commits.items():
+            if commit['hash'] not in all_commit_hashes.values:
+                print(commit['hash'])
+```
+
 # code_scanner = CodeScanner()
 # code_scanner.analyze_commit_message('[41451]Something [Bug 213] copyrights (312) (1242).')
 # exit(1)
