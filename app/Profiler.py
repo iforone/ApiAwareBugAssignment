@@ -1,12 +1,6 @@
-import csv
-
-from Profile import Profile
-import numpy as np
-import subprocess
+import math
+from Profile import Profile, array_to_frequency_list
 import pandas as pd
-from dateutil import parser
-import git
-from Extractor import get_imports, get_packages
 
 
 def write_to_text(file_name, text):
@@ -17,17 +11,39 @@ def write_to_text(file_name, text):
 
 class Profiler:
     def __init__(self, approach, project):
-        print('running profiler')
-        self.real_commits = {}
-        self.last_changes = {}
+        print('💻 running profiler')
+        # the approach that is being used for finding the underlying relation between a new bug and previous data
         self.approach = approach
+        # name of the project
         self.project = project
-        self.path = './data/input/' + self.project
+        # the beginning of the timeframe in which activities should be considered for update
         self.previous = '1999-01-01 00:00:00'
-        self.all_changes = {}
+        # array of known bugs that are already processed at any moment
+        self.previous_bugs = {}
+        # array of known developer profiles at any moment
+        self.profiles = {}
+
+    def sync_profiles(self, bug):
+        self.sync_history(bug)
+        self.sync_activity(bug)
+        self.sync_api(bug)
 
     def sync_history(self, new_bug):
-        pass
+        if len(self.previous_bugs) == 0:
+            return
+
+        last_bug = self.previous_bugs[len(self.previous_bugs) - 1]
+        # TODO for now let's just use the words in bug report later it can be codes too
+        last_bug_terms = last_bug['bag_of_word_stemmed'].split()
+        last_bug_terms_f = array_to_frequency_list(last_bug_terms, last_bug['report_time'])
+
+        # none of the bug reports in JDT have more than one assignee so this is technically one assignee
+        assignees = last_bug['assignees'].split(',')
+        for assignee in assignees:
+            if assignee in self.profiles:
+                self.profiles[assignee].update_history(last_bug_terms_f)
+            else:
+                self.profiles[assignee] = Profile(assignee, last_bug_terms_f, {}, {})
 
     def sync_activity(self, new_bug):
         pass
@@ -35,15 +51,64 @@ class Profiler:
     def sync_api(self, new_bug):
         pass
 
-    def match_api(self, new_bug):
+    def get_bug_apis(self, new_bug):
         if self.approach == 'direct':
-            pass
+            return []
         elif self.approach == 'indirect':
-            pass
+            return []
 
-    def rank_developers(self):
-        # profile = Profile()
-        return np.array(['name 1', 'name 2', 'Markus Keller'])
+    def rank_developers(self, new_bug):
+        result = self.calculate_ranks(new_bug).tolist()
+        self.previous = new_bug['report_time']
+        self.previous_bugs[len(self.previous_bugs)] = new_bug
 
-    def extract_apis(self):
-        pass
+        return result
+
+    def calculate_ranks(self, new_bug):
+        bug_apis = self.get_bug_apis(new_bug)
+        bug_terms = new_bug['bag_of_word_stemmed'].split()
+        # TODO: remove 30 most common words from bug reports in VSM
+        # ask question about this
+
+        local_scores = pd.DataFrame(columns=['developer', 'score'])
+
+        for index_, profile in self.profiles.items():
+            fix_experience = self.time_based_tfidf(profile.history, bug_terms, new_bug['report_time'], 'history')
+            code_experience = self.time_based_tfidf(profile.code, bug_terms, new_bug['report_time'], 'code')
+            api_experience = self.time_based_tfidf(profile.api, bug_apis, new_bug['report_time'], 'api')
+
+            score = fix_experience + code_experience + api_experience
+            local_scores.loc[len(local_scores)] = [profile.name, score]
+
+        return local_scores.sort_values(by='score', ascending=False)['developer']
+
+    # A time-based approach to automatic bug report assignment
+    # Ramin Shokripoura, John Anvik, Zarinah M. Kasiruna, Sima Zamania
+    def time_based_tfidf(self, profile_terms, bug_terms, bug_time, module):
+        expertise = 0
+
+        for bug_term in bug_terms:
+            if bug_term in profile_terms:
+                if self.dev_count(bug_term, module) == 0:
+                    continue
+                temp = profile_terms[bug_term]
+                tfidf = temp['frequency'] * math.log10(len(self.profiles) / self.dev_count(bug_term, module))
+                difference_in_days = (bug_time - temp['date']).days
+                recency = (1 / self.dev_count(bug_term, module)) + (1 / math.sqrt(difference_in_days))
+
+                time_tf_idf = tfidf * recency
+                expertise += time_tf_idf
+
+        return expertise
+
+    def dev_count(self, bug_term, module):
+        counter = 0
+        for index_, profile in self.profiles.items():
+            if module == 'history' and bug_term in profile.history:
+                counter += 1
+            if module == 'code' and bug_term in profile.code:
+                counter += 1
+            if module == 'api' and bug_term in profile.api:
+                counter += 1
+
+        return counter
