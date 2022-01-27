@@ -218,6 +218,20 @@ SELECT author, count(*) as number_of_changes, username FROM processed_code group
                 print(commit['hash'])
 ```
 
+-------
+Not needed any more:
+
+print('for bug' + str(new_bug['id']))
+print(local_scores.sort_values(by='score', ascending=False))
+x = datetime.datetime.strptime('1998-12-28 12:00:00', '%Y-%m-%d %H:%M:%S')
+            self.profiles['Martin Aeschlimann'].update_history(
+                {'A': {'frequency': 1 / 2, 'date': x}, 'B': {'frequency': 3, 'date': x}})
+            self.profiles['Amir Dashti'] = Profile('Amit Dashti', {}, {}, {})
+            fix_experience = self.time_based_tfidf(profile.history, ['B', 'B'], new_bug['report_time'], 'history')
+
+            exit(fix_experience)
+
+
 # code_scanner = CodeScanner()
 # code_scanner.analyze_commit_message('[41451]Something [Bug 213] copyrights (312) (1242).')
 # exit(1)

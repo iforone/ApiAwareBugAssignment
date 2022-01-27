@@ -1,5 +1,3 @@
-import re
-
 import mysql.connector
 import pandas as pd
 from Profiler import Profiler
@@ -150,31 +148,23 @@ code_scanner = CodeScanner()
 code_scanner.analyze_codes(project, builder, database)
 database.close()
 
-exit('OKAY FOR NOW')
-
 # create profiles for users
 profiler = Profiler(approach, project)
-
 # loop through each bug report
 for index, bug in bugs.iterrows():
-    # run 3 modules
-    profiler.sync_history(bug)
-    profiler.sync_activity(bug)
-    profiler.sync_api(bug)
-
-    # calculate ranking
-    # TODO: remove 30 most common words from bug reports in VSM
-    ranked_developers = profiler.rank_developers()
-
+    profiler.sync_profiles(bug)
+    ranked_developers = profiler.rank_developers(bug)
     # check against gold standard and save the result
     for k in ks:
         bugs.at[index, 'at_' + str(k)] = 0
-
         # if assignee was edited we consider the edit too
         assignees = bug['assignees'].split(',')
         for assignee in assignees:
             if assignee in ranked_developers[:k]:
                 bugs.at[index, 'at_' + str(k)] = 1
 
+print('Accuracy at:')
+for k in ks:
+    print(str(len(bugs[bugs['at_' + str(k)] == 1])))
+    print('at ' + str(k) + ': ' + str(100 * (len(bugs[bugs['at_' + str(k)] == 1]) / len(bugs))) + '%')
 export_to_csv(bugs, project)
-
