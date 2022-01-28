@@ -1,6 +1,7 @@
 import math
 from Profile import Profile, array_to_frequency_list
 import pandas as pd
+from base import SECONDS_IN_A_DAY
 
 
 def write_to_text(file_name, text):
@@ -11,7 +12,7 @@ def write_to_text(file_name, text):
 
 class Profiler:
     def __init__(self, approach, project):
-        print('💻 running profiler')
+        print('🍔 running profiler')
         # the approach that is being used for finding the underlying relation between a new bug and previous data
         self.approach = approach
         # name of the project
@@ -93,8 +94,15 @@ class Profiler:
                     continue
                 temp = profile_terms[bug_term]
                 tfidf = temp['frequency'] * math.log10(len(self.profiles) / self.dev_count(bug_term, module))
-                difference_in_days = (bug_time - temp['date']).days
-                recency = (1 / self.dev_count(bug_term, module)) + (1 / math.sqrt(difference_in_days))
+
+                difference_in_seconds = (bug_time - temp['date']).total_seconds()
+                difference_in_days = difference_in_seconds / SECONDS_IN_A_DAY
+                damped_difference_in_days = math.sqrt(difference_in_days)
+                if difference_in_days == 0:
+                    # lim 1/ x where x -> 0+ is +infinite
+                    recency = float('inf')
+                else:
+                    recency = (1 / self.dev_count(bug_term, module)) + (1 / damped_difference_in_days)
 
                 time_tf_idf = tfidf * recency
                 expertise += time_tf_idf

@@ -8,7 +8,7 @@ javaee_directory = input_directory + 'javaee/'
 javase_tree_file = 'javase.txt'
 javaee_tree_file = 'javaee.txt'
 stop_words_file = 'java_stopwords.txt'
-
+SECONDS_IN_A_DAY = 24 * 60 * 60
 validation_folder = output_folder + 'validations/'
 validation_of_vcs_jdt = validation_folder + 'jdt_vcs_log.txt'
 
