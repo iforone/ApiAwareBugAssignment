@@ -1,8 +1,4 @@
-from time import timezone
-
 import subprocess
-import base
-import pandas as pd
 import pytz
 from dateutil import parser
 import git
@@ -88,7 +84,9 @@ class DeepProcessor:
     def find_commits_between(self, end_, start_):
         initial = 'cd ./data/input/' + self.project
         subprocess.run(initial + ';git checkout master', capture_output=True, shell=True)
-        command = initial + ';git log --after="' + str(start_) + '-05:00" --before="' + str(end_) + '-05:00"'
+        # my machine is UTC - git is UTC
+        # EDT + 5:00 == UTC
+        command = initial + ';git log --after="' + str(start_) + '+05:00" --before="' + str(end_) + '+05:00"'
         process = subprocess.run(command, capture_output=True, shell=True)
         commits_text = process.stdout.decode("utf-8")
         commits_dict = {}

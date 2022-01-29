@@ -1,5 +1,6 @@
 import mysql.connector
 import pandas as pd
+import pytz
 from Profiler import Profiler
 import os.path
 from DeepProcess import DeepProcessor
@@ -151,7 +152,12 @@ database.close()
 # create profiles for users
 profiler = Profiler(approach, project)
 # loop through each bug report
+counter = 0
 for index, bug in bugs.iterrows():
+    bug['report_time'] = bug['report_time'].tz_localize(pytz.timezone('EST5EDT'))
+    bug['report_time'] = bug['report_time'].tz_convert(pytz.timezone('UTC'))
+    bug['report_time'] = bug['report_time'].tz_localize(None)
+
     profiler.sync_profiles(bug)
     ranked_developers = profiler.rank_developers(bug)
     # check against gold standard and save the result
@@ -162,6 +168,9 @@ for index, bug in bugs.iterrows():
         for assignee in assignees:
             if assignee in ranked_developers[:k]:
                 bugs.at[index, 'at_' + str(k)] = 1
+
+    counter += 1
+    print('processed: ' + str(counter) + '/' + str(len(bugs)))
 
 print('Accuracy at:')
 for k in ks:
