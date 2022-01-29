@@ -1,7 +1,7 @@
 import math
 import pytz
 from pandas import Timestamp
-from Profile import Profile, array_to_frequency_list
+from Profile import Profile, array_to_frequency_list, frequency_to_frequency_list
 import pandas as pd
 from base import SECONDS_IN_A_DAY
 
@@ -13,23 +13,40 @@ def write_to_text(file_name, text):
 
 
 class Profiler:
-    def __init__(self, approach, project):
+    def __init__(self, approach, project, builder):
         print('🍔 running profiler')
         # the approach that is being used for finding the underlying relation between a new bug and previous data
         self.approach = approach
         # name of the project
         self.project = project
         # the beginning of the timeframe in which activities should be considered for update
-        self.previous = Timestamp('1999-01-01 00:00:00', tz=pytz.timezone('utc'))
+        self.previous = Timestamp('1999-01-01 00:00:00')
         # array of known bugs that are already processed at any moment
         self.previous_bugs = {}
         # array of known developer profiles at any moment
         self.profiles = {}
+        # builder for query to projects
+        self.builder = builder
+        # temporary keep last changes in code between a time frame
+        self.temp_changes = None
 
     def sync_profiles(self, bug):
         self.sync_history(bug)
+        self.get_changed_codes(self.previous, bug['report_time'])
         self.sync_activity(bug)
         self.sync_api(bug)
+        # checking authors and exiting history
+        # unify all update methods
+
+    def get_changed_codes(self, begin, end):
+        self.builder.execute("""
+            SELECT id, codes_bag_of_words, commit_bag_of_words, used_apis, author, committed_at
+            FROM processed_code
+            WHERE %s <= committed_at AND committed_at < %s AND is_extractable = 1
+        """, [str(begin), str(end)])
+        self.temp_changes = pd.DataFrame(self.builder.fetchall())
+        if len(self.temp_changes) != 0:
+            self.temp_changes.columns = self.builder.column_names
 
     def sync_history(self, new_bug):
         if len(self.previous_bugs) == 0:
@@ -49,16 +66,38 @@ class Profiler:
                 self.profiles[assignee] = Profile(assignee, last_bug_terms_f, {}, {})
 
     def sync_activity(self, new_bug):
-        pass
+        for index, change in self.temp_changes.iterrows():
+            author = change['author']
+            code_terms = array_to_frequency_list(change['codes_bag_of_words'].split(','), change['committed_at'])
+
+            if author in self.profiles:
+                self.profiles[author].update_code(code_terms)
+            else:
+                self.profiles[author] = Profile(author, {}, code_terms, {})
 
     def sync_api(self, new_bug):
-        pass
+        for index, change in self.temp_changes.iterrows():
+            author = change['author']
+            api_terms = frequency_to_frequency_list(change['used_apis'], change['committed_at'])
+
+            if author in self.profiles:
+                self.profiles[author].update_api(api_terms)
+            else:
+                self.profiles[author] = Profile(author, {}, api_terms, {})
 
     def get_bug_apis(self, new_bug):
         if self.approach == 'direct':
             return []
         elif self.approach == 'indirect':
             return []
+
+    def similar_bugs(self, new_bug, top=5):
+        similar_bugs = {}
+        for index_, previous_bug in self.previous_bugs.items():
+            if False:
+                pass
+
+        return similar_bugs
 
     def rank_developers(self, new_bug):
         result = self.calculate_ranks(new_bug).tolist()
@@ -122,3 +161,4 @@ class Profiler:
                 counter += 1
 
         return counter
+
