@@ -1,4 +1,6 @@
 import math
+import pytz
+from pandas import Timestamp
 from Profile import Profile, array_to_frequency_list
 import pandas as pd
 from base import SECONDS_IN_A_DAY
@@ -18,7 +20,7 @@ class Profiler:
         # name of the project
         self.project = project
         # the beginning of the timeframe in which activities should be considered for update
-        self.previous = '1999-01-01 00:00:00'
+        self.previous = Timestamp('1999-01-01 00:00:00', tz=pytz.timezone('utc'))
         # array of known bugs that are already processed at any moment
         self.previous_bugs = {}
         # array of known developer profiles at any moment
