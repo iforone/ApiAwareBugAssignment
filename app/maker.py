@@ -147,10 +147,9 @@ scanner.count_used_apis(builder)
 # tokenize all codes and commit messages
 code_scanner = CodeScanner()
 code_scanner.analyze_codes(project, builder, database)
-database.close()
 
 # create profiles for users
-profiler = Profiler(approach, project)
+profiler = Profiler(approach, project, builder)
 # loop through each bug report
 counter = 0
 for index, bug in bugs.iterrows():
@@ -172,8 +171,11 @@ for index, bug in bugs.iterrows():
     counter += 1
     print('processed: ' + str(counter) + '/' + str(len(bugs)))
 
-print('Accuracy at:')
+database.close()
+
+print('📈 Accuracy at:')
 for k in ks:
     print(str(len(bugs[bugs['at_' + str(k)] == 1])))
     print('at ' + str(k) + ': ' + str(100 * (len(bugs[bugs['at_' + str(k)] == 1]) / len(bugs))) + '%')
+
 export_to_csv(bugs, project)
