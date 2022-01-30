@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import mysql.connector
 import pandas as pd
 import pytz
@@ -107,9 +109,9 @@ def make_process_table(builder_):
     ''')
 
 
-def export_to_csv(data, project_name):
+def export_to_csv(data, project_name, extra=''):
     print('☁️ exporting the results to csv')
-    data[exportable_keys].to_csv('./data/output/' + project_name + '_' + approach + '.csv')
+    data[exportable_keys].to_csv('./data/output/' + project_name + '_' + approach + extra + '.csv')
 
 
 # process the commits to find line-by-line changes and imports of each file
@@ -194,6 +196,9 @@ for index, bug in bugs.iterrows():
 
     save_proof_of_work(bugs, index, answer)
     counter += 1
+    if counter % 150 == 0:
+        export_to_csv(bugs, project, str(datetime.now().strftime("%d-%b-%Y_%H-%M-%S")))
+
     print('processed: ' + str(counter) + '/' + str(len(bugs)))
 
 database.close()
