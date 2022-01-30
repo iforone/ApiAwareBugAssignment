@@ -1,5 +1,5 @@
+import collections
 import math
-import pytz
 from pandas import Timestamp
 from Profile import Profile, array_to_frequency_list, frequency_to_frequency_list
 import pandas as pd
@@ -53,15 +53,30 @@ class Profiler:
             return
 
         last_bug = self.previous_bugs[len(self.previous_bugs) - 1]
+        # final updates for memorizing important values of a bug to be used later
+        self.previous_bugs[len(self.previous_bugs) - 1]['bag_of_word_stemmed_split'] = \
+            self.previous_bugs[len(self.previous_bugs) - 1]['bag_of_word_stemmed'].split()
+
+        self.previous_bugs[len(self.previous_bugs) - 1]['bag_of_word_stemmed_frequency'] = \
+            collections.Counter(self.previous_bugs[len(self.previous_bugs) - 1]['bag_of_word_stemmed_split'])
+
+        self.previous_bugs[len(self.previous_bugs) - 1]['direct_apis'] = {}
+
         # TODO for now let's just use the words in bug report later it can be codes too
-        last_bug_terms = last_bug['bag_of_word_stemmed'].split()
+        last_bug_terms = self.previous_bugs[len(self.previous_bugs) - 1]['bag_of_word_stemmed_split']
         last_bug_terms_f = array_to_frequency_list(last_bug_terms, last_bug['report_time'])
 
         # none of the bug reports in JDT have more than one assignee so this is technically one assignee
         assignees = last_bug['assignees'].split(',')
+
+        if 1 < len(assignees):
+            exit('❌ API experience track of bugs would not work. you need to consider all assignees')
+
         for assignee in assignees:
             if assignee in self.profiles:
                 self.profiles[assignee].update_history(last_bug_terms_f)
+                temp_api_dict = self.profiles[assignee].api.copy()
+                self.previous_bugs[len(self.previous_bugs) - 1]['direct_apis'] = temp_api_dict
             else:
                 self.profiles[assignee] = Profile(assignee, last_bug_terms_f, {}, {})
 
@@ -85,54 +100,90 @@ class Profiler:
             else:
                 self.profiles[author] = Profile(author, {}, api_terms, {})
 
-    def get_bug_apis(self, new_bug):
-        if self.approach == 'direct':
-            return []
-        elif self.approach == 'indirect':
-            return []
+    def get_bug_apis(self, bug_terms):
+        similar_bug_ids = self.top_similar_bugs(bug_terms)
+        similar_bug_ids = similar_bug_ids['index'][:5]
 
-    def similar_bugs(self, new_bug, top=5):
-        similar_bugs = {}
+        # direct - use the API experience of assignees for the similar bugs
+        list_ = {}
+
+        for index_ in similar_bug_ids:
+            apis = self.previous_bugs[index_]['direct_apis']
+            for i_, api in apis.items():
+                list_.update({i_: api['frequency'] + list_.get(i_, 0)})
+
+        return list_
+        # if self.approach == 'direct':
+        # indirect - use the API experience of the commit the solved the similar bug
+        # elif self.approach == 'indirect':
+        #    exit('❌ the indirect approach failed!')
+        #    return []
+
+    def top_similar_bugs(self, bug_terms, top=5):
+        local_scores = pd.DataFrame(columns=['index', 'bug_id', 'score'])
+
         for index_, previous_bug in self.previous_bugs.items():
-            if False:
-                pass
+            score = self.tf_idf(
+                previous_bug['bag_of_word_stemmed_split'],
+                previous_bug['bag_of_word_stemmed_frequency'],
+                bug_terms
+            )
 
-        return similar_bugs
+            local_scores.loc[len(local_scores)] = [index_, previous_bug['bug_id'], score]
+
+        return local_scores[local_scores['score'] != 0].sort_values(by='score', ascending=False)
 
     def rank_developers(self, new_bug):
-        result = self.calculate_ranks(new_bug).tolist()
+        result = self.calculate_ranks(new_bug)
         self.previous = new_bug['report_time']
         self.previous_bugs[len(self.previous_bugs)] = new_bug
 
         return result
 
     def calculate_ranks(self, new_bug):
-        bug_apis = self.get_bug_apis(new_bug)
         bug_terms = new_bug['bag_of_word_stemmed'].split()
+        print('BUG:' + str(new_bug['id']))
+        bug_apis = self.get_bug_apis(bug_terms)
         # TODO: remove 30 most common words from bug reports in VSM
         # ask question about this
 
-        local_scores = pd.DataFrame(columns=['developer', 'score'])
+        local_scores = pd.DataFrame(columns=['developer', 'score'])  # the total score
+        history_scores = pd.DataFrame(columns=['developer', 'score'])
+        code_scores = pd.DataFrame(columns=['developer', 'score'])
+        api_scores = pd.DataFrame(columns=['developer', 'score'])
 
         for index_, profile in self.profiles.items():
             fix_experience = self.time_based_tfidf(profile.history, bug_terms, new_bug['report_time'], 'history')
             code_experience = self.time_based_tfidf(profile.code, bug_terms, new_bug['report_time'], 'code')
             api_experience = self.time_based_tfidf(profile.api, bug_apis, new_bug['report_time'], 'api')
-
             score = fix_experience + code_experience + api_experience
+
+            history_scores.loc[len(history_scores)] = [profile.name, fix_experience]
+            code_scores.loc[len(code_scores)] = [profile.name, code_experience]
+            api_scores.loc[len(api_scores)] = [profile.name, api_experience]
             local_scores.loc[len(local_scores)] = [profile.name, score]
 
-        return local_scores.sort_values(by='score', ascending=False)['developer']
+        return [
+            local_scores.sort_values(by='score', ascending=False)['developer'].tolist(),
+            history_scores.sort_values(by='score', ascending=False),
+            code_scores.sort_values(by='score', ascending=False),
+            api_scores.sort_values(by='score', ascending=False),
+        ]
 
     # A time-based approach to automatic bug report assignment
     # Ramin Shokripoura, John Anvik, Zarinah M. Kasiruna, Sima Zamania
     def time_based_tfidf(self, profile_terms, bug_terms, bug_time, module):
         expertise = 0
 
+        # this is only due different data-type for counts of apis the logic is still same as original
+        if type(bug_terms) is dict:
+            weights = bug_terms.copy()
+            bug_terms = bug_terms.keys()
+        else:
+            weights = {}
+
         for bug_term in bug_terms:
             if bug_term in profile_terms:
-                if self.dev_count(bug_term, module) == 0:
-                    continue
                 temp = profile_terms[bug_term]
                 tfidf = temp['frequency'] * math.log10(len(self.profiles) / self.dev_count(bug_term, module))
 
@@ -145,7 +196,7 @@ class Profiler:
                 else:
                     recency = (1 / self.dev_count(bug_term, module)) + (1 / damped_difference_in_days)
 
-                time_tf_idf = tfidf * recency
+                time_tf_idf = tfidf * recency * weights.get(bug_term, 1)
                 expertise += time_tf_idf
 
         return expertise
@@ -162,3 +213,19 @@ class Profiler:
 
         return counter
 
+    # for TF-IDF
+    def tf_idf(self, doc_a_terms, frequencies, bug_terms):
+        total = 0
+        for bug_term in bug_terms:
+            if bug_term in doc_a_terms:
+                tfidf = (frequencies[bug_term] / len(doc_a_terms)) * \
+                        math.log10(len(self.previous_bugs) / self.bug_count(bug_term))
+                total += tfidf
+        return total
+
+    def bug_count(self, bug_term):
+        counter = 0
+        for index_, previous_bug in self.previous_bugs.items():
+            if bug_term in previous_bug['bag_of_word_stemmed_split']:
+                counter += 1
+        return counter

@@ -6,7 +6,7 @@ import os.path
 from DeepProcess import DeepProcessor
 from APIScanner import APIScanner
 from CodeScanner import CodeScanner
-from base import output_folder, ks
+from base import output_folder, ks, exportable_keys
 
 
 # select which project to check
@@ -49,6 +49,29 @@ def with_cleaning():
     return answers['cleaning']
 
 
+def save_proof_of_work(bugs_, index_, answer_):
+    # 1 is history
+    counter__ = 0
+    for x, row_ in answer_[1].head(10).iterrows():
+        counter__ += 1
+        bugs_.at[index_, 'history_at_' + str(counter__)] = row_['developer']
+        bugs_.at[index_, 'history_at_' + str(counter__) + '_v'] = row_['score']
+
+    # 2 is code
+    counter__ = 0
+    for x, row_ in answer_[2].head(10).iterrows():
+        counter__ += 1
+        bugs_.at[index_, 'code_at_' + str(counter__)] = row_['developer']
+        bugs_.at[index_, 'code_at_' + str(counter__) + '_v'] = row_['score']
+
+    # 3 is api
+    counter__ = 0
+    for x, row_ in answer_[3].head(10).iterrows():
+        counter__ += 1
+        bugs_.at[index_, 'api_at_' + str(counter__)] = row_['developer']
+        bugs_.at[index_, 'api_at_' + str(counter__) + '_v'] = row_['score']
+
+
 # connect to a selected database
 def mysql_connection(project_name):
     return mysql.connector.connect(
@@ -86,8 +109,7 @@ def make_process_table(builder_):
 
 def export_to_csv(data, project_name):
     print('☁️ exporting the results to csv')
-    keys = ['bug_id', 'at_1', 'at_2', 'at_3', 'at_4', 'at_5', 'at_10']
-    data[keys].to_csv('./data/output/' + project_name + '_' + approach + '.csv')
+    data[exportable_keys].to_csv('./data/output/' + project_name + '_' + approach + '.csv')
 
 
 # process the commits to find line-by-line changes and imports of each file
@@ -152,27 +174,25 @@ code_scanner.analyze_codes(project, builder, database)
 profiler = Profiler(approach, project, builder)
 # loop through each bug report
 counter = 0
+
 for index, bug in bugs.iterrows():
     bug['report_time'] = bug['report_time'].tz_localize(pytz.timezone('EST5EDT'))
     bug['report_time'] = bug['report_time'].tz_convert(pytz.timezone('UTC'))
     bug['report_time'] = bug['report_time'].tz_localize(None)
 
     profiler.sync_profiles(bug)
-    ranked_developers = profiler.rank_developers(bug)
+    answer = profiler.rank_developers(bug)
+    ranked_developers = answer[0]
     # check against gold standard and save the result
     for k in ks:
         bugs.at[index, 'at_' + str(k)] = 0
-
-        # if bug['assignees'] is None:
-        #    bug['assignees'] = ''
-
         assignees = bug['assignees'].split(',')
-
         # if assignee was edited we consider the edit too
         for assignee in assignees:
             if assignee in ranked_developers[:k]:
                 bugs.at[index, 'at_' + str(k)] = 1
 
+    save_proof_of_work(bugs, index, answer)
     counter += 1
     print('processed: ' + str(counter) + '/' + str(len(bugs)))
 
