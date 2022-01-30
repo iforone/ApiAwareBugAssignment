@@ -5,7 +5,7 @@ def array_to_frequency_list(words, date):
     list_ = {}
     counter = collections.Counter(words)
     for i, c in counter.items():
-        list_[i] = {'frequency': c, 'date': date}
+        list_[i] = {'frequency': float(c), 'date': date}
     return list_
 
 
@@ -17,7 +17,7 @@ def frequency_to_frequency_list(word_str_, date):
     words = word_str_.split(',')
     for word in words:
         sp = word.split(':')
-        list_[sp[0]] = {'frequency': sp[1], 'date': date}
+        list_[sp[0]] = {'frequency': float(sp[1]), 'date': date}
 
     return list_
 
@@ -53,7 +53,7 @@ class Profile:
     def update(self, list_, key):
         for i, content in list_.items():
             if i in self[key]:
-                self[key][i]['frequency'] += content['frequency']
+                self[key][i]['frequency'] += float(content['frequency'])
                 # update date only if it is more in the future
                 if self[key][i]['date'] < content['date']:
                     self[key][i]['date'] = content['date']

@@ -162,8 +162,13 @@ for index, bug in bugs.iterrows():
     # check against gold standard and save the result
     for k in ks:
         bugs.at[index, 'at_' + str(k)] = 0
-        # if assignee was edited we consider the edit too
+
+        # if bug['assignees'] is None:
+        #    bug['assignees'] = ''
+
         assignees = bug['assignees'].split(',')
+
+        # if assignee was edited we consider the edit too
         for assignee in assignees:
             if assignee in ranked_developers[:k]:
                 bugs.at[index, 'at_' + str(k)] = 1
