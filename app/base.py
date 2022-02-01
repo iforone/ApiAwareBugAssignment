@@ -32,3 +32,13 @@ exportable_keys = ['bug_id', 'at_1', 'at_2', 'at_3', 'at_4', 'at_5', 'at_10', 'a
                    'api_at_1_v', 'api_at_2_v', 'api_at_3_v', 'api_at_4_v', 'api_at_5_v', 'api_at_6_v', 'api_at_7_v',
                    'api_at_8_v', 'api_at_9_v', 'api_at_10_v',
                    ]
+
+jdt_fixable_names = {
+    'cknaus': 'Claude Knaus',
+    'Andrew Weinand': 'Andre Weinand',
+    'Thomas Maeder': 'Thomas Mäder',
+    'tbay': 'Till Bay',
+    'Kai Maetzel': 'Kai-Uwe Maetzel',
+}
+
+jdt_fallback_account = 'JDT-Text-Inbox'

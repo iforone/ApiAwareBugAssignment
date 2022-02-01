@@ -1,4 +1,5 @@
 import collections
+from base import jdt_fixable_names
 
 
 def array_to_frequency_list(words, date):
@@ -20,6 +21,17 @@ def frequency_to_frequency_list(word_str_, date):
         list_[sp[0]] = {'frequency': float(sp[1]), 'date': date}
 
     return list_
+
+
+# guess the correct name developers
+# some of the developer names are in-consistent between commits and assignee name in the bug report
+# yet they refer to the same person (probably due them having made / modified account in different timelines or typos)
+def guess_correct_author_name(name, project):
+    # some names are in
+    if project == 'jdt':
+        if name in jdt_fixable_names.keys():
+            return jdt_fixable_names[name]
+    return name
 
 
 class Profile:
