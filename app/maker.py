@@ -197,8 +197,7 @@ for index, bug in bugs.iterrows():
     save_proof_of_work(bugs, index, answer)
     counter += 1
     if counter % 150 == 0:
-        export_to_csv(bugs, project, str(datetime.now().strftime("%d-%b-%Y_%H-%M-%S")))
-
+        export_to_csv(bugs, project, '_new' + str(datetime.now().strftime("%d-%b-%Y_%H-%M-%S")))
     print('processed: ' + str(counter) + '/' + str(len(bugs)))
 
 database.close()
