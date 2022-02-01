@@ -1,9 +1,9 @@
 import collections
 import math
 from pandas import Timestamp
-from Profile import Profile, array_to_frequency_list, frequency_to_frequency_list
+from Profile import Profile, array_to_frequency_list, frequency_to_frequency_list, guess_correct_author_name
 import pandas as pd
-from base import SECONDS_IN_A_DAY
+from base import SECONDS_IN_A_DAY, jdt_fallback_account
 
 
 def write_to_text(file_name, text):
@@ -82,8 +82,9 @@ class Profiler:
 
     def sync_activity(self, new_bug):
         for index, change in self.temp_changes.iterrows():
-            author = change['author']
-            code_terms = array_to_frequency_list(change['codes_bag_of_words'].split(','), change['committed_at'])
+            author = guess_correct_author_name(change['author'], self.project)
+            tempest = change['codes_bag_of_words'].split(',') + change['commit_bag_of_words'].split(',')
+            code_terms = array_to_frequency_list(tempest, change['committed_at'])
 
             if author in self.profiles:
                 self.profiles[author].update_code(code_terms)
@@ -92,7 +93,7 @@ class Profiler:
 
     def sync_api(self, new_bug):
         for index, change in self.temp_changes.iterrows():
-            author = change['author']
+            author = guess_correct_author_name(change['author'], self.project)
             api_terms = frequency_to_frequency_list(change['used_apis'], change['committed_at'])
 
             if author in self.profiles:
@@ -102,7 +103,7 @@ class Profiler:
 
     def get_bug_apis(self, bug_terms):
         similar_bug_ids = self.top_similar_bugs(bug_terms)
-        similar_bug_ids = similar_bug_ids['index'][:5]
+        similar_bug_ids = similar_bug_ids['index'][:2]
 
         # direct - use the API experience of assignees for the similar bugs
         list_ = {}
@@ -163,11 +164,18 @@ class Profiler:
             api_scores.loc[len(api_scores)] = [profile.name, api_experience]
             local_scores.loc[len(local_scores)] = [profile.name, score]
 
+        # add fallback of the project
+        if self.project == 'jdt':
+            code_scores.loc[len(code_scores)] = [jdt_fallback_account, -1]
+            api_scores.loc[len(api_scores)] = [jdt_fallback_account, -1]
+        if self.project == 'swt':
+            pass
+
         return [
             local_scores.sort_values(by='score', ascending=False)['developer'].tolist(),
             history_scores.sort_values(by='score', ascending=False),
-            code_scores.sort_values(by='score', ascending=False),
-            api_scores.sort_values(by='score', ascending=False),
+            code_scores[code_scores['score'] != 0].sort_values(by='score', ascending=False),
+            api_scores[api_scores['score'] != 0].sort_values(by='score', ascending=False),
         ]
 
     # A time-based approach to automatic bug report assignment
