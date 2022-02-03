@@ -12,6 +12,9 @@ SECONDS_IN_A_DAY = 24 * 60 * 60
 validation_folder = output_folder + 'validations/'
 validation_of_vcs_jdt = validation_folder + 'jdt_vcs_log.txt'
 
+bug_similarity_threshold = 1
+bug_api_threshold = 5
+
 ks = [1, 2, 3, 4, 5, 10]
 
 exportable_keys = ['bug_id', 'at_1', 'at_2', 'at_3', 'at_4', 'at_5', 'at_10', 'assignees',

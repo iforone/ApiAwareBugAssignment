@@ -3,7 +3,7 @@ import math
 from pandas import Timestamp
 from Profile import Profile, array_to_frequency_list, frequency_to_frequency_list, guess_correct_author_name
 import pandas as pd
-from base import SECONDS_IN_A_DAY, jdt_fallback_account
+from base import SECONDS_IN_A_DAY, jdt_fallback_account, bug_similarity_threshold, bug_api_threshold
 
 
 def write_to_text(file_name, text):
@@ -83,7 +83,7 @@ class Profiler:
     def sync_activity(self, new_bug):
         for index, change in self.temp_changes.iterrows():
             author = guess_correct_author_name(change['author'], self.project)
-            tempest = change['codes_bag_of_words'].split(',') + change['commit_bag_of_words'].split(',')
+            tempest = list(set(change['codes_bag_of_words'].split(','))) + change['commit_bag_of_words'].split(',')
             code_terms = array_to_frequency_list(tempest, change['committed_at'])
 
             if author in self.profiles:
@@ -103,7 +103,7 @@ class Profiler:
 
     def get_bug_apis(self, bug_terms):
         similar_bug_ids = self.top_similar_bugs(bug_terms)
-        similar_bug_ids = similar_bug_ids['index'][:2]
+        similar_bug_ids = similar_bug_ids['index'][:bug_similarity_threshold]
 
         # direct - use the API experience of assignees for the similar bugs
         list_ = {}
@@ -114,13 +114,21 @@ class Profiler:
                 list_.update({i_: api['frequency'] + list_.get(i_, 0)})
 
         return list_
+        # IDEA: least common apis can carry knowledge
+        # sorted_ = sorted(list_.items(), key=lambda item: item[1], reverse=True)[:bug_api_threshold]
+        # final = {}
+        # for t in sorted_:
+        #     final.update({t[0]: t[1]})
+        # return final
+
+        # Dustet daram
         # if self.approach == 'direct':
         # indirect - use the API experience of the commit the solved the similar bug
         # elif self.approach == 'indirect':
         #    exit('❌ the indirect approach failed!')
         #    return []
 
-    def top_similar_bugs(self, bug_terms, top=5):
+    def top_similar_bugs(self, bug_terms):
         local_scores = pd.DataFrame(columns=['index', 'bug_id', 'score'])
 
         for index_, previous_bug in self.previous_bugs.items():
@@ -185,7 +193,7 @@ class Profiler:
 
         # this is only due different data-type for counts of apis the logic is still same as original
         if type(bug_terms) is dict:
-            weights = bug_terms.copy()
+            weights = {}  # bug_terms.copy()
             bug_terms = bug_terms.keys()
         else:
             weights = {}

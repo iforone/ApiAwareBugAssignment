@@ -51,27 +51,40 @@ def with_cleaning():
     return answers['cleaning']
 
 
-def save_proof_of_work(bugs_, index_, answer_):
+def save_proof_of_work(id_, assignees_, answer_):
+    proof = {'bug_id': id_, 'assignees': assignees_}
+
+    # check against gold standard and save the result
+    for k_ in ks:
+        proof['at_' + str(k_)] = 0
+        assignees = assignees_.split(',')
+        # if assignee was edited we consider the edit too
+        for assignee in assignees:
+            if assignee in ranked_developers[:k_]:
+                proof['at_' + str(k_)] = 1
+
     # 1 is history
     counter__ = 0
     for x, row_ in answer_[1].head(10).iterrows():
         counter__ += 1
-        bugs_.at[index_, 'history_at_' + str(counter__)] = row_['developer']
-        bugs_.at[index_, 'history_at_' + str(counter__) + '_v'] = row_['score']
+        proof['history_at_' + str(counter__)] = row_['developer']
+        proof['history_at_' + str(counter__) + '_v'] = row_['score']
 
     # 2 is code
     counter__ = 0
     for x, row_ in answer_[2].head(10).iterrows():
         counter__ += 1
-        bugs_.at[index_, 'code_at_' + str(counter__)] = row_['developer']
-        bugs_.at[index_, 'code_at_' + str(counter__) + '_v'] = row_['score']
+        proof['code_at_' + str(counter__)] = row_['developer']
+        proof['code_at_' + str(counter__) + '_v'] = row_['score']
 
     # 3 is api
     counter__ = 0
     for x, row_ in answer_[3].head(10).iterrows():
         counter__ += 1
-        bugs_.at[index_, 'api_at_' + str(counter__)] = row_['developer']
-        bugs_.at[index_, 'api_at_' + str(counter__) + '_v'] = row_['score']
+        proof['api_at_' + str(counter__)] = row_['developer']
+        proof['api_at_' + str(counter__) + '_v'] = row_['score']
+
+    return proof
 
 
 # connect to a selected database
@@ -108,10 +121,19 @@ def make_process_table(builder_):
     UNIQUE KEY `processed_code_id_uindex` (`id`))
     ''')
 
+    try:
+        builder.execute('''
+        create index processed_code_committed_at_is_extractable_index on processed_code(committed_at, is_extractable);
+        ''')
+    except:
+        pass
+
 
 def export_to_csv(data, project_name, extra=''):
     print('☁️ exporting the results to csv')
-    data[exportable_keys].to_csv('./data/output/' + project_name + '_' + approach + extra + '.csv')
+
+    tempest = pd.DataFrame.from_dict(data, orient='index')
+    tempest[exportable_keys].to_csv('./data/output/' + project_name + '_' + approach + extra + '.csv')
 
 
 # process the commits to find line-by-line changes and imports of each file
@@ -176,7 +198,7 @@ code_scanner.analyze_codes(project, builder, database)
 profiler = Profiler(approach, project, builder)
 # loop through each bug report
 counter = 0
-
+response = {}
 for index, bug in bugs.iterrows():
     bug['report_time'] = bug['report_time'].tz_localize(pytz.timezone('EST5EDT'))
     bug['report_time'] = bug['report_time'].tz_convert(pytz.timezone('UTC'))
@@ -185,26 +207,19 @@ for index, bug in bugs.iterrows():
     profiler.sync_profiles(bug)
     answer = profiler.rank_developers(bug)
     ranked_developers = answer[0]
-    # check against gold standard and save the result
-    for k in ks:
-        bugs.at[index, 'at_' + str(k)] = 0
-        assignees = bug['assignees'].split(',')
-        # if assignee was edited we consider the edit too
-        for assignee in assignees:
-            if assignee in ranked_developers[:k]:
-                bugs.at[index, 'at_' + str(k)] = 1
 
-    save_proof_of_work(bugs, index, answer)
+    response[index] = save_proof_of_work(bug['bug_id'], bug['assignees'], answer)
+
     counter += 1
-    if counter % 150 == 0:
-        export_to_csv(bugs, project, '_new' + str(datetime.now().strftime("%d-%b-%Y_%H-%M-%S")))
+    if counter % 1000 == 0:
+        export_to_csv(response, project, '_new' + str(datetime.now().strftime("%d-%b-%Y_%H-%M-%S")))
     print('processed: ' + str(counter) + '/' + str(len(bugs)))
 
 database.close()
 
-print('📈 Accuracy at:')
-for k in ks:
-    print(str(len(bugs[bugs['at_' + str(k)] == 1])))
-    print('at ' + str(k) + ': ' + str(100 * (len(bugs[bugs['at_' + str(k)] == 1]) / len(bugs))) + '%')
+# print('📈 Accuracy at:')
+# for k in ks:
+#     print(str(len(bugs[bugs['at_' + str(k)] == 1])))
+#     print('at ' + str(k) + ': ' + str(100 * (len(bugs[bugs['at_' + str(k)] == 1]) / len(bugs))) + '%')
 
-export_to_csv(bugs, project)
+export_to_csv(response, project)
