@@ -159,8 +159,8 @@ class Profiler:
     def calculate_ranks(self, new_bug):
         bug_terms = new_bug['bag_of_word_stemmed'].split()
         print('BUG:' + str(new_bug['id']))
-        # bug_apis = self.get_direct_bug_apis(bug_terms)
-        bug_apis = self.get_indirect_bug_apis(new_bug['commit_hash'])
+        bug_apis = self.get_direct_bug_apis(bug_terms)
+        # bug_apis = self.get_indirect_bug_apis(new_bug['commit_hash'])
         # TODO: remove 30 most common words from bug reports in VSM
         # ask question about this
 
