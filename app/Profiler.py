@@ -193,7 +193,7 @@ class Profiler:
 
         # this is only due different data-type for counts of apis the logic is still same as original
         if type(bug_terms) is dict:
-            weights = {}  # bug_terms.copy()
+            weights = bug_terms.copy()
             bug_terms = bug_terms.keys()
         else:
             weights = {}
