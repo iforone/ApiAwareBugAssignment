@@ -128,6 +128,13 @@ def make_process_table(builder_):
     except:
         pass
 
+    try:
+        builder.execute('''
+        create index processed_code_commit_hash_index on processed_code(commit_hash);
+        ''')
+    except:
+        pass
+
 
 def export_to_csv(data, project_name, extra=''):
     print('☁️ exporting the results to csv')
@@ -167,10 +174,10 @@ database = mysql_connection(project)
 builder = database.cursor()
 make_process_table(builder)
 builder.execute("""
-    SELECT bug_and_files.*, assginee_mapper.assignees
+    SELECT bug_and_files.*, assginee_mapper.assignees, assginee_mapper.commit_hash
     FROM bug_and_files
     JOIN (
-            SELECT bug_id, GROUP_CONCAT(assignee) as assignees
+            SELECT bug_id, GROUP_CONCAT(assignee) as assignees, `commit` as commit_hash
             FROM bug_commit
             group by bug_id
         ) assginee_mapper on assginee_mapper.bug_id = bug_and_files.bug_id

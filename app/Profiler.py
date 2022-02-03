@@ -40,7 +40,7 @@ class Profiler:
 
     def get_changed_codes(self, begin, end):
         self.builder.execute("""
-            SELECT id, codes_bag_of_words, commit_bag_of_words, used_apis, author, committed_at
+            SELECT id, codes_bag_of_words, commit_bag_of_words, used_apis, author, committed_at, commit_hash
             FROM processed_code
             WHERE %s <= committed_at AND committed_at < %s AND is_extractable = 1
         """, [str(begin), str(end)])
@@ -81,9 +81,17 @@ class Profiler:
                 self.profiles[assignee] = Profile(assignee, last_bug_terms_f, {}, {})
 
     def sync_activity(self, new_bug):
+        # each change in a commit is a row but the commit message should be considered only once
+        already_considered_hashes = []
+
         for index, change in self.temp_changes.iterrows():
             author = guess_correct_author_name(change['author'], self.project)
-            tempest = list(set(change['codes_bag_of_words'].split(','))) + change['commit_bag_of_words'].split(',')
+            tempest = list(set(change['codes_bag_of_words'].split(',')))
+
+            if change['commit_hash'] not in already_considered_hashes:
+                tempest += change['commit_bag_of_words'].split(',')
+                already_considered_hashes.append(change['commit_hash'])
+
             code_terms = array_to_frequency_list(tempest, change['committed_at'])
 
             if author in self.profiles:
@@ -101,32 +109,31 @@ class Profiler:
             else:
                 self.profiles[author] = Profile(author, {}, api_terms, {})
 
-    def get_bug_apis(self, bug_terms):
+    def get_direct_bug_apis(self, bug_terms):
+        # direct - use the API experience of assignees for the similar bugs
         similar_bug_ids = self.top_similar_bugs(bug_terms)
         similar_bug_ids = similar_bug_ids['index'][:bug_similarity_threshold]
 
-        # direct - use the API experience of assignees for the similar bugs
         list_ = {}
-
         for index_ in similar_bug_ids:
             apis = self.previous_bugs[index_]['direct_apis']
             for i_, api in apis.items():
                 list_.update({i_: api['frequency'] + list_.get(i_, 0)})
 
         return list_
-        # IDEA: least common apis can carry knowledge
-        # sorted_ = sorted(list_.items(), key=lambda item: item[1], reverse=True)[:bug_api_threshold]
-        # final = {}
-        # for t in sorted_:
-        #     final.update({t[0]: t[1]})
-        # return final
 
-        # Dustet daram
-        # if self.approach == 'direct':
-        # indirect - use the API experience of the commit the solved the similar bug
-        # elif self.approach == 'indirect':
-        #    exit('❌ the indirect approach failed!')
-        #    return []
+    def get_indirect_bug_apis(self, commit_hash):
+        self.builder.execute("SELECT used_apis, committed_at FROM processed_code WHERE commit_hash LIKE '" + commit_hash + "%'")
+
+        changes = pd.DataFrame(self.builder.fetchall())
+
+        list_ = {}
+        for index, change in changes.iterrows():
+            tempest = frequency_to_frequency_list(change[0], None)
+            for i_, api in tempest.items():
+                list_.update({i_: api['frequency'] + list_.get(i_, 0)})
+
+        return list_
 
     def top_similar_bugs(self, bug_terms):
         local_scores = pd.DataFrame(columns=['index', 'bug_id', 'score'])
@@ -152,7 +159,8 @@ class Profiler:
     def calculate_ranks(self, new_bug):
         bug_terms = new_bug['bag_of_word_stemmed'].split()
         print('BUG:' + str(new_bug['id']))
-        bug_apis = self.get_bug_apis(bug_terms)
+        # bug_apis = self.get_direct_bug_apis(bug_terms)
+        bug_apis = self.get_indirect_bug_apis(new_bug['commit_hash'])
         # TODO: remove 30 most common words from bug reports in VSM
         # ask question about this
 
