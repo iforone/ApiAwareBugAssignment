@@ -123,7 +123,7 @@ class Profiler:
         return list_
 
     def get_indirect_bug_apis(self, commit_hash):
-        self.builder.execute("SELECT used_apis, committed_at FROM processed_code WHERE commit_hash LIKE '" + commit_hash + "%'")
+        self.builder.execute("SELECT used_apis FROM processed_code WHERE commit_hash LIKE '" + commit_hash + "%'")
 
         changes = pd.DataFrame(self.builder.fetchall())
 

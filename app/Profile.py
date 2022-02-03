@@ -1,4 +1,6 @@
 import collections
+import pandas
+
 from base import jdt_fixable_names
 
 
@@ -12,6 +14,8 @@ def array_to_frequency_list(words, date):
 
 def frequency_to_frequency_list(word_str_, date):
     if word_str_ is None or word_str_ == '':
+        return {}
+    if pandas.isnull(word_str_):
         return {}
 
     list_ = {}
