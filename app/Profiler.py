@@ -42,7 +42,7 @@ class Profiler:
         self.builder.execute("""
             SELECT id, codes_bag_of_words, commit_bag_of_words, used_apis, author, committed_at, commit_hash
             FROM processed_code
-            WHERE %s <= committed_at AND committed_at < %s AND is_extractable = 1
+            WHERE %s <= committed_at AND committed_at < %s
         """, [str(begin), str(end)])
         self.temp_changes = pd.DataFrame(self.builder.fetchall())
         if len(self.temp_changes) != 0:
@@ -86,7 +86,7 @@ class Profiler:
 
         for index, change in self.temp_changes.iterrows():
             author = guess_correct_author_name(change['author'], self.project)
-            tempest = list(set(change['codes_bag_of_words'].split(',')))
+            tempest = change['codes_bag_of_words'].split(',')
 
             if change['commit_hash'] not in already_considered_hashes:
                 tempest += change['commit_bag_of_words'].split(',')
@@ -111,8 +111,8 @@ class Profiler:
 
     def get_direct_bug_apis(self, bug_terms):
         # direct - use the API experience of assignees for the similar bugs
-        similar_bug_ids = self.top_similar_bugs(bug_terms)
-        similar_bug_ids = similar_bug_ids['index'][:bug_similarity_threshold]
+        # Jaccard is slightly worse but way faster - I want to see how the rest pans out
+        similar_bug_ids = self.top_similar_bugs(bug_terms, bug_similarity_threshold)
 
         list_ = {}
         for index_ in similar_bug_ids:
@@ -135,19 +135,24 @@ class Profiler:
 
         return list_
 
-    def top_similar_bugs(self, bug_terms):
-        local_scores = pd.DataFrame(columns=['index', 'bug_id', 'score'])
+    # returns index of the most similar bugs based on tf-idf similarity
+    def top_similar_bugs(self, bug_terms, top):
+        local_scores = {}
 
         for index_, previous_bug in self.previous_bugs.items():
-            score = self.tf_idf(
-                previous_bug['bag_of_word_stemmed_split'],
-                previous_bug['bag_of_word_stemmed_frequency'],
-                bug_terms
-            )
+            # score = self.tf_idf(
+            #     previous_bug['bag_of_word_stemmed_split'],
+            #     previous_bug['bag_of_word_stemmed_frequency'],
+            #     bug_terms
+            # )
+            score = self.jaccard(previous_bug['bag_of_word_stemmed_split'], bug_terms)
+            if 0 < score:
+                local_scores[index_] = score
 
-            local_scores.loc[len(local_scores)] = [index_, previous_bug['bug_id'], score]
+        if len(local_scores) == 0:
+            return []
 
-        return local_scores[local_scores['score'] != 0].sort_values(by='score', ascending=False)
+        return sorted(local_scores, key=local_scores.get, reverse=True)[:top]
 
     def rank_developers(self, new_bug):
         result = self.calculate_ranks(new_bug)
@@ -237,7 +242,13 @@ class Profiler:
 
         return counter
 
-    # for TF-IDF
+    # formula of jaccard similarity  -- used anymore for bug similarity
+    def jaccard(self, list1, list2):
+        intersection = len(list(set(list1).intersection(list2)))
+        union = (len(list1) + len(list2)) - intersection
+        return float(intersection) / union
+
+    # formula of TF-IDF -- not used anymore for bug similarity
     def tf_idf(self, doc_a_terms, frequencies, bug_terms):
         total = 0
         for bug_term in bug_terms:

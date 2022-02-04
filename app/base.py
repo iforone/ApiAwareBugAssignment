@@ -42,6 +42,9 @@ jdt_fixable_names = {
     'Thomas Maeder': 'Thomas Mäder',
     'tbay': 'Till Bay',
     'Kai Maetzel': 'Kai-Uwe Maetzel',
+    'dspringgay': 'Grant Gayed',
+    'mhuebscher': 'Markus Huebscher',
+    'jszurszewski': 'Joe Szurszewski'
 }
 
 jdt_fallback_account = 'JDT-Text-Inbox'

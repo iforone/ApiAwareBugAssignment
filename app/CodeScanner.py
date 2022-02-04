@@ -63,9 +63,9 @@ class CodeScanner:
         return id_matches
 
     def analyze_commit_message(self, all_text_):
-        return self.analyze_code(all_text_, True)
+        return self.analyze_code(all_text_, True, True)
 
-    def analyze_code(self, all_text_, with_simple_split=False, with_lexicon_analysis=False):
+    def analyze_code(self, all_text_, with_simple_split=False, with_shingle=False, with_lexicon_analysis=False):
         if with_lexicon_analysis:
             exit('failed!')
 
@@ -89,9 +89,11 @@ class CodeScanner:
             # w-shingling: 2-shingling
             shingles = w_shingles(' '.join(decomposed), 2)
             temp_tokens = {token}
-            temp_tokens.update(decomposed)
-            temp_tokens.update(shingles)
-            temp_tokens = set(temp_tokens)
+
+            if with_shingle:
+                temp_tokens.update(decomposed)
+                temp_tokens.update(shingles)
+                temp_tokens = set(temp_tokens)
 
             all_tokens.extend(temp_tokens)
 
@@ -134,7 +136,7 @@ class CodeScanner:
             # 0 - id
             # 1 - code
             # 2 - commit message
-            tokenized_code = self.analyze_code(change[1])
+            tokenized_code = self.analyze_code(change[1], False, False)
             tokenized_message = self.analyze_commit_message(change[2])
 
             builder_.execute("""UPDATE processed_code SET codes_bag_of_words = %s , commit_bag_of_words = %s WHERE id = %s """,
