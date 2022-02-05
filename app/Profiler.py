@@ -30,6 +30,17 @@ class Profiler:
         # temporary keep last changes in code between a time frame
         self.temp_changes = None
 
+    # initializing all possible profiles in the system -- this is different for each project
+    def initialize(self, potential_assignees):
+        self.builder.execute("SELECT author FROM processed_code WHERE 1 GROUP BY author")
+        all_authors_in_tracked_changes = pd.DataFrame(self.builder.fetchall())
+        for potential_assignee in potential_assignees:
+            if potential_assignee in all_authors_in_tracked_changes:
+                self.profiles[potential_assignee] = Profile(potential_assignee, {}, {}, {})
+
+        print('✅ Developer profiles are initialized!')
+        return
+
     def sync_profiles(self, bug):
         self.sync_history(bug)
         self.get_changed_codes(self.previous, bug['report_time'])
@@ -77,8 +88,8 @@ class Profiler:
                 self.profiles[assignee].update_history(last_bug_terms_f)
                 temp_api_dict = self.profiles[assignee].api.copy()
                 self.previous_bugs[len(self.previous_bugs) - 1]['direct_apis'] = temp_api_dict
-            else:
-                self.profiles[assignee] = Profile(assignee, last_bug_terms_f, {}, {})
+            # else:
+            #    self.profiles[assignee] = Profile(assignee, last_bug_terms_f, {}, {})
 
     def sync_activity(self, new_bug):
         # each change in a commit is a row but the commit message should be considered only once
@@ -96,8 +107,8 @@ class Profiler:
 
             if author in self.profiles:
                 self.profiles[author].update_code(code_terms)
-            else:
-                self.profiles[author] = Profile(author, {}, code_terms, {})
+            # else:
+            #    self.profiles[author] = Profile(author, {}, code_terms, {})
 
     def sync_api(self, new_bug):
         for index, change in self.temp_changes.iterrows():
@@ -106,8 +117,8 @@ class Profiler:
 
             if author in self.profiles:
                 self.profiles[author].update_api(api_terms)
-            else:
-                self.profiles[author] = Profile(author, {}, api_terms, {})
+            # else:
+            #    self.profiles[author] = Profile(author, {}, api_terms, {})
 
     def get_direct_bug_apis(self, bug_terms):
         # direct - use the API experience of assignees for the similar bugs

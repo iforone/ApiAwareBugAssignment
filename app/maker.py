@@ -210,6 +210,7 @@ code_scanner.analyze_codes(project, builder, database)
 
 # create profiles for users
 profiler = Profiler(approach, project, builder)
+profiler.initialize(bugs['assignees'].unique())
 # loop through each bug report
 counter = 0
 response = {}
