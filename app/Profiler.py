@@ -187,8 +187,9 @@ class Profiler:
 
         # add fallback of the project
         if self.project == 'jdt':
-            code_scores.loc[len(code_scores)] = [jdt_fallback_account, -1]
-            api_scores.loc[len(api_scores)] = [jdt_fallback_account, -1]
+            pass
+            # code_scores.loc[len(code_scores)] = [jdt_fallback_account, -1]
+            # api_scores.loc[len(api_scores)] = [jdt_fallback_account, -1]
         if self.project == 'swt':
             pass
 

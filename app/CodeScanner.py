@@ -85,15 +85,17 @@ class CodeScanner:
             # test: token = 'getCompilationUnitXMLDocument312Provider'
             # TODO: maybe change underline to nothing + capital letter in next character
             # identifier decomposition - based on BSBA  - this is basically 1-shingling
-            decomposed = camel_case_decomposed_list(token)
-            # w-shingling: 2-shingling
-            shingles = w_shingles(' '.join(decomposed), 2)
             temp_tokens = {token}
 
+            decomposed = camel_case_decomposed_list(token)
+            temp_tokens.update(decomposed)
+
             if with_shingle:
-                temp_tokens.update(decomposed)
+                # w-shingling: 2-shingling
+                shingles = w_shingles(' '.join(decomposed), 2)
                 temp_tokens.update(shingles)
-                temp_tokens = set(temp_tokens)
+
+            temp_tokens = set(temp_tokens)
 
             all_tokens.extend(temp_tokens)
 
