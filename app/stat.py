@@ -21,7 +21,6 @@ for index, row in df.iterrows():
         if str(a) != 'nan':
             total_scores['api'] += a
 
-
     scores = {}
     for i in range(1, 11):
         h = row['history_at_' + str(i) + '_v']
@@ -49,11 +48,20 @@ for index, row in df.iterrows():
             else:
                 scores[a_developer] = scores.get(a_developer, 0) + (a * 100 / total_scores['api'])
 
+    scores[previous] = scores.get(previous, 0) + 18
+
     # sorting the results
     sort = sorted(scores.items(), key=lambda x: x[1], reverse=True)
-
     if sort[0][0] == row['assignees']:
         count += 1
+
+    # golds = {row['history_at_1']: 0, row['history_at_2']: 0}
+    # for name, score in scores.items():
+    #     if name in golds:
+    #         golds[name] = golds.get(name, 0) + score
+    # sort = sorted(golds.items(), key=lambda x: x[1], reverse=True)
+    # if sort[0][0] == row['assignees']:
+    #     count +=1
 
     previous = row['assignees']
     total += 1
