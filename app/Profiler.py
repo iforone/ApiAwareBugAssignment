@@ -86,7 +86,7 @@ class Profiler:
 
         for index, change in self.temp_changes.iterrows():
             author = guess_correct_author_name(change['author'], self.project)
-            tempest = change['codes_bag_of_words'].split(',')
+            tempest = list(set(change['codes_bag_of_words'].split(',')))
 
             if change['commit_hash'] not in already_considered_hashes:
                 tempest += change['commit_bag_of_words'].split(',')
