@@ -86,13 +86,13 @@ class Profiler:
 
         for index, change in self.temp_changes.iterrows():
             author = guess_correct_author_name(change['author'], self.project)
-            tempest = list(set(change['codes_bag_of_words'].split(',')))
+            tempest = change['codes_bag_of_words'].split(',')
 
             if change['commit_hash'] not in already_considered_hashes:
                 tempest += change['commit_bag_of_words'].split(',')
                 already_considered_hashes.append(change['commit_hash'])
 
-            code_terms = array_to_frequency_list(tempest, change['committed_at'])
+            code_terms = array_to_frequency_list(list(set(tempest)), change['committed_at'])
 
             if author in self.profiles:
                 self.profiles[author].update_code(code_terms)
@@ -216,11 +216,14 @@ class Profiler:
                 temp = profile_terms[bug_term]
                 tfidf = temp['frequency'] * math.log10(len(self.profiles) / self.dev_count(bug_term, module))
 
-                difference_in_seconds = (bug_time - temp['date']).total_seconds()
-                difference_in_days = difference_in_seconds / SECONDS_IN_A_DAY
+                #difference_in_seconds = (bug_time - temp['date']).total_seconds()
+                #difference_in_days = difference_in_seconds / SECONDS_IN_A_DAY
+
+                difference_in_days = (bug_time - temp['date']).days
                 damped_difference_in_days = math.sqrt(difference_in_days)
                 if difference_in_days == 0:
                     # lim 1/ x where x -> 0+ is +infinite
+                    print('INFINITE Triggered')
                     recency = float('inf')
                 else:
                     recency = (1 / self.dev_count(bug_term, module)) + (1 / damped_difference_in_days)

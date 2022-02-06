@@ -12,7 +12,9 @@ def array_to_frequency_list(words, date):
     return list_
 
 
-def frequency_to_frequency_list(word_str_, date):
+# if dampen_weights is True it ignores the counts within one commit it is either 0 or 1
+# one means such api is used in this file change and 0 is no basically
+def frequency_to_frequency_list(word_str_, date, dampen_weights=True):
     if word_str_ is None or word_str_ == '':
         return {}
     if pandas.isnull(word_str_):
@@ -22,7 +24,11 @@ def frequency_to_frequency_list(word_str_, date):
     words = word_str_.split(',')
     for word in words:
         sp = word.split(':')
-        list_[sp[0]] = {'frequency': float(sp[1]), 'date': date}
+        value = sp[1]
+        # the reason for damping the impact is the count of how many times it has happened with in one file does not matter
+        if dampen_weights:
+            value = 1.0
+        list_[sp[0]] = {'frequency': float(value), 'date': date}
 
     return list_
 
