@@ -8,7 +8,7 @@ import os.path
 from DeepProcess import DeepProcessor
 from APIScanner import APIScanner
 from CodeScanner import CodeScanner
-from base import output_folder, ks, exportable_keys
+from base import output_folder, ks, exportable_keys, EXPORT_THRESHOLD
 
 
 # select which project to check
@@ -62,6 +62,17 @@ def save_proof_of_work(id_, assignees_, answer_):
         for assignee in assignees:
             if assignee in ranked_developers[:k_]:
                 proof['at_' + str(k_)] = 1
+
+    # 0 is initial
+    for counter__ in range(1, 11):
+        proof['history_at_' + str(counter__)] = None
+        proof['history_at_' + str(counter__) + '_v'] = None
+    for counter__ in range(1, 11):
+        proof['code_at_' + str(counter__)] = None
+        proof['code_at_' + str(counter__) + '_v'] = None
+    for counter__ in range(1, 11):
+        proof['api_at_' + str(counter__)] = None
+        proof['api_at_' + str(counter__) + '_v'] = None
 
     # 1 is history
     counter__ = 0
@@ -226,7 +237,7 @@ for index, bug in bugs.iterrows():
     response[index] = save_proof_of_work(bug['bug_id'], bug['assignees'], answer)
 
     counter += 1
-    if counter % 1000 == 0:
+    if counter % EXPORT_THRESHOLD == 0:
         export_to_csv(response, project, '_new' + str(datetime.now().strftime("%d-%b-%Y_%H-%M-%S")))
     print('processed: ' + str(counter) + '/' + str(len(bugs)))
 

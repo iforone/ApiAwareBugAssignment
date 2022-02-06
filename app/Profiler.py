@@ -33,7 +33,8 @@ class Profiler:
     # initializing all possible profiles in the system -- this is different for each project
     def initialize(self, potential_assignees):
         self.builder.execute("SELECT author FROM processed_code WHERE 1 GROUP BY author")
-        all_authors_in_tracked_changes = pd.DataFrame(self.builder.fetchall())
+        all_authors_in_tracked_changes = pd.DataFrame(self.builder.fetchall())[0].tolist()
+
         for potential_assignee in potential_assignees:
             if potential_assignee in all_authors_in_tracked_changes:
                 self.profiles[potential_assignee] = Profile(potential_assignee, {}, {}, {})
