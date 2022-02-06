@@ -51,8 +51,8 @@ def with_cleaning():
     return answers['cleaning']
 
 
-def save_proof_of_work(id_, assignees_, answer_):
-    proof = {'bug_id': id_, 'assignees': assignees_}
+def save_proof_of_work(id_, assignees_, time_, answer_):
+    proof = {'bug_id': id_, 'assignees': assignees_, 'report_time': time_}
 
     # check against gold standard and save the result
     for k_ in ks:
@@ -222,7 +222,7 @@ for index, bug in bugs.iterrows():
     answer = profiler.rank_developers(bug)
     ranked_developers = answer[0]
 
-    response[index] = save_proof_of_work(bug['bug_id'], bug['assignees'], answer)
+    response[index] = save_proof_of_work(bug['bug_id'], bug['assignees'], bug['report_time'], answer)
 
     counter += 1
     if counter % 1000 == 0:

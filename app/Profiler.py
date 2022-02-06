@@ -219,11 +219,12 @@ class Profiler:
                 #difference_in_seconds = (bug_time - temp['date']).total_seconds()
                 #difference_in_days = difference_in_seconds / SECONDS_IN_A_DAY
 
-                difference_in_days = (bug_time - temp['date']).days
+                difference_in_days = (bug_time.date() - temp['date'].date()).days
                 damped_difference_in_days = math.sqrt(difference_in_days)
                 if difference_in_days == 0:
-                    # lim 1/ x where x -> 0+ is +infinite
-                    print('INFINITE Triggered')
+                    # lim 1/ x where x -> 0+ i
+                    # s +infinite
+                    # print('INFINITE Triggered')
                     recency = float('inf')
                 else:
                     recency = (1 / self.dev_count(bug_term, module)) + (1 / damped_difference_in_days)
