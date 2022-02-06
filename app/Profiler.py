@@ -216,10 +216,10 @@ class Profiler:
                 temp = profile_terms[bug_term]
                 tfidf = temp['frequency'] * math.log10(len(self.profiles) / self.dev_count(bug_term, module))
 
-                #difference_in_seconds = (bug_time - temp['date']).total_seconds()
-                #difference_in_days = difference_in_seconds / SECONDS_IN_A_DAY
+                difference_in_seconds = (bug_time - temp['date']).total_seconds()
+                difference_in_days = difference_in_seconds / SECONDS_IN_A_DAY
 
-                difference_in_days = (bug_time.date() - temp['date'].date()).days
+                # difference_in_days = (bug_time.date() - temp['date'].date()).days
                 damped_difference_in_days = math.sqrt(difference_in_days)
                 if difference_in_days == 0:
                     # lim 1/ x where x -> 0+ i
