@@ -77,6 +77,10 @@ class CodeScanner:
         # 51 suggests finding 30 most common words of bugs and removing them.
 
         # TODO: maybe change '-' to '_'
+        all_text_ = all_text_.replace('/', ' ').replace('\\', ' ').replace('*', ' ').replace('-', ' ')\
+            .replace('+', ' ') \
+            .replace(')', ' ').replace('(', ' ') \
+            .replace('{', ' ').replace('}', ' ').replace('"', ' ').replace('\'', ' ').replace(';', ' ')
 
         tokens = re.findall(r"[\w']+", all_text_)  # tokens = word_tokenize(codes)
         all_tokens = list()
@@ -104,17 +108,18 @@ class CodeScanner:
                 if simple_spit not in all_tokens:
                     all_tokens.append(simple_spit)
 
-        # remove java stopwords
-        all_tokens = [word for word in all_tokens if word not in self.stop_words]
         # to lowercase everything
         all_tokens = [x.lower() for x in all_tokens]
         all_tokens = [x.replace(',', '') for x in all_tokens]
-        # remove english stopwords
-        all_tokens = [word for word in all_tokens if word not in self.english_stop_words]
+        # remove java stopwords
+        all_tokens = [word for word in all_tokens if word not in self.stop_words]
 
         # TODO: maybe remove punctuations
         stemmer = PorterStemmer()
         all_tokens = [stemmer.stem(word) for word in all_tokens]
+
+        # remove english stopwords
+        all_tokens = [word for word in all_tokens if word not in self.english_stop_words]
 
         return all_tokens
 
@@ -137,11 +142,12 @@ class CodeScanner:
             # 0 - id
             # 1 - code
             # 2 - commit message
-            tokenized_code = self.analyze_code(change[1], False, False)
+            tokenized_code = self.analyze_code(change[1], True, True)
             tokenized_message = self.analyze_commit_message(change[2])
 
-            builder_.execute("""UPDATE processed_code SET codes_bag_of_words = %s , commit_bag_of_words = %s WHERE id = %s """,
-                             [','.join(tokenized_code), ','.join(tokenized_message), change[0]])
+            builder_.execute(
+                """UPDATE processed_code SET codes_bag_of_words = %s , commit_bag_of_words = %s WHERE id = %s """,
+                [','.join(tokenized_code), ','.join(tokenized_message), change[0]])
             db_.commit()
         # lock the scanner
         file = open(change_file_name, "w")

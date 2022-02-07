@@ -31,6 +31,14 @@ class Profiler:
         self.temp_changes = None
 
     def sync_profiles(self, bug):
+        # if  bug['bug_id'] == 3883:# and 'Darin Wright' in self.profiles:
+        #     print('H')
+        #     print(self.profiles['Darin Wright'].history)
+        #     print('C')
+        #     print(self.profiles['Darin Wright'].code)
+        #     print('A')
+        #     print(self.profiles['Darin Wright'].api)
+        #     exit(1)
         self.sync_history(bug)
         self.get_changed_codes(self.previous, bug['report_time'])
         self.sync_activity(bug)
@@ -86,13 +94,13 @@ class Profiler:
 
         for index, change in self.temp_changes.iterrows():
             author = guess_correct_author_name(change['author'], self.project)
-            tempest = change['codes_bag_of_words'].split(',')
+            tempest = list(set(change['codes_bag_of_words'].split(',')))
 
             if change['commit_hash'] not in already_considered_hashes:
                 tempest += change['commit_bag_of_words'].split(',')
                 already_considered_hashes.append(change['commit_hash'])
 
-            code_terms = array_to_frequency_list(list(set(tempest)), change['committed_at'])
+            code_terms = array_to_frequency_list(tempest, change['committed_at'])
 
             if author in self.profiles:
                 self.profiles[author].update_code(code_terms)
@@ -109,10 +117,10 @@ class Profiler:
             else:
                 self.profiles[author] = Profile(author, {}, api_terms, {})
 
-    def get_direct_bug_apis(self, bug_terms):
+    def get_direct_bug_apis(self, bug_terms, bug_time):
         # direct - use the API experience of assignees for the similar bugs
         # Jaccard is slightly worse but way faster - I want to see how the rest pans out
-        similar_bug_ids = self.top_similar_bugs(bug_terms, bug_similarity_threshold)
+        similar_bug_ids = self.top_similar_bugs(bug_terms, bug_time, bug_similarity_threshold)
 
         list_ = {}
         for index_ in similar_bug_ids:
@@ -136,7 +144,7 @@ class Profiler:
         return list_
 
     # returns index of the most similar bugs based on tf-idf similarity
-    def top_similar_bugs(self, bug_terms, top):
+    def top_similar_bugs(self, bug_terms, bug_time, top):
         local_scores = {}
 
         for index_, previous_bug in self.previous_bugs.items():
@@ -146,6 +154,10 @@ class Profiler:
             #     bug_terms
             # )
             score = self.jaccard(previous_bug['bag_of_word_stemmed_split'], bug_terms)
+            difference_in_seconds = (bug_time - previous_bug['report_time']).total_seconds()
+            difference_in_days = difference_in_seconds / SECONDS_IN_A_DAY
+            damped_difference_in_days = math.sqrt(1 + difference_in_days)
+            score = score / damped_difference_in_days
             if 0 < score:
                 local_scores[index_] = score
 
@@ -162,9 +174,9 @@ class Profiler:
         return result
 
     def calculate_ranks(self, new_bug):
-        bug_terms = new_bug['bag_of_word_stemmed'].split()
         print('BUG:' + str(new_bug['id']))
-        bug_apis = self.get_direct_bug_apis(bug_terms)
+        bug_terms = new_bug['bag_of_word_stemmed'].split()
+        bug_apis = self.get_direct_bug_apis(bug_terms, new_bug['report_time'])
         # bug_apis = self.get_indirect_bug_apis(new_bug['commit_hash'])
         # TODO: remove 30 most common words from bug reports in VSM
         # ask question about this
