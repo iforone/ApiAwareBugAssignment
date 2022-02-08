@@ -3,7 +3,7 @@ import math
 from pandas import Timestamp
 from Profile import Profile, array_to_frequency_list, frequency_to_frequency_list, guess_correct_author_name
 import pandas as pd
-from base import SECONDS_IN_A_DAY, jdt_fallback_account, bug_similarity_threshold, bug_api_threshold
+from base import SECONDS_IN_A_DAY, bug_similarity_threshold
 
 
 def write_to_text(file_name, text):
@@ -86,7 +86,7 @@ class Profiler:
 
         for index, change in self.temp_changes.iterrows():
             author = guess_correct_author_name(change['author'], self.project)
-            tempest = list(set(change['codes_bag_of_words'].split(',')))
+            tempest = change['codes_bag_of_words'].split(',')
 
             if change['commit_hash'] not in already_considered_hashes:
                 tempest += change['commit_bag_of_words'].split(',')
@@ -175,9 +175,9 @@ class Profiler:
         api_scores = pd.DataFrame(columns=['developer', 'score'])
 
         for index_, profile in self.profiles.items():
-            fix_experience = self.time_based_tfidf(profile.history, bug_terms, new_bug['report_time'], 'history')
-            code_experience = self.time_based_tfidf(profile.code, bug_terms, new_bug['report_time'], 'code')
-            api_experience = self.time_based_tfidf(profile.api, bug_apis, new_bug['report_time'], 'api')
+            fix_experience = self.time_based_tfidf(profile.history, profile.h_f, bug_terms, new_bug['report_time'], 'history')
+            code_experience = self.time_based_tfidf(profile.code, profile.c_f, bug_terms, new_bug['report_time'], 'code')
+            api_experience = self.time_based_tfidf(profile.api, profile.a_f, bug_apis, new_bug['report_time'], 'api')
             score = fix_experience + code_experience + api_experience
 
             history_scores.loc[len(history_scores)] = [profile.name, fix_experience]
@@ -198,10 +198,10 @@ class Profiler:
 
     # A time-based approach to automatic bug report assignment
     # Ramin Shokripoura, John Anvik, Zarinah M. Kasiruna, Sima Zamania
-    def time_based_tfidf(self, profile_terms, bug_terms, bug_time, module):
+    def time_based_tfidf(self, profile_terms, profile_frequency, bug_terms, bug_time, module):
         expertise = 0
 
-        # this is only due different data-type for counts of apis the logic is still same as original
+        # different: this is only due different data-type for counts of apis the logic is still same as original
         if type(bug_terms) is dict:
             weights = bug_terms.copy()
             bug_terms = bug_terms.keys()
@@ -211,7 +211,9 @@ class Profiler:
         for bug_term in bug_terms:
             if bug_term in profile_terms:
                 temp = profile_terms[bug_term]
-                tfidf = temp['frequency'] * math.log10(len(self.profiles) / self.dev_count(bug_term, module))
+                # different: this is due to difference in length of documents to normalize the frequencies
+                tf = self.calculate_tf(temp['frequency'], profile_frequency)
+                tfidf = tf * math.log10(len(self.profiles) / self.dev_count(bug_term, module))
 
                 difference_in_seconds = (bug_time - temp['date']).total_seconds()
                 difference_in_days = difference_in_seconds / SECONDS_IN_A_DAY
@@ -258,6 +260,9 @@ class Profiler:
                         math.log10(len(self.previous_bugs) / self.bug_count(bug_term))
                 total += tfidf
         return total
+
+    def calculate_tf(self, term_frequency, profile_frequency):
+        return term_frequency / profile_frequency
 
     def bug_count(self, bug_term):
         counter = 0

@@ -52,6 +52,18 @@ class Profile:
         self.code = code
         self.api = api
 
+        # total frequencies
+        self.h_f = 0
+        self.c_f = 0
+        self.a_f = 0
+
+        for i, content in self.history.items():
+            self.h_f += float(content['frequency'])
+        for i, content in self.code.items():
+            self.c_f += float(content['frequency'])
+        for i, content in self.api.items():
+            self.a_f += float(content['frequency'])
+
     def __getitem__(self, name):
         return getattr(self, name)
 
@@ -82,3 +94,13 @@ class Profile:
                     self[key][i]['date'] = content['date']
             else:
                 self[key][i] = content
+
+            self.update_total_frequencies(content, key)
+
+    def update_total_frequencies(self, content, key):
+        if key == 'history':
+            self.h_f += float(content['frequency'])
+        if key == 'code':
+            self.c_f += float(content['frequency'])
+        if key == 'api':
+            self.a_f += float(content['frequency'])
