@@ -185,12 +185,9 @@ class Profiler:
             api_scores.loc[len(api_scores)] = [profile.name, api_experience]
             local_scores.loc[len(local_scores)] = [profile.name, score]
 
-        # add fallback of the project
-        if self.project == 'jdt':
-            code_scores.loc[len(code_scores)] = [jdt_fallback_account, -1]
-            api_scores.loc[len(api_scores)] = [jdt_fallback_account, -1]
-        if self.project == 'swt':
-            pass
+        # add fallback of the project as Inbox
+        code_scores.loc[len(code_scores)] = [self.project.upper() + '-' + new_bug['component'] + '-' + 'Inbox', -1]
+        api_scores.loc[len(api_scores)] = [self.project.upper() + '-' + new_bug['component'] + '-' + 'Inbox', -1]
 
         return [
             local_scores.sort_values(by='score', ascending=False)['developer'].tolist(),

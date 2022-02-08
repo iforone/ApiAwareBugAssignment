@@ -181,10 +181,10 @@ database = mysql_connection(project)
 builder = database.cursor()
 make_process_table(builder)
 builder.execute("""
-    SELECT bug_and_files.*, assginee_mapper.assignees, assginee_mapper.commit_hash
+    SELECT bug_and_files.*, assginee_mapper.assignees, assginee_mapper.commit_hash, product, component
     FROM bug_and_files
     JOIN (
-            SELECT bug_id, GROUP_CONCAT(assignee) as assignees, `commit` as commit_hash
+            SELECT bug_id, GROUP_CONCAT(assignee) as assignees, `commit` as commit_hash, product, component
             FROM bug_commit
             group by bug_id
         ) assginee_mapper on assginee_mapper.bug_id = bug_and_files.bug_id
