@@ -4,7 +4,7 @@ from pandas import Timestamp
 from Profile import Profile, array_to_frequency_list, frequency_to_frequency_list, guess_correct_author_name
 import pandas as pd
 from base import SECONDS_IN_A_DAY, bug_similarity_threshold
-
+from Analysis import Analysis
 
 def write_to_text(file_name, text):
     text_file = open(file_name, 'w')
@@ -14,6 +14,7 @@ def write_to_text(file_name, text):
 
 class Profiler:
     def __init__(self, approach, project, builder):
+        self.analysis = Analysis()
         print('🍔 running profiler')
         # the approach that is being used for finding the underlying relation between a new bug and previous data
         self.approach = approach
@@ -171,30 +172,68 @@ class Profiler:
 
         local_scores = pd.DataFrame(columns=['developer', 'score'])  # the total score
         history_scores = pd.DataFrame(columns=['developer', 'score'])
+        fix_scores = pd.DataFrame(columns=['developer', 'score'])
         code_scores = pd.DataFrame(columns=['developer', 'score'])
         api_scores = pd.DataFrame(columns=['developer', 'score'])
 
         for index_, profile in self.profiles.items():
-            fix_experience = self.time_based_tfidf(profile.history, profile.h_f, bug_terms, new_bug['report_time'], 'history')
-            code_experience = self.time_based_tfidf(profile.code, profile.c_f, bug_terms, new_bug['report_time'], 'code')
+            history_experience = self.time_based_tfidf(profile.history, profile.h_f, bug_terms, new_bug['report_time'],
+                                                   'history')
+            fix_experience = self.time_based_tfidf_original(profile.history, profile.h_f, bug_terms,
+                                                                new_bug['report_time'], 'history')
+            code_experience = self.time_based_tfidf(profile.code, profile.c_f, bug_terms, new_bug['report_time'],
+                                                    'code')
             api_experience = self.time_based_tfidf(profile.api, profile.a_f, bug_apis, new_bug['report_time'], 'api')
             score = fix_experience + code_experience + api_experience
 
-            history_scores.loc[len(history_scores)] = [profile.name, fix_experience]
+            local_scores.loc[len(local_scores)] = [profile.name, score]
+            history_scores.loc[len(history_scores)] = [profile.name, history_experience]
+            fix_scores.loc[len(fix_scores)] = [profile.name, fix_experience]
             code_scores.loc[len(code_scores)] = [profile.name, code_experience]
             api_scores.loc[len(api_scores)] = [profile.name, api_experience]
-            local_scores.loc[len(local_scores)] = [profile.name, score]
 
         # add fallback of the project as Inbox
         code_scores.loc[len(code_scores)] = [self.project.upper() + '-' + new_bug['component'] + '-' + 'Inbox', -1]
         api_scores.loc[len(api_scores)] = [self.project.upper() + '-' + new_bug['component'] + '-' + 'Inbox', -1]
 
+        alternate_score = self.analysis.find_alternative_score(history_scores, fix_scores, code_scores, api_scores)
+
         return [
+            alternate_score,
             local_scores.sort_values(by='score', ascending=False)['developer'].tolist(),
             history_scores.sort_values(by='score', ascending=False),
+            fix_scores.sort_values(by='score', ascending=False),
             code_scores[code_scores['score'] != 0].sort_values(by='score', ascending=False),
             api_scores[api_scores['score'] != 0].sort_values(by='score', ascending=False),
         ]
+
+    def time_based_tfidf_original(self, profile_terms, profile_frequency, bug_terms, bug_time, module):
+        expertise = 0
+
+        if type(bug_terms) is dict:
+            weights = bug_terms.copy()
+            bug_terms = bug_terms.keys()
+        else:
+            weights = {}
+
+        for bug_term in bug_terms:
+            if bug_term in profile_terms:
+                temp = profile_terms[bug_term]
+                tfidf = temp['frequency'] * math.log10(len(self.profiles) / self.dev_count(bug_term, module))
+
+                difference_in_seconds = (bug_time - temp['date']).total_seconds()
+                difference_in_days = difference_in_seconds / SECONDS_IN_A_DAY
+
+                damped_difference_in_days = math.sqrt(difference_in_days)
+                if difference_in_days == 0:
+                    recency = float('inf')
+                else:
+                    recency = (1 / self.dev_count(bug_term, module)) + (1 / damped_difference_in_days)
+
+                time_tf_idf = tfidf * recency * weights.get(bug_term, 1)
+                expertise += time_tf_idf
+
+        return expertise
 
     # A time-based approach to automatic bug report assignment
     # Ramin Shokripoura, John Anvik, Zarinah M. Kasiruna, Sima Zamania

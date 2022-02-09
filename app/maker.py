@@ -63,23 +63,30 @@ def save_proof_of_work(id_, assignees_, time_, answer_):
             if assignee in ranked_developers[:k_]:
                 proof['at_' + str(k_)] = 1
 
-    # 1 is history
+    # 2 is history
     counter__ = 0
-    for x, row_ in answer_[1].head(10).iterrows():
+    for x, row_ in answer_[2].head(10).iterrows():
         counter__ += 1
         proof['history_at_' + str(counter__)] = row_['developer']
         proof['history_at_' + str(counter__) + '_v'] = row_['score']
 
-    # 2 is code
+    # 3 is fix
     counter__ = 0
-    for x, row_ in answer_[2].head(10).iterrows():
+    for x, row_ in answer_[3].head(10).iterrows():
+        counter__ += 1
+        proof['fix_at_' + str(counter__)] = row_['developer']
+        proof['fix_at_' + str(counter__) + '_v'] = row_['score']
+
+    # 4 is code
+    counter__ = 0
+    for x, row_ in answer_[4].head(10).iterrows():
         counter__ += 1
         proof['code_at_' + str(counter__)] = row_['developer']
         proof['code_at_' + str(counter__) + '_v'] = row_['score']
 
-    # 3 is api
+    # 5 is api
     counter__ = 0
-    for x, row_ in answer_[3].head(10).iterrows():
+    for x, row_ in answer_[5].head(10).iterrows():
         counter__ += 1
         proof['api_at_' + str(counter__)] = row_['developer']
         proof['api_at_' + str(counter__) + '_v'] = row_['score']
