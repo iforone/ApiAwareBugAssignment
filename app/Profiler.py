@@ -193,8 +193,8 @@ class Profiler:
             api_scores.loc[len(api_scores)] = [profile.name, api_experience]
 
         # add fallback of the project as Inbox
-        code_scores.loc[len(code_scores)] = [self.project.upper() + '-' + new_bug['component'] + '-' + 'Inbox', -1]
-        api_scores.loc[len(api_scores)] = [self.project.upper() + '-' + new_bug['component'] + '-' + 'Inbox', -1]
+        code_scores.loc[len(code_scores)] = [self.project.upper() + '-' + new_bug['component'] + '-' + 'Inbox', 0]
+        api_scores.loc[len(api_scores)] = [self.project.upper() + '-' + new_bug['component'] + '-' + 'Inbox', 0]
 
         alternate_scores = self.analysis.find_alternative_scores(history_scores, fix_scores, code_scores, api_scores)
 
