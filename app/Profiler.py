@@ -5,6 +5,7 @@ from Profile import Profile, array_to_frequency_list, frequency_to_frequency_lis
 import pandas as pd
 from base import SECONDS_IN_A_DAY, bug_similarity_threshold
 from Analysis import Analysis
+from Mapper import Mapper
 
 def write_to_text(file_name, text):
     text_file = open(file_name, 'w')
@@ -26,6 +27,8 @@ class Profiler:
         self.previous_bugs = {}
         # array of known developer profiles at any moment
         self.profiles = {}
+        # profiles that contribute to an specific components
+        self.component_mapper = Mapper()
         # builder for query to projects
         self.builder = builder
         # temporary keep last changes in code between a time frame
@@ -80,6 +83,7 @@ class Profiler:
                 self.previous_bugs[len(self.previous_bugs) - 1]['direct_apis'] = temp_api_dict
             else:
                 self.profiles[assignee] = Profile(assignee, last_bug_terms_f, {}, {})
+            self.component_mapper.update(assignee, last_bug['component'])
 
     def sync_activity(self, new_bug):
         # each change in a commit is a row but the commit message should be considered only once
@@ -99,6 +103,7 @@ class Profiler:
                 self.profiles[author].update_code(code_terms)
             else:
                 self.profiles[author] = Profile(author, {}, code_terms, {})
+            self.component_mapper.update(author, 'UI')
 
     def sync_api(self, new_bug):
         for index, change in self.temp_changes.iterrows():
@@ -109,6 +114,7 @@ class Profiler:
                 self.profiles[author].update_api(api_terms)
             else:
                 self.profiles[author] = Profile(author, {}, api_terms, {})
+            self.component_mapper.update(author, 'UI')
 
     def get_direct_bug_apis(self, bug_terms):
         # direct - use the API experience of assignees for the similar bugs
@@ -163,9 +169,12 @@ class Profiler:
         return result
 
     def calculate_ranks(self, new_bug):
-        bug_terms = new_bug['bag_of_word_stemmed'].split()
         print('BUG:' + str(new_bug['id']))
+
+        bug_terms = new_bug['bag_of_word_stemmed'].split()
         bug_apis = self.get_direct_bug_apis(bug_terms)
+        potential_profiles = self.component_mapper.get_component_authors(new_bug['component'])
+
         # bug_apis = self.get_indirect_bug_apis(new_bug['commit_hash'])
         # TODO: remove 30 most common words from bug reports in VSM
         # ask question about this
@@ -177,10 +186,13 @@ class Profiler:
         api_scores = pd.DataFrame(columns=['developer', 'score'])
 
         for index_, profile in self.profiles.items():
+            if profile.name not in potential_profiles:
+                continue
+
             history_experience = self.time_based_tfidf(profile.history, profile.h_f, bug_terms, new_bug['report_time'],
-                                                   'history')
+                                                       'history')
             fix_experience = self.time_based_tfidf_original(profile.history, profile.h_f, bug_terms,
-                                                                new_bug['report_time'], 'history')
+                                                            new_bug['report_time'], 'history')
             code_experience = self.time_based_tfidf(profile.code, profile.c_f, bug_terms, new_bug['report_time'],
                                                     'code')
             api_experience = self.time_based_tfidf(profile.api, profile.a_f, bug_apis, new_bug['report_time'], 'api')
