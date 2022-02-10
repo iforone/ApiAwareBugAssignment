@@ -234,9 +234,9 @@ for index, bug in bugs.iterrows():
     response[index] = save_proof_of_work(bug['bug_id'], bug['assignees'], bug['report_time'], answer)
 
     counter += 1
-    if counter % 1000 == 0:
-        export_to_csv(response, project, '_new' + str(datetime.now().strftime("%d-%b-%Y_%H-%M-%S")))
-    print('processed: ' + str(counter) + '/' + str(len(bugs)))
+    # if counter % 1000 == 0:
+    #     export_to_csv(response, project, '_new' + str(datetime.now().strftime("%d-%b-%Y_%H-%M-%S")))
+    # print('processed: ' + str(counter) + '/' + str(len(bugs)))
 
 database.close()
 
