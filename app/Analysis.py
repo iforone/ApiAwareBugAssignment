@@ -1,22 +1,30 @@
+import pandas as pd
+
+
 class Analysis:
-    def find_alternative_score(self, history_scores, fix_scores, code_scores, api_scores):
+    def find_alternative_scores(self, history_scores, fix_scores, code_scores, api_scores):
+        history_scores = history_scores.head(10)
+        fix_scores = fix_scores.head(10)
+        code_scores = code_scores.head(10)
+        api_scores = api_scores.head(10)
+
         total_scores = {'history': 0, 'fix': 0, 'api': 0, 'code': 0}
         scores = {}
 
-        for index, row in history_scores[:10].iterrows():
+        for index, row in history_scores.iterrows():
             if str(row['score']) != 'nan':
                 total_scores['history'] += row['score']
-        for index, row in fix_scores[:10].iterrows():
+        for index, row in fix_scores.iterrows():
             if str(row['score']) != 'nan':
                 total_scores['fix'] += row['score']
-        for index, row in code_scores[:10].iterrows():
+        for index, row in code_scores.iterrows():
             if str(row['score']) != 'nan':
                 total_scores['api'] += row['score']
-        for index, row in api_scores[:10].iterrows():
+        for index, row in api_scores.iterrows():
             if str(row['score']) != 'nan':
                 total_scores['code'] += row['score']
 
-        for index, row in history_scores[:10].iterrows():
+        for index, row in history_scores.iterrows():
             value = row['score']
             developer = row['developer']
             if str(developer) != 'nan':
@@ -25,7 +33,7 @@ class Analysis:
                 else:
                     scores[developer] = scores.get(developer, 0) + (value * 100 / total_scores['history'])
 
-        for index, row in fix_scores[:10].iterrows():
+        for index, row in fix_scores.iterrows():
             value = row['score']
             developer = row['developer']
             if str(developer) != 'nan':
@@ -34,7 +42,7 @@ class Analysis:
                 else:
                     scores[developer] = scores.get(developer, 0) + (value * 100 / total_scores['fix']) / 1.05
 
-        for index, row in api_scores[:10].iterrows():
+        for index, row in api_scores.iterrows():
             value = row['score']
             developer = row['developer']
             if str(developer) != 'nan':
@@ -43,7 +51,7 @@ class Analysis:
                 else:
                     scores[developer] = scores.get(developer, 0) + (value * 100 / total_scores['api'])
 
-        for index, row in code_scores[:10].iterrows():
+        for index, row in code_scores.iterrows():
             value = row['score']
             developer = row['developer']
             if str(developer) != 'nan':
@@ -52,10 +60,8 @@ class Analysis:
                 else:
                     scores[developer] = scores.get(developer, 0) + (value * 100 / total_scores['code'])
 
-        sort_items = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+        df = pd.DataFrame(columns=['developer', 'score'])
+        for i, v in scores.items():
+            df.loc[len(df)] = [i, v]
 
-        answer = []
-        for s in sort_items:
-            answer.append(s[0])
-
-        return answer
+        return df

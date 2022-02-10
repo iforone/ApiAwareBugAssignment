@@ -170,7 +170,7 @@ class Profiler:
         # TODO: remove 30 most common words from bug reports in VSM
         # ask question about this
 
-        local_scores = pd.DataFrame(columns=['developer', 'score'])  # the total score
+        local_scores = pd.DataFrame(columns=['developer', 'score'])
         history_scores = pd.DataFrame(columns=['developer', 'score'])
         fix_scores = pd.DataFrame(columns=['developer', 'score'])
         code_scores = pd.DataFrame(columns=['developer', 'score'])
@@ -196,10 +196,10 @@ class Profiler:
         code_scores.loc[len(code_scores)] = [self.project.upper() + '-' + new_bug['component'] + '-' + 'Inbox', -1]
         api_scores.loc[len(api_scores)] = [self.project.upper() + '-' + new_bug['component'] + '-' + 'Inbox', -1]
 
-        alternate_score = self.analysis.find_alternative_score(history_scores, fix_scores, code_scores, api_scores)
+        alternate_scores = self.analysis.find_alternative_scores(history_scores, fix_scores, code_scores, api_scores)
 
         return [
-            alternate_score,
+            alternate_scores.sort_values(by='score', ascending=False)['developer'].tolist(),
             local_scores.sort_values(by='score', ascending=False)['developer'].tolist(),
             history_scores.sort_values(by='score', ascending=False),
             fix_scores.sort_values(by='score', ascending=False),

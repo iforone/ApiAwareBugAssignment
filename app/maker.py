@@ -54,6 +54,7 @@ def with_cleaning():
 def save_proof_of_work(id_, assignees_, time_, answer_):
     proof = {'bug_id': id_, 'assignees': assignees_, 'report_time': time_}
 
+    ranked_developers = answer[0]
     # check against gold standard and save the result
     for k_ in ks:
         proof['at_' + str(k_)] = 0
