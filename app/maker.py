@@ -196,7 +196,6 @@ builder.execute("""
             FROM bug_commit
             group by bug_id
         ) assginee_mapper on assginee_mapper.bug_id = bug_and_files.bug_id
-    WHERE product = 'JDT' and component = 'UI'
     ORDER BY bug_and_files.report_time
 """)
 
