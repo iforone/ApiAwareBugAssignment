@@ -7,6 +7,7 @@ from base import SECONDS_IN_A_DAY, bug_similarity_threshold
 from Analysis import Analysis
 from Mapper import Mapper
 
+
 def write_to_text(file_name, text):
     text_file = open(file_name, 'w')
     text_file.write(text)
@@ -313,7 +314,11 @@ class Profiler:
         return total
 
     def calculate_tf(self, term_frequency, profile_frequency):
-        return term_frequency / profile_frequency
+        if term_frequency == 0:
+            return 0
+
+        return math.log2(1 + term_frequency)
+        # return term_frequency / profile_frequency
 
     def bug_count(self, bug_term):
         counter = 0
