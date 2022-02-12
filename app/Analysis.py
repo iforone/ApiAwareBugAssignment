@@ -3,11 +3,11 @@ import pandas as pd
 
 class Analysis:
     def find_alternative_scores(self, history_scores, fix_scores, code_scores, api_scores):
-        # grabbing top 10 would not work as it is not sorted yet
-        # history_scores = history_scores.head(10)
-        # fix_scores = fix_scores.head(10)
-        # code_scores = code_scores.head(10)
-        # api_scores = api_scores.head(10)
+        # top 10 with each measure is chosen
+        history_scores = history_scores.sort_values(by='score', ascending=False).head(10)
+        fix_scores = fix_scores.sort_values(by='score', ascending=False).head(10)
+        code_scores = code_scores[code_scores['score'] != 0].sort_values(by='score', ascending=False).head(10)
+        api_scores = api_scores[api_scores['score'] != 0].sort_values(by='score', ascending=False).head(10)
 
         total_scores = {'history': 0, 'fix': 0, 'code': 0, 'api': 0}
         scores = {}

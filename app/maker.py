@@ -51,17 +51,23 @@ def with_cleaning():
     return answers['cleaning']
 
 
-def save_proof_of_work(id_, assignees_, time_, answer_):
-    proof = {'bug_id': id_, 'assignees': assignees_, 'report_time': time_}
+def save_proof_of_work(id_, assignees_, authors_, c_, time_, answer_):
+    ranked_developers_ = answer[0]
+    proof = {
+        'bug_id': id_,
+        'component': c_,
+        'assignees': assignees_,
+        'author': authors_,
+        'report_time': time_,
+    }
 
-    ranked_developers = answer[0]
     # check against gold standard and save the result
     for k_ in ks:
         proof['at_' + str(k_)] = 0
         assignees = assignees_.split(',')
         # if assignee was edited we consider the edit too
         for assignee in assignees:
-            if assignee in ranked_developers[:k_]:
+            if assignee in ranked_developers_[:k_]:
                 proof['at_' + str(k_)] = 1
 
     # 2 is history
@@ -189,7 +195,7 @@ database = mysql_connection(project)
 builder = database.cursor()
 make_process_table(builder)
 builder.execute("""
-    SELECT bug_and_files.*, assginee_mapper.assignees, assginee_mapper.commit_hash, product, component
+    SELECT bug_and_files.*, assginee_mapper.assignees,  assginee_mapper.authors, assginee_mapper.commit_hash, product, component
     FROM bug_and_files
     JOIN (
             SELECT bug_id, GROUP_CONCAT(assignee) as assignees, GROUP_CONCAT(author) as authors, `commit` as commit_hash, product, component
@@ -198,7 +204,7 @@ builder.execute("""
         ) assginee_mapper on assginee_mapper.bug_id = bug_and_files.bug_id
 
     ORDER BY bug_and_files.report_time
-""")#  WHERE authors = assignees
+""")  # WHERE authors = assignees
 
 bugs = pd.DataFrame(builder.fetchall())
 bugs.columns = builder.column_names
@@ -229,9 +235,14 @@ for index, bug in bugs.iterrows():
 
     profiler.sync_profiles(bug)
     answer = profiler.rank_developers(bug)
-    ranked_developers = answer[0]
 
-    response[index] = save_proof_of_work(bug['bug_id'], bug['assignees'], bug['report_time'], answer)
+    response[index] = save_proof_of_work(bug['bug_id'],
+                                         bug['assignees'],
+                                         bug['authors'],
+                                         bug['component'],
+                                         bug['report_time'],
+                                         answer
+                                         )
 
     counter += 1
     if counter % 1000 == 0:
