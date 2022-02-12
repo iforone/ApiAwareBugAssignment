@@ -192,12 +192,13 @@ builder.execute("""
     SELECT bug_and_files.*, assginee_mapper.assignees, assginee_mapper.commit_hash, product, component
     FROM bug_and_files
     JOIN (
-            SELECT bug_id, GROUP_CONCAT(assignee) as assignees, `commit` as commit_hash, product, component
+            SELECT bug_id, GROUP_CONCAT(assignee) as assignees, GROUP_CONCAT(author) as authors, `commit` as commit_hash, product, component
             FROM bug_commit
             group by bug_id
         ) assginee_mapper on assginee_mapper.bug_id = bug_and_files.bug_id
+
     ORDER BY bug_and_files.report_time
-""")
+""")#  WHERE authors = assignees
 
 bugs = pd.DataFrame(builder.fetchall())
 bugs.columns = builder.column_names
@@ -233,9 +234,9 @@ for index, bug in bugs.iterrows():
     response[index] = save_proof_of_work(bug['bug_id'], bug['assignees'], bug['report_time'], answer)
 
     counter += 1
-    # if counter % 1000 == 0:
-    #     export_to_csv(response, project, '_new' + str(datetime.now().strftime("%d-%b-%Y_%H-%M-%S")))
-    # print('processed: ' + str(counter) + '/' + str(len(bugs)))
+    if counter % 1000 == 0:
+        export_to_csv(response, project, '_new' + str(datetime.now().strftime("%d-%b-%Y_%H-%M-%S")))
+    print('processed: ' + str(counter) + '/' + str(len(bugs)))
 
 database.close()
 
