@@ -195,16 +195,19 @@ database = mysql_connection(project)
 builder = database.cursor()
 make_process_table(builder)
 builder.execute("""
-    SELECT bug_and_files.*, assginee_mapper.assignees,  assginee_mapper.authors, assginee_mapper.commit_hash, product, component
+    SELECT bug_and_files.*, assginee_mapper.assignees,
+           assginee_mapper.authors, assginee_mapper.commit_hash, concat(product, '-', component) AS component
     FROM bug_and_files
     JOIN (
             SELECT bug_id, GROUP_CONCAT(assignee) as assignees, GROUP_CONCAT(author) as authors, `commit` as commit_hash, product, component, commit_time
             FROM bug_commit
             group by bug_id
         ) assginee_mapper on assginee_mapper.bug_id = bug_and_files.bug_id
-    where DATEDIFF(commit_time, bug_and_files.report_time) < 10
+    WHERE (product = 'JDT' or product = 'Platform')
     ORDER BY bug_and_files.report_time
-""")  # WHERE authors = assignees
+""")
+# where DATEDIFF(commit_time, bug_and_files.report_time) < 200
+# WHERE authors = assignees
 
 bugs = pd.DataFrame(builder.fetchall())
 bugs.columns = builder.column_names

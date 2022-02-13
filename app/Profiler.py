@@ -108,18 +108,20 @@ class Profiler:
                 self.profiles[author].update_code(code_terms)
             else:
                 self.profiles[author] = Profile(author, {}, code_terms, {})
-            self.component_mapper.update(author, 'UI')
+            self.component_mapper.update(author, 'JDT-UI')
 
     def sync_api(self, new_bug):
         for index, change in self.temp_changes.iterrows():
             author = guess_correct_author_name(change['author'], self.project)
+            # author = self.component_mapper.is_by_different_author(author, change, 'UI')
+
             api_terms = frequency_to_frequency_list(change['used_apis'], change['committed_at'])
 
             if author in self.profiles:
                 self.profiles[author].update_api(api_terms)
             else:
                 self.profiles[author] = Profile(author, {}, api_terms, {})
-            self.component_mapper.update(author, 'UI')
+            self.component_mapper.update(author, 'JDT-UI')
 
     def get_direct_bug_apis(self, bug_terms):
         # direct - use the API experience of assignees for the similar bugs
