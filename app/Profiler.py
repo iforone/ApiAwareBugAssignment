@@ -91,7 +91,11 @@ class Profiler:
         already_considered_hashes = []
 
         for index, change in self.temp_changes.iterrows():
+            # edge case: some users have different name in Eclipse bug board VS in code
             author = guess_correct_author_name(change['author'], self.project)
+            # edge case: some codes are provided by another developer yet committed by different user
+            author = self.component_mapper.is_by_different_author(author, change, 'UI')
+
             tempest = change['codes_bag_of_words'].split(',')
 
             if change['commit_hash'] not in already_considered_hashes:

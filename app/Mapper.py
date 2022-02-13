@@ -15,3 +15,20 @@ class Mapper:
             return set()
 
         return self.components[component]
+
+    def is_by_different_author(self, author, change, component):
+        if component != 'UI':
+            return author
+
+        commit_message = change['commit_bag_of_words'].split(',')
+        if 'review' in commit_message:
+            return author
+
+        for potential_author in self.get_component_authors(component):
+            parts = potential_author.split()
+            for part in parts:
+                if part.lower() in commit_message:
+                    print(potential_author)
+                    return potential_author
+
+        return author
