@@ -3,7 +3,7 @@ import math
 from pandas import Timestamp
 from Profile import Profile, array_to_frequency_list, frequency_to_frequency_list, guess_correct_author_name
 import pandas as pd
-from base import SECONDS_IN_A_DAY, bug_similarity_threshold
+from base import SECONDS_IN_A_DAY, bug_similarity_threshold, LEARN, TEST
 from Analysis import Analysis
 from Mapper import Mapper
 
@@ -35,15 +35,13 @@ class Profiler:
         # temporary keep last changes in code between a time frame
         self.temp_changes = None
 
-    def sync_profiles(self, bug):
-        self.sync_history(bug)
-        self.get_changed_codes(self.previous, bug['report_time'])
-        self.sync_activity(bug)
-        self.sync_api(bug)
-        # checking authors and exiting history
-        # unify all update methods
+    def sync_profiles(self, bug, mode):
+        self.sync_history(bug, mode)
+        self.get_changed_codes(self.previous, bug['report_time'], mode)
+        self.sync_activity(bug, mode)
+        self.sync_api(bug, mode)
 
-    def get_changed_codes(self, begin, end):
+    def get_changed_codes(self, begin, end, mode):
         self.builder.execute("""
             SELECT id, codes_bag_of_words, commit_bag_of_words, used_apis, author, committed_at, commit_hash
             FROM processed_code
@@ -53,7 +51,7 @@ class Profiler:
         if len(self.temp_changes) != 0:
             self.temp_changes.columns = self.builder.column_names
 
-    def sync_history(self, new_bug):
+    def sync_history(self, new_bug, mode):
         if len(self.previous_bugs) == 0:
             return
 
@@ -72,7 +70,11 @@ class Profiler:
         last_bug_terms_f = array_to_frequency_list(last_bug_terms, last_bug['report_time'])
 
         # none of the bug reports in JDT have more than one assignee so this is technically one assignee
-        assignees = last_bug['assignees'].split(',')
+        assignees = ''
+        if mode == LEARN:
+            assignees = last_bug['assignees'].split(',')
+        elif mode == TEST:
+            assignees = last_bug['chosen'].split(',')
 
         if 1 < len(assignees):
             exit('❌ API experience track of bugs would not work. you need to consider all assignees')
@@ -86,7 +88,7 @@ class Profiler:
                 self.profiles[assignee] = Profile(assignee, last_bug_terms_f, {}, {})
             self.component_mapper.update(assignee, last_bug['component'])
 
-    def sync_activity(self, new_bug):
+    def sync_activity(self, new_bug, mode):
         # each change in a commit is a row but the commit message should be considered only once
         already_considered_hashes = []
 
@@ -110,7 +112,7 @@ class Profiler:
                 self.profiles[author] = Profile(author, {}, code_terms, {})
             self.component_mapper.update(author, 'JDT-UI')
 
-    def sync_api(self, new_bug):
+    def sync_api(self, new_bug, mode):
         for index, change in self.temp_changes.iterrows():
             author = guess_correct_author_name(change['author'], self.project)
             # author = self.component_mapper.is_by_different_author(author, change, 'UI')
@@ -170,6 +172,8 @@ class Profiler:
 
     def rank_developers(self, new_bug):
         result = self.calculate_ranks(new_bug)
+
+        new_bug['chosen'] = result[0][0]
         self.previous = new_bug['report_time']
         self.previous_bugs[len(self.previous_bugs)] = new_bug
 

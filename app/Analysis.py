@@ -6,8 +6,8 @@ class Analysis:
         # top 10 with each measure is chosen
         history_scores = history_scores.sort_values(by='score', ascending=False).head(10)
         fix_scores = fix_scores.sort_values(by='score', ascending=False).head(10)
-        code_scores = code_scores[code_scores['score'] != 0].sort_values(by='score', ascending=False).head(10)
-        api_scores = api_scores[api_scores['score'] != 0].sort_values(by='score', ascending=False).head(10)
+        code_scores = code_scores.sort_values(by='score', ascending=False).head(10)
+        api_scores = api_scores.sort_values(by='score', ascending=False).head(10)
 
         total_scores = {'history': 0, 'fix': 0, 'code': 0, 'api': 0}
         scores = {}

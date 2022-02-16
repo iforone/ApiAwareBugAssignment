@@ -18,7 +18,7 @@ bug_api_threshold = 5
 ks = [1, 2, 3, 4, 5, 10]
 
 exportable_keys = ['bug_id', 'at_1', 'at_2', 'at_3', 'at_4', 'at_5', 'at_10',
-                   'component', 'assignees', 'author',
+                   'component', 'assignees', 'author', 'chosen', 'mode',
                    'fix_at_1', 'fix_at_2', 'fix_at_3', 'fix_at_4', 'fix_at_5', 'fix_at_6',
                    'fix_at_7', 'fix_at_8', 'fix_at_9', 'fix_at_10',
                    'fix_at_1_v', 'fix_at_2_v', 'fix_at_3_v', 'fix_at_4_v', 'fix_at_5_v',
@@ -54,3 +54,7 @@ jdt_fixable_names = {
 }
 
 jdt_fallback_account = 'JDT-Text-Inbox'
+
+# modes
+LEARN = 'LEARN'
+TEST = 'TEST'

@@ -1,14 +1,12 @@
-from datetime import datetime
-
 import mysql.connector
 import pandas as pd
-import pytz
 from Profiler import Profiler
 import os.path
 from DeepProcess import DeepProcessor
 from APIScanner import APIScanner
 from CodeScanner import CodeScanner
 from base import output_folder, ks, exportable_keys
+from Results import export_to_csv, find_response
 
 
 # select which project to check
@@ -39,6 +37,19 @@ def approach_selector():
     return answers['approach'].split(' - ')[0]
 
 
+# select which k-fold formula to use
+def formula_selector():
+    import inquirer
+    questions = [
+        inquirer.List('formula',
+                      message="Which formula should be used for training-testing?",
+                      choices=['similar to BSBA', 'similar to TNBA', 'similiar to L2R and L2R+'],
+                      ),
+    ]
+    answers = inquirer.prompt(questions)
+    return answers['formula']
+
+
 def with_cleaning():
     import inquirer
     questions = [
@@ -49,56 +60,6 @@ def with_cleaning():
     ]
     answers = inquirer.prompt(questions)
     return answers['cleaning']
-
-
-def save_proof_of_work(id_, assignees_, authors_, c_, time_, answer_):
-    ranked_developers_ = answer[0]
-    proof = {
-        'bug_id': id_,
-        'component': c_,
-        'assignees': assignees_,
-        'author': authors_,
-        'report_time': time_,
-    }
-
-    # check against gold standard and save the result
-    for k_ in ks:
-        proof['at_' + str(k_)] = 0
-        assignees = assignees_.split(',')
-        # if assignee was edited we consider the edit too
-        for assignee in assignees:
-            if assignee in ranked_developers_[:k_]:
-                proof['at_' + str(k_)] = 1
-
-    # 2 is history
-    counter__ = 0
-    for x, row_ in answer_[2].head(10).iterrows():
-        counter__ += 1
-        proof['history_at_' + str(counter__)] = row_['developer']
-        proof['history_at_' + str(counter__) + '_v'] = row_['score']
-
-    # 3 is fix
-    counter__ = 0
-    for x, row_ in answer_[3].head(10).iterrows():
-        counter__ += 1
-        proof['fix_at_' + str(counter__)] = row_['developer']
-        proof['fix_at_' + str(counter__) + '_v'] = row_['score']
-
-    # 4 is code
-    counter__ = 0
-    for x, row_ in answer_[4].head(10).iterrows():
-        counter__ += 1
-        proof['code_at_' + str(counter__)] = row_['developer']
-        proof['code_at_' + str(counter__) + '_v'] = row_['score']
-
-    # 5 is api
-    counter__ = 0
-    for x, row_ in answer_[5].head(10).iterrows():
-        counter__ += 1
-        proof['api_at_' + str(counter__)] = row_['developer']
-        proof['api_at_' + str(counter__) + '_v'] = row_['score']
-
-    return proof
 
 
 # connect to a selected database
@@ -157,13 +118,6 @@ def make_process_table(builder_):
         pass
 
 
-def export_to_csv(data, project_name, extra=''):
-    print('☁️ exporting the results to csv')
-
-    tempest = pd.DataFrame.from_dict(data, orient='index')
-    tempest[exportable_keys].to_csv('./data/output/' + project_name + '_' + approach + extra + '.csv')
-
-
 # process the commits to find line-by-line changes and imports of each file
 def deep_process(bugs_list, project_name, builder_, db_):
     change_file_name = output_folder + 'lock_' + project_name + '.txt'
@@ -189,6 +143,7 @@ def deep_process(bugs_list, project_name, builder_, db_):
 print('Running maker')
 project = project_selector()
 approach = approach_selector()
+formula = formula_selector()
 
 # database work
 database = mysql_connection(project)
@@ -228,35 +183,8 @@ code_scanner.analyze_codes(project, builder, database)
 
 # create profiles for users
 profiler = Profiler(approach, project, builder)
-# loop through each bug report
-counter = 0
-response = {}
-for index, bug in bugs.iterrows():
-    bug['report_time'] = bug['report_time'].tz_localize(pytz.timezone('EST5EDT'))
-    bug['report_time'] = bug['report_time'].tz_convert(pytz.timezone('UTC'))
-    bug['report_time'] = bug['report_time'].tz_localize(None)
 
-    profiler.sync_profiles(bug)
-    answer = profiler.rank_developers(bug)
-
-    response[index] = save_proof_of_work(bug['bug_id'],
-                                         bug['assignees'],
-                                         bug['authors'],
-                                         bug['component'],
-                                         bug['report_time'],
-                                         answer
-                                         )
-
-    counter += 1
-    if counter % 1000 == 0:
-        export_to_csv(response, project, '_new' + str(datetime.now().strftime("%d-%b-%Y_%H-%M-%S")))
-    print('processed: ' + str(counter) + '/' + str(len(bugs)))
+response = find_response(profiler, bugs, project, approach, formula)
 
 database.close()
-
-# print('📈 Accuracy at:')
-# for k in ks:
-#     print(str(len(bugs[bugs['at_' + str(k)] == 1])))
-#     print('at ' + str(k) + ': ' + str(100 * (len(bugs[bugs['at_' + str(k)] == 1]) / len(bugs))) + '%')
-
-export_to_csv(response, project)
+export_to_csv(response, approach, project)
