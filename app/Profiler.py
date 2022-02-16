@@ -323,8 +323,8 @@ class Profiler:
         if term_frequency == 0:
             return 0
 
-        return math.log2(1 + term_frequency)
-        # return term_frequency / profile_frequency
+        # return math.log2(1 + term_frequency)
+        return term_frequency / profile_frequency
 
     def bug_count(self, bug_term):
         counter = 0
