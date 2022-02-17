@@ -41,6 +41,9 @@ class Profiler:
         self.sync_activity(bug, mode)
         self.sync_api(bug, mode)
 
+        self.previous = bug['report_time']
+        self.previous_bugs[len(self.previous_bugs)] = bug
+
     def get_changed_codes(self, begin, end, mode):
         self.builder.execute("""
             SELECT id, codes_bag_of_words, commit_bag_of_words, used_apis, author, committed_at, commit_hash
@@ -56,12 +59,6 @@ class Profiler:
             return
 
         last_bug = self.previous_bugs[len(self.previous_bugs) - 1]
-        # final updates for memorizing important values of a bug to be used later
-        self.previous_bugs[len(self.previous_bugs) - 1]['bag_of_word_stemmed_split'] = \
-            self.previous_bugs[len(self.previous_bugs) - 1]['bag_of_word_stemmed'].split()
-
-        self.previous_bugs[len(self.previous_bugs) - 1]['bag_of_word_stemmed_frequency'] = \
-            collections.Counter(self.previous_bugs[len(self.previous_bugs) - 1]['bag_of_word_stemmed_split'])
 
         self.previous_bugs[len(self.previous_bugs) - 1]['direct_apis'] = {}
 
@@ -69,11 +66,7 @@ class Profiler:
         last_bug_terms = self.previous_bugs[len(self.previous_bugs) - 1]['bag_of_word_stemmed_split']
         last_bug_terms_f = array_to_frequency_list(last_bug_terms, last_bug['report_time'])
 
-        assignees = ''
-        if mode == LEARN:
-            assignees = last_bug['assignees'].split(',')
-        elif mode == TEST:
-            assignees = last_bug['chosen'].split(',')
+        assignees = last_bug['assignees'].split(',')
 
         if 1 < len(assignees):
             exit('❌ API experience track of bugs would not work. you need to consider all assignees')
@@ -167,10 +160,6 @@ class Profiler:
 
     def rank_developers(self, new_bug):
         result = self.calculate_ranks(new_bug)
-
-        new_bug['chosen'] = result[0][0]
-        self.previous = new_bug['report_time']
-        self.previous_bugs[len(self.previous_bugs)] = new_bug
 
         return result
 
@@ -309,15 +298,15 @@ class Profiler:
         union = (len(list1) + len(list2)) - intersection
         return float(intersection) / union
 
-    # formula of TF-IDF -- not used anymore for bug similarity
-    def tf_idf(self, doc_a_terms, frequencies, bug_terms):
-        total = 0
-        for bug_term in bug_terms:
-            if bug_term in doc_a_terms:
-                tfidf = (frequencies[bug_term] / len(doc_a_terms)) * \
-                        math.log10(len(self.previous_bugs) / self.bug_count(bug_term))
-                total += tfidf
-        return total
+    # # formula of TF-IDF -- not used anymore for bug similarity
+    # def tf_idf(self, doc_a_terms, frequencies, bug_terms):
+    #     total = 0
+    #     for bug_term in bug_terms:
+    #         if bug_term in doc_a_terms:
+    #             tfidf = (frequencies[bug_term] / len(doc_a_terms)) * \
+    #                     math.log10(len(self.previous_bugs) / self.bug_count(bug_term))
+    #             total += tfidf
+    #     return total
 
     def calculate_tf(self, term_frequency, profile_frequency):
         if term_frequency == 0:
@@ -325,9 +314,9 @@ class Profiler:
 
         return term_frequency / profile_frequency
 
-    def bug_count(self, bug_term):
-        counter = 0
-        for index_, previous_bug in self.previous_bugs.items():
-            if bug_term in previous_bug['bag_of_word_stemmed_split']:
-                counter += 1
-        return counter
+    # def bug_count(self, bug_term):
+    #     counter = 0
+    #     for index_, previous_bug in self.previous_bugs.items():
+    #         if bug_term in previous_bug['bag_of_word_stemmed_split']:
+    #             counter += 1
+    #     return counter

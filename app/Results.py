@@ -1,3 +1,5 @@
+import collections
+
 import pandas as pd
 import pytz
 from base import ks, exportable_keys, LEARN, TEST
@@ -29,23 +31,28 @@ def find_response(profiler, bugs, project, approach, formula):
             bug['report_time'] = bug['report_time'].tz_localize(pytz.timezone('EST5EDT'))
             bug['report_time'] = bug['report_time'].tz_convert(pytz.timezone('UTC'))
             bug['report_time'] = bug['report_time'].tz_localize(None)
+            bug['bag_of_word_stemmed_split'] = bug['bag_of_word_stemmed'].split()
+            bug['bag_of_word_stemmed_frequency'] = collections.Counter(bug['bag_of_word_stemmed_split'])
 
-            profiler.sync_profiles(bug, mode_)
-            answer = profiler.rank_developers(bug)
+            if mode_ == LEARN:
+                profiler.sync_profiles(bug, mode_)
+            else:
+                answer = profiler.rank_developers(bug)
 
-            response[index] = save_proof_of_work(
-                bug['bug_id'],
-                bug['assignees'],
-                bug['authors'],
-                bug['component'],
-                bug['report_time'],
-                answer,
-                mode_
-            )
+                response[index] = save_proof_of_work(
+                    bug['bug_id'],
+                    bug['assignees'],
+                    bug['authors'],
+                    bug['component'],
+                    bug['report_time'],
+                    answer,
+                    mode_
+                )
+                if counter % 100 == 0:
+                    export_to_csv(response, approach, project,
+                                  '_new' + str(datetime.now().strftime("%d-%b-%Y_%H-%M-%S")))
 
             counter += 1
-            if counter % 1000 == 0:
-                export_to_csv(response, approach, project, '_new' + str(datetime.now().strftime("%d-%b-%Y_%H-%M-%S")))
             print('processed: ' + str(counter) + '/' + str(len(bugs)))
 
     return response
