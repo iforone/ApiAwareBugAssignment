@@ -160,9 +160,6 @@ builder.execute("""
         ) assginee_mapper on assginee_mapper.bug_id = bug_and_files.bug_id
     ORDER BY bug_and_files.report_time
 """)
-#     WHERE (product = 'JDT' or product = 'Platform')
-# where DATEDIFF(commit_time, bug_and_files.report_time) < 200
-# WHERE authors = assignees
 
 bugs = pd.DataFrame(builder.fetchall())
 bugs.columns = builder.column_names
@@ -183,8 +180,6 @@ code_scanner.analyze_codes(project, builder, database)
 
 # create profiles for users
 profiler = Profiler(approach, project, builder)
-
 response = find_response(profiler, bugs, project, approach, formula)
-
 database.close()
 export_to_csv(response, approach, project)
