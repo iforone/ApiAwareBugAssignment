@@ -65,11 +65,9 @@ class Profiler:
         last_bug_terms_f = array_to_frequency_list(last_bug_terms, last_bug['report_time'])
 
         if 'chosen' in last_bug:
-            print('using chosen')
-            assignees = last_bug['chosen'].split(',')
+            assignees = last_bug['assignees'].split(',')
         else:
-            print('using author')
-            assignees = last_bug['authors'].split(',')
+            assignees = last_bug['assignees'].split(',')
 
         if 1 < len(assignees):
             exit('❌ API experience track of bugs would not work. you need to consider all assignees')
