@@ -184,37 +184,47 @@ class Profiler:
 
         local_scores = pd.DataFrame(columns=['developer', 'score'])
         history_scores = pd.DataFrame(columns=['developer', 'score'])
-        fix_scores = pd.DataFrame(columns=['developer', 'score'])
         code_scores = pd.DataFrame(columns=['developer', 'score'])
         api_scores = pd.DataFrame(columns=['developer', 'score'])
 
         for index_, profile in self.profiles.items():
-            history_experience = self.time_based_tfidf(profile.history, profile.h_f, bug_terms, new_bug['report_time'],
-                                                       'history')
-            fix_experience = self.time_based_tfidf_original(profile.history, profile.h_f, bug_terms,
-                                                            new_bug['report_time'], 'history')
-            code_experience = self.time_based_tfidf(profile.code, profile.c_f, bug_terms, new_bug['report_time'],
-                                                    'code')
-            api_experience = self.time_based_tfidf(profile.api, profile.a_f, bug_apis, new_bug['report_time'], 'api')
-            score = fix_experience + code_experience + api_experience
+            history_experience = self.time_based_tfidf(
+                profile.history,
+                profile.h_f,
+                bug_terms,
+                new_bug['report_time'],
+                'history')
+            code_experience = self.time_based_tfidf(
+                profile.code,
+                profile.c_f,
+                bug_terms,
+                new_bug['report_time'],
+                'code')
+            api_experience = self.time_based_tfidf(
+                profile.api,
+                profile.a_f,
+                bug_apis,
+                new_bug['report_time'],
+                'api')
+
+            score = history_experience + code_experience + api_experience
 
             local_scores.loc[len(local_scores)] = [profile.name, score]
+
             history_scores.loc[len(history_scores)] = [profile.name, history_experience]
-            fix_scores.loc[len(fix_scores)] = [profile.name, fix_experience]
             code_scores.loc[len(code_scores)] = [profile.name, code_experience]
             api_scores.loc[len(api_scores)] = [profile.name, api_experience]
 
-        # add fallback of the project as Inbox
-        code_scores.loc[len(code_scores)] = [self.project.upper() + '-' + new_bug['component'] + '-' + 'Inbox', 0]
-        api_scores.loc[len(api_scores)] = [self.project.upper() + '-' + new_bug['component'] + '-' + 'Inbox', 0]
+        # # add fallback of the project as Inbox
+        # code_scores.loc[len(code_scores)] = [self.project.upper() + '-' + new_bug['component'] + '-' + 'Inbox', 0]
+        # api_scores.loc[len(api_scores)] = [self.project.upper() + '-' + new_bug['component'] + '-' + 'Inbox', 0]
 
-        alternate_scores = self.analysis.find_alternative_scores(history_scores, fix_scores, code_scores, api_scores)
+        alternate_scores = self.analysis.find_alternative_scores(history_scores, code_scores, api_scores)
 
         return [
             alternate_scores.sort_values(by='score', ascending=False)['developer'].tolist(),
             local_scores.sort_values(by='score', ascending=False)['developer'].tolist(),
             history_scores.sort_values(by='score', ascending=False),
-            fix_scores.sort_values(by='score', ascending=False),
             code_scores[code_scores['score'] != 0].sort_values(by='score', ascending=False),
             api_scores[api_scores['score'] != 0].sort_values(by='score', ascending=False),
         ]
@@ -313,8 +323,7 @@ class Profiler:
         if term_frequency == 0:
             return 0
 
-        # return term_frequency / profile_frequency
-        return math.log2(1 + term_frequency)
+        return term_frequency / profile_frequency
 
     def bug_count(self, bug_term):
         counter = 0
