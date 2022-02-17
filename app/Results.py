@@ -79,23 +79,16 @@ def save_proof_of_work(id_, assignees_, authors_, c_, time_, answer_, mode_):
         proof['history_at_' + str(counter__)] = row_['developer']
         proof['history_at_' + str(counter__) + '_v'] = row_['score']
 
-    # 3 is fix
+    # 3 is code
     counter__ = 0
     for x, row_ in answer_[3].head(10).iterrows():
-        counter__ += 1
-        proof['fix_at_' + str(counter__)] = row_['developer']
-        proof['fix_at_' + str(counter__) + '_v'] = row_['score']
-
-    # 4 is code
-    counter__ = 0
-    for x, row_ in answer_[4].head(10).iterrows():
         counter__ += 1
         proof['code_at_' + str(counter__)] = row_['developer']
         proof['code_at_' + str(counter__) + '_v'] = row_['score']
 
-    # 5 is api
+    # 4 is api
     counter__ = 0
-    for x, row_ in answer_[5].head(10).iterrows():
+    for x, row_ in answer_[4].head(10).iterrows():
         counter__ += 1
         proof['api_at_' + str(counter__)] = row_['developer']
         proof['api_at_' + str(counter__) + '_v'] = row_['score']
