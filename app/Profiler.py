@@ -64,9 +64,11 @@ class Profiler:
         last_bug_terms = self.previous_bugs[len(self.previous_bugs) - 1]['bag_of_word_stemmed_split']
         last_bug_terms_f = array_to_frequency_list(last_bug_terms, last_bug['report_time'])
 
-        if mode == LEARN:
-            assignees = last_bug['authors'].split(',')
+        if 'chosen' in last_bug:
+            print('using chosen')
+            assignees = last_bug['chosen'].split(',')
         else:
+            print('using author')
             assignees = last_bug['authors'].split(',')
 
         if 1 < len(assignees):
@@ -163,6 +165,7 @@ class Profiler:
         result = self.calculate_ranks(new_bug)
 
         self.previous = new_bug['report_time']
+        new_bug['chosen'] = result[0][0]
         self.previous_bugs[len(self.previous_bugs)] = new_bug
 
         return result
