@@ -197,8 +197,8 @@ class Profiler:
         api_scores = pd.DataFrame(columns=['developer', 'score'])
 
         for index_, profile in self.profiles.items():
-            if profile.name not in potential_profiles:
-                continue
+            # if profile.name not in potential_profiles:
+            #    continue
 
             history_experience = self.time_based_tfidf(profile.history, profile.h_f, bug_terms, new_bug['report_time'],
                                                        'history')
@@ -327,8 +327,8 @@ class Profiler:
         if term_frequency == 0:
             return 0
 
-        # return math.log2(1 + term_frequency)
-        return term_frequency / profile_frequency
+        # return term_frequency / profile_frequency
+        return math.log2(1 + term_frequency)
 
     def bug_count(self, bug_term):
         counter = 0

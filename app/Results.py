@@ -46,7 +46,6 @@ def find_response(profiler, bugs, project, approach, formula):
             counter += 1
             if counter % 1000 == 0:
                 export_to_csv(response, approach, project, '_new' + str(datetime.now().strftime("%d-%b-%Y_%H-%M-%S")))
-                break
             print('processed: ' + str(counter) + '/' + str(len(bugs)))
 
     return response

@@ -158,9 +158,9 @@ builder.execute("""
             FROM bug_commit
             group by bug_id
         ) assginee_mapper on assginee_mapper.bug_id = bug_and_files.bug_id
-    WHERE (product = 'JDT' or product = 'Platform')
     ORDER BY bug_and_files.report_time
 """)
+#     WHERE (product = 'JDT' or product = 'Platform')
 # where DATEDIFF(commit_time, bug_and_files.report_time) < 200
 # WHERE authors = assignees
 
