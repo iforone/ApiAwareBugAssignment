@@ -41,8 +41,9 @@ class Profiler:
         self.sync_activity(bug, mode)
         self.sync_api(bug, mode)
 
-        self.previous = bug['report_time']
-        self.previous_bugs[len(self.previous_bugs)] = bug
+        if mode == LEARN:
+            self.previous = bug['report_time']
+            self.previous_bugs[len(self.previous_bugs)] = bug
 
     def get_changed_codes(self, begin, end, mode):
         self.builder.execute("""
@@ -59,14 +60,14 @@ class Profiler:
             return
 
         last_bug = self.previous_bugs[len(self.previous_bugs) - 1]
-
-        self.previous_bugs[len(self.previous_bugs) - 1]['direct_apis'] = {}
-
         # TODO for now let's just use the words in bug report later it can be codes too
         last_bug_terms = self.previous_bugs[len(self.previous_bugs) - 1]['bag_of_word_stemmed_split']
         last_bug_terms_f = array_to_frequency_list(last_bug_terms, last_bug['report_time'])
 
-        assignees = last_bug['assignees'].split(',')
+        if mode == LEARN:
+            assignees = last_bug['authors'].split(',')
+        else:
+            assignees = last_bug['authors'].split(',')
 
         if 1 < len(assignees):
             exit('❌ API experience track of bugs would not work. you need to consider all assignees')
@@ -160,6 +161,9 @@ class Profiler:
 
     def rank_developers(self, new_bug):
         result = self.calculate_ranks(new_bug)
+
+        self.previous = new_bug['report_time']
+        self.previous_bugs[len(self.previous_bugs)] = new_bug
 
         return result
 

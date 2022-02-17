@@ -33,10 +33,11 @@ def find_response(profiler, bugs, project, approach, formula):
             bug['report_time'] = bug['report_time'].tz_localize(None)
             bug['bag_of_word_stemmed_split'] = bug['bag_of_word_stemmed'].split()
             bug['bag_of_word_stemmed_frequency'] = collections.Counter(bug['bag_of_word_stemmed_split'])
+            bug['direct_apis'] = {}
 
-            if mode_ == LEARN:
-                profiler.sync_profiles(bug, mode_)
-            else:
+            profiler.sync_profiles(bug, mode_)
+
+            if mode_ == TEST:
                 answer = profiler.rank_developers(bug)
 
                 response[index] = save_proof_of_work(
