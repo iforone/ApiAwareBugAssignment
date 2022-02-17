@@ -18,6 +18,13 @@ zsh boot.sh
 # if it asks permission or questions allow accordingly
 ```
 
+Observations:
+
+1- none of the bug reports in JDT have more than one assignee so this is technically one assignee
+
+
+
+-----
 
 🆘 Helpful notes (for me):
 

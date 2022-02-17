@@ -69,7 +69,6 @@ class Profiler:
         last_bug_terms = self.previous_bugs[len(self.previous_bugs) - 1]['bag_of_word_stemmed_split']
         last_bug_terms_f = array_to_frequency_list(last_bug_terms, last_bug['report_time'])
 
-        # none of the bug reports in JDT have more than one assignee so this is technically one assignee
         assignees = ''
         if mode == LEARN:
             assignees = last_bug['assignees'].split(',')
@@ -106,6 +105,7 @@ class Profiler:
 
             code_terms = array_to_frequency_list(tempest, change['committed_at'])
 
+            # adding code terms to profile
             if author in self.profiles:
                 self.profiles[author].update_code(code_terms)
             else:
@@ -156,11 +156,6 @@ class Profiler:
         local_scores = {}
 
         for index_, previous_bug in self.previous_bugs.items():
-            # score = self.tf_idf(
-            #     previous_bug['bag_of_word_stemmed_split'],
-            #     previous_bug['bag_of_word_stemmed_frequency'],
-            #     bug_terms
-            # )
             score = self.jaccard(previous_bug['bag_of_word_stemmed_split'], bug_terms)
             if 0 < score:
                 local_scores[index_] = score
@@ -184,11 +179,8 @@ class Profiler:
 
         bug_terms = new_bug['bag_of_word_stemmed'].split()
         bug_apis = self.get_direct_bug_apis(bug_terms)
-        potential_profiles = self.component_mapper.get_component_authors(new_bug['component'])
 
-        # bug_apis = self.get_indirect_bug_apis(new_bug['commit_hash'])
         # TODO: remove 30 most common words from bug reports in VSM
-        # ask question about this
 
         local_scores = pd.DataFrame(columns=['developer', 'score'])
         history_scores = pd.DataFrame(columns=['developer', 'score'])
@@ -197,9 +189,6 @@ class Profiler:
         api_scores = pd.DataFrame(columns=['developer', 'score'])
 
         for index_, profile in self.profiles.items():
-            # if profile.name not in potential_profiles:
-            #    continue
-
             history_experience = self.time_based_tfidf(profile.history, profile.h_f, bug_terms, new_bug['report_time'],
                                                        'history')
             fix_experience = self.time_based_tfidf_original(profile.history, profile.h_f, bug_terms,
@@ -283,9 +272,6 @@ class Profiler:
                 # difference_in_days = (bug_time.date() - temp['date'].date()).days
                 damped_difference_in_days = math.sqrt(difference_in_days)
                 if difference_in_days == 0:
-                    # lim 1/ x where x -> 0+ i
-                    # s +infinite
-                    # print('INFINITE Triggered')
                     recency = float('inf')
                 else:
                     recency = (1 / self.dev_count(bug_term, module)) + (1 / damped_difference_in_days)
