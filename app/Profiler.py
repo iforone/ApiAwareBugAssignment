@@ -74,10 +74,9 @@ class Profiler:
         last_bug_terms = self.previous_bugs[len(self.previous_bugs) - 1]['bag_of_word_stemmed_split']
         last_bug_terms_f = array_to_frequency_list(last_bug_terms, last_bug['report_time'])
 
-        assignees = ''
-        if mode == LEARN:
-            assignees = last_bug['assignees'].split(',')
-        elif mode == TEST:
+        if 'chosen' in last_bug:
+            assignees = last_bug['chosen'].split(',')
+        else:
             assignees = last_bug['assignees'].split(',')
 
         if 1 < len(assignees):

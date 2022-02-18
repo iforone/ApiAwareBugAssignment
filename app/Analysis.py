@@ -34,14 +34,14 @@ class Analysis:
                 else:
                     scores[developer] = scores.get(developer, 0) + (value * 100 / total_scores['history'])
 
-        for index, row in fix_scores.iterrows():
-            value = row['score']
-            developer = row['developer']
-            if str(developer) != 'nan':
-                if str(value) == 'nan' or total_scores['fix'] <= 0:
-                    scores[developer] = scores.get(developer, 0) + 0
-                else:
-                    scores[developer] = scores.get(developer, 0) + (value * 100 / total_scores['fix']) / 1.05
+        # for index, row in fix_scores.iterrows():
+        #     value = row['score']
+        #     developer = row['developer']
+        #     if str(developer) != 'nan':
+        #         if str(value) == 'nan' or total_scores['fix'] <= 0:
+        #             scores[developer] = scores.get(developer, 0) + 0
+        #         else:
+        #             scores[developer] = scores.get(developer, 0) + (value * 100 / total_scores['fix']) / 1.05
 
         for index, row in code_scores.iterrows():
             value = row['score']
