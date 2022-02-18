@@ -41,6 +41,11 @@ class Profiler:
         self.sync_activity(bug, mode)
         self.sync_api(bug, mode)
 
+        if mode == LEARN:
+            self.previous = bug['report_time']
+            self.previous_bugs[len(self.previous_bugs)] = bug
+
+
     def get_changed_codes(self, begin, end, mode):
         self.builder.execute("""
             SELECT id, codes_bag_of_words, commit_bag_of_words, used_apis, author, committed_at, commit_hash
@@ -73,7 +78,7 @@ class Profiler:
         if mode == LEARN:
             assignees = last_bug['assignees'].split(',')
         elif mode == TEST:
-            assignees = last_bug['chosen'].split(',')
+            assignees = last_bug['assignees'].split(',')
 
         if 1 < len(assignees):
             exit('❌ API experience track of bugs would not work. you need to consider all assignees')
@@ -313,7 +318,6 @@ class Profiler:
         if term_frequency == 0:
             return 0
 
-        # return term_frequency / profile_frequency
         return math.log2(1 + term_frequency)
 
     def bug_count(self, bug_term):

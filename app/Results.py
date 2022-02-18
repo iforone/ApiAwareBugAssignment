@@ -31,21 +31,20 @@ def find_response(profiler, bugs, project, approach, formula):
             bug['report_time'] = bug['report_time'].tz_localize(None)
 
             profiler.sync_profiles(bug, mode_)
-            answer = profiler.rank_developers(bug)
 
-            response[index] = save_proof_of_work(
-                bug['bug_id'],
-                bug['assignees'],
-                bug['authors'],
-                bug['component'],
-                bug['report_time'],
-                answer,
-                mode_
-            )
+            if mode_ == TEST:
+                answer = profiler.rank_developers(bug)
+                response[index] = save_proof_of_work(
+                    bug['bug_id'],
+                    bug['assignees'],
+                    bug['authors'],
+                    bug['component'],
+                    bug['report_time'],
+                    answer,
+                    mode_
+                )
 
             counter += 1
-            if counter % 1000 == 0:
-                export_to_csv(response, approach, project, '_new' + str(datetime.now().strftime("%d-%b-%Y_%H-%M-%S")))
             print('processed: ' + str(counter) + '/' + str(len(bugs)))
 
     return response
