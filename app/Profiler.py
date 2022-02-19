@@ -34,9 +34,17 @@ class Profiler:
         self.builder = builder
         # temporary keep last changes in code between a time frame
         self.temp_changes = None
+        # since history learns one last one it missed the last bug
+        self.locked = False
 
     def sync_profiles(self, bug, mode):
-        self.sync_history(bug, mode)
+        if mode == LEARN:
+            self.sync_history(bug, mode)
+        elif not self.locked:
+            self.sync_history(bug, mode)
+            self.locked = True
+            print('okay locked now!', bug['bug_id'])
+
         self.get_changed_codes(self.previous, bug['report_time'], mode)
         self.sync_activity(bug, mode)
         self.sync_api(bug, mode)
@@ -175,7 +183,7 @@ class Profiler:
 
         new_bug['chosen'] = result[0][0]
         self.previous = new_bug['report_time']
-        self.previous_bugs[len(self.previous_bugs)] = new_bug
+        # self.previous_bugs[len(self.previous_bugs)] = new_bug
 
         return result
 
@@ -200,7 +208,7 @@ class Profiler:
 
             history_experience = self.time_based_tfidf_original(
                 profile.history,
-                profile.get_max_frequency('history'),
+                profile.h_f,
                 bug_terms,
                 new_bug['report_time'],
                 'history'
@@ -322,26 +330,9 @@ class Profiler:
         union = (len(list1) + len(list2)) - intersection
         return float(intersection) / union
 
-    # formula of TF-IDF -- not used anymore for bug similarity
-    def tf_idf(self, doc_a_terms, frequencies, bug_terms):
-        total = 0
-        for bug_term in bug_terms:
-            if bug_term in doc_a_terms:
-                tfidf = (frequencies[bug_term] / len(doc_a_terms)) * \
-                        math.log10(len(self.previous_bugs) / self.bug_count(bug_term))
-                total += tfidf
-        return total
-
     def calculate_tf(self, term_frequency, profile_frequency):
         if term_frequency == 0:
             return 0
 
         return 0.4 + (0.6 * term_frequency / profile_frequency)
         # return math.log2(1 + term_frequency)
-
-    def bug_count(self, bug_term):
-        counter = 0
-        for index_, previous_bug in self.previous_bugs.items():
-            if bug_term in previous_bug['bag_of_word_stemmed_split']:
-                counter += 1
-        return counter
