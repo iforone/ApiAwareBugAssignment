@@ -45,7 +45,6 @@ class Profiler:
             self.previous = bug['report_time']
             self.previous_bugs[len(self.previous_bugs)] = bug
 
-
     def get_changed_codes(self, begin, end, mode):
         self.builder.execute("""
             SELECT id, codes_bag_of_words, commit_bag_of_words, used_apis, author, committed_at, commit_hash
@@ -193,18 +192,37 @@ class Profiler:
         api_scores = pd.DataFrame(columns=['developer', 'score'])
 
         for index_, profile in self.profiles.items():
-            history_experience = self.time_based_tfidf(profile.history, profile.h_f, bug_terms, new_bug['report_time'],
-                                                       'history')
-            fix_experience = self.time_based_tfidf_original(profile.history, profile.h_f, bug_terms,
-                                                            new_bug['report_time'], 'history')
-            code_experience = self.time_based_tfidf(profile.code, profile.c_f, bug_terms, new_bug['report_time'],
-                                                    'code')
-            api_experience = self.time_based_tfidf(profile.api, profile.a_f, bug_apis, new_bug['report_time'], 'api')
-            score = fix_experience + code_experience + api_experience
+            history_experience = self.time_based_tfidf(
+                profile.history,
+                profile.h_f,
+                bug_terms,
+                new_bug['report_time'],
+                'history'
+            )
 
-            local_scores.loc[len(local_scores)] = [profile.name, score]
+            code_experience = self.time_based_tfidf(
+                profile.code,
+                profile.c_f,
+                bug_terms,
+                new_bug['report_time'],
+                'code'
+            )
+
+            api_experience = self.time_based_tfidf(
+                profile.api,
+                profile.a_f,
+                bug_apis,
+                new_bug['report_time'],
+                'api'
+            )
+
+            # fix_experience = self.time_based_tfidf_original(profile.history, profile.h_f, bug_terms,
+            #                                                new_bug['report_time'], 'history')
+            # score = fix_experience + code_experience + api_experience
+
+            # local_scores.loc[len(local_scores)] = [profile.name, score]
             history_scores.loc[len(history_scores)] = [profile.name, history_experience]
-            fix_scores.loc[len(fix_scores)] = [profile.name, fix_experience]
+            # fix_scores.loc[len(fix_scores)] = [profile.name, fix_experience]
             code_scores.loc[len(code_scores)] = [profile.name, code_experience]
             api_scores.loc[len(api_scores)] = [profile.name, api_experience]
 
