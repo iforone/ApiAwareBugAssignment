@@ -194,7 +194,7 @@ class Profiler:
         for index_, profile in self.profiles.items():
             history_experience = self.time_based_tfidf(
                 profile.history,
-                profile.h_f,
+                profile.get_max_frequency('history'),
                 bug_terms,
                 new_bug['report_time'],
                 'history'
@@ -202,7 +202,7 @@ class Profiler:
 
             code_experience = self.time_based_tfidf(
                 profile.code,
-                profile.c_f,
+                profile.get_max_frequency('code'),
                 bug_terms,
                 new_bug['report_time'],
                 'code'
@@ -210,7 +210,7 @@ class Profiler:
 
             api_experience = self.time_based_tfidf(
                 profile.api,
-                profile.a_f,
+                profile.get_max_frequency('api'),
                 bug_apis,
                 new_bug['report_time'],
                 'api'
@@ -335,7 +335,8 @@ class Profiler:
         if term_frequency == 0:
             return 0
 
-        return math.log2(1 + term_frequency)
+        return 0.4 + (0.6 * term_frequency / profile_frequency)
+        # return math.log2(1 + term_frequency)
 
     def bug_count(self, bug_term):
         counter = 0

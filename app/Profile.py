@@ -104,3 +104,19 @@ class Profile:
             self.c_f += float(content['frequency'])
         if key == 'api':
             self.a_f += float(content['frequency'])
+
+    def get_max_frequency(self, key):
+        list_ = []
+        if key == 'history':
+            for i, content in self.history.items():
+                list_.append(float(content['frequency']))
+        if key == 'code':
+            for i, content in self.code.items():
+                list_.append(float(content['frequency']))
+        if key == 'api':
+            for i, content in self.api.items():
+                list_.append(float(content['frequency']))
+        if len(list_) == 0:
+            return 0
+
+        return max(list_)
