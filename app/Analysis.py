@@ -52,14 +52,14 @@ class Analysis:
                 else:
                     scores[developer] = scores.get(developer, 0) + (value * 100 / total_scores['code'])
 
-        for index, row in api_scores.iterrows():
-            value = row['score']
-            developer = row['developer']
-            if str(developer) != 'nan':
-                if str(value) == 'nan' or total_scores['api'] <= 0:
-                    scores[developer] = scores.get(developer, 0) + 0
-                else:
-                    scores[developer] = scores.get(developer, 0) + (value * 100 / total_scores['api'])
+        # for index, row in api_scores.iterrows():
+        #     value = row['score']
+        #     developer = row['developer']
+        #     if str(developer) != 'nan':
+        #         if str(value) == 'nan' or total_scores['api'] <= 0:
+        #             scores[developer] = scores.get(developer, 0) + 0
+        #         else:
+        #             scores[developer] = scores.get(developer, 0) + (value * 100 / total_scores['api'])
 
         df = pd.DataFrame(columns=['developer', 'score'])
         for i, v in scores.items():

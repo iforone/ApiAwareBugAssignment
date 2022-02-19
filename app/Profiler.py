@@ -114,6 +114,7 @@ class Profiler:
             else:
                 self.profiles[author] = Profile(author, {}, code_terms, {})
             self.component_mapper.update(author, 'JDT-UI')
+            self.component_mapper.update(author, 'JDT-Text')
 
     def sync_api(self, new_bug, mode):
         for index, change in self.temp_changes.iterrows():
@@ -127,6 +128,7 @@ class Profiler:
             else:
                 self.profiles[author] = Profile(author, {}, api_terms, {})
             self.component_mapper.update(author, 'JDT-UI')
+            self.component_mapper.update(author, 'JDT-Text')
 
     def get_direct_bug_apis(self, bug_terms):
         # direct - use the API experience of assignees for the similar bugs
@@ -192,7 +194,11 @@ class Profiler:
         api_scores = pd.DataFrame(columns=['developer', 'score'])
 
         for index_, profile in self.profiles.items():
-            history_experience = self.time_based_tfidf(
+            # not that much effective but good enough
+            if index_ not in self.component_mapper.get_component_authors(new_bug['component']):
+                continue
+
+            history_experience = self.time_based_tfidf_original(
                 profile.history,
                 profile.get_max_frequency('history'),
                 bug_terms,
@@ -208,7 +214,7 @@ class Profiler:
                 'code'
             )
 
-            api_experience = self.time_based_tfidf(
+            api_experience = self.time_based_tfidf_original(
                 profile.api,
                 profile.get_max_frequency('api'),
                 bug_apis,
@@ -216,13 +222,7 @@ class Profiler:
                 'api'
             )
 
-            # fix_experience = self.time_based_tfidf_original(profile.history, profile.h_f, bug_terms,
-            #                                                new_bug['report_time'], 'history')
-            # score = fix_experience + code_experience + api_experience
-
-            # local_scores.loc[len(local_scores)] = [profile.name, score]
             history_scores.loc[len(history_scores)] = [profile.name, history_experience]
-            # fix_scores.loc[len(fix_scores)] = [profile.name, fix_experience]
             code_scores.loc[len(code_scores)] = [profile.name, code_experience]
             api_scores.loc[len(api_scores)] = [profile.name, api_experience]
 
@@ -253,7 +253,8 @@ class Profiler:
         for bug_term in bug_terms:
             if bug_term in profile_terms:
                 temp = profile_terms[bug_term]
-                tfidf = temp['frequency'] * math.log10(len(self.profiles) / self.dev_count(bug_term, module))
+                tf = math.log2(1 + temp['frequency'])
+                tfidf = tf * math.log10(len(self.profiles) / self.dev_count(bug_term, module))
 
                 difference_in_seconds = (bug_time - temp['date']).total_seconds()
                 difference_in_days = difference_in_seconds / SECONDS_IN_A_DAY
