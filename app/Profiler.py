@@ -81,10 +81,7 @@ class Profiler:
         last_bug_terms = self.previous_bugs[len(self.previous_bugs) - 1]['bag_of_word_stemmed_split']
         last_bug_terms_f = array_to_frequency_list(last_bug_terms, last_bug['report_time'])
 
-        if 'chosen' in last_bug:
-            assignees = last_bug['chosen'].split(',')
-        else:
-            assignees = last_bug['assignees'].split(',')
+        assignees = last_bug['assignees'].split(',')
 
         if 1 < len(assignees):
             exit('❌ API experience track of bugs would not work. you need to consider all assignees')
@@ -181,9 +178,8 @@ class Profiler:
     def rank_developers(self, new_bug):
         result = self.calculate_ranks(new_bug)
 
-        new_bug['chosen'] = result[0][0]
         self.previous = new_bug['report_time']
-        # self.previous_bugs[len(self.previous_bugs)] = new_bug
+        result.append(self.top_similar_bugs(new_bug['bag_of_word_stemmed'].split(), bug_similarity_threshold))
 
         return result
 
@@ -238,7 +234,7 @@ class Profiler:
         code_scores.loc[len(code_scores)] = [self.project.upper() + '-' + new_bug['component'] + '-' + 'Inbox', 0]
         api_scores.loc[len(api_scores)] = [self.project.upper() + '-' + new_bug['component'] + '-' + 'Inbox', 0]
 
-        alternate_scores = self.analysis.find_alternative_scores(history_scores, fix_scores, code_scores, api_scores)
+        alternate_scores = self.analysis.find_alternative_scores(history_scores, code_scores, api_scores)
 
         return [
             alternate_scores.sort_values(by='score', ascending=False)['developer'].tolist(),

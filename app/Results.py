@@ -33,14 +33,13 @@ def find_response(profiler, bugs, project, approach, formula):
             profiler.sync_profiles(bug, mode_)
 
             if mode_ == TEST:
-                answer = profiler.rank_developers(bug)
                 response[index] = save_proof_of_work(
                     bug['bug_id'],
                     bug['assignees'],
                     bug['authors'],
                     bug['component'],
                     bug['report_time'],
-                    answer,
+                    profiler.rank_developers(bug),
                     mode_
                 )
 
@@ -60,6 +59,7 @@ def save_proof_of_work(id_, assignees_, authors_, c_, time_, answer_, mode_):
         'author': authors_,
         'report_time': time_,
         'mode': mode_,
+        'similar_bug': ','.join(answer_[6]),
     }
 
     # check against gold standard and save the result
