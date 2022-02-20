@@ -1,4 +1,5 @@
 import collections
+import json
 import math
 from pandas import Timestamp
 from Profile import Profile, array_to_frequency_list, frequency_to_frequency_list, guess_correct_author_name
@@ -82,6 +83,7 @@ class Profiler:
         last_bug_terms_f = array_to_frequency_list(last_bug_terms, last_bug['report_time'])
 
         assignees = last_bug['assignees'].split(',')
+        authors = last_bug['authors']
 
         if 1 < len(assignees):
             exit('❌ API experience track of bugs would not work. you need to consider all assignees')
@@ -89,11 +91,15 @@ class Profiler:
         for assignee in assignees:
             if assignee in self.profiles:
                 self.profiles[assignee].update_history(last_bug_terms_f)
-                temp_api_dict = self.profiles[assignee].api.copy()
-                self.previous_bugs[len(self.previous_bugs) - 1]['direct_apis'] = temp_api_dict
             else:
                 self.profiles[assignee] = Profile(assignee, last_bug_terms_f, {}, {})
             self.component_mapper.update(assignee, last_bug['component'])
+
+        # 20 Feb - slight change: now we use author instead of assignee
+        # due chronological errors of assignee learning api from it can be wrong
+        if authors in self.profiles:
+            temp_api_dict = self.profiles[authors].api.copy()
+            self.previous_bugs[len(self.previous_bugs) - 1]['direct_apis'] = temp_api_dict
 
     def sync_activity(self):
         # each change in a commit is a row but the commit message should be considered only once
@@ -157,19 +163,24 @@ class Profiler:
         for index_ in similar_bug_indices:
             similar_bug = self.previous_bugs[index_]
             commit_hash = similar_bug['commit_hash']
-            self.builder.execute("SELECT used_apis "
-                                 "FROM processed_code WHERE commit_hash LIKE '"
-                                 "" + commit_hash + "%'"
-                                 )
+            self.builder.execute(
+                "SELECT used_apis, api_usage_details FROM processed_code WHERE commit_hash LIKE '" + commit_hash + "%'")
             changes = pd.DataFrame(self.builder.fetchall())
 
-            for i_, change in changes.items():
+            for i_, change in changes.iterrows():
                 if change[0] == '':
-                    continue
+                    potential_apis = json.loads(change[1])
+                    api_terms = {}
+                    for potential_api in potential_apis:
+                        api_terms[potential_api] = {'frequency': 0.0, 'date': ''}
+                else:
+                    api_terms = frequency_to_frequency_list(change[0], '')
 
-                api_terms = frequency_to_frequency_list(change[0], '')
                 for api_name, api_ in api_terms.items():
-                    list_.update({api_name: api_['frequency'] + list_.get(api_name, 0)})
+                    list_.update({api_name: float(api_['frequency']) + list_.get(api_name, 0.0)})
+
+        for i_, item_ in list_.items():
+            list_[i_] += 1
 
         return list_
 
@@ -204,7 +215,7 @@ class Profiler:
         print('BUG:' + str(new_bug['id']))
 
         bug_terms = new_bug['bag_of_word_stemmed'].split()
-        bug_apis = self.get_indirect_bug_apis(bug_terms)
+        bug_apis = self.get_direct_bug_apis(bug_terms)
 
         # TODO: remove 30 most common words from bug reports in VSM
 
@@ -286,7 +297,11 @@ class Profiler:
                 else:
                     recency = (1 / self.dev_count(bug_term, module)) + (1 / damped_difference_in_days)
 
-                time_tf_idf = tfidf * recency * weights.get(bug_term, 1)
+                w = 1
+                if bug_term in weights:
+                    w = math.log2(1 + weights.get(bug_term, 1))
+
+                time_tf_idf = tfidf * recency * w
                 expertise += time_tf_idf
 
         return expertise
@@ -320,7 +335,11 @@ class Profiler:
                 else:
                     recency = (1 / self.dev_count(bug_term, module)) + (1 / damped_difference_in_days)
 
-                time_tf_idf = tfidf * recency * weights.get(bug_term, 1)
+                w = 1
+                if bug_term in weights:
+                    w = math.log2(1 + weights.get(bug_term, 1))
+
+                time_tf_idf = tfidf * recency * w
                 expertise += time_tf_idf
 
         return expertise
