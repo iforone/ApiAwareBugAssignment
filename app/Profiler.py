@@ -45,15 +45,15 @@ class Profiler:
             self.locked = True
             print('okay locked now!', bug['bug_id'])
 
-        self.get_changed_codes(self.previous, bug['report_time'], mode)
-        self.sync_activity(bug, mode)
-        self.sync_api(bug, mode)
+        self.get_changed_codes(self.previous, bug['report_time'])
+        self.sync_activity()
+        self.sync_api()
 
         if mode == LEARN:
             self.previous = bug['report_time']
             self.previous_bugs[len(self.previous_bugs)] = bug
 
-    def get_changed_codes(self, begin, end, mode):
+    def get_changed_codes(self, begin, end):
         self.builder.execute("""
             SELECT id, codes_bag_of_words, commit_bag_of_words, used_apis, author, committed_at, commit_hash
             FROM processed_code
@@ -95,7 +95,7 @@ class Profiler:
                 self.profiles[assignee] = Profile(assignee, last_bug_terms_f, {}, {})
             self.component_mapper.update(assignee, last_bug['component'])
 
-    def sync_activity(self, new_bug, mode):
+    def sync_activity(self):
         # each change in a commit is a row but the commit message should be considered only once
         already_considered_hashes = []
 
@@ -121,7 +121,7 @@ class Profiler:
             self.component_mapper.update(author, 'JDT-UI')
             self.component_mapper.update(author, 'JDT-Text')
 
-    def sync_api(self, new_bug, mode):
+    def sync_api(self):
         for index, change in self.temp_changes.iterrows():
             author = guess_correct_author_name(change['author'], self.project)
             # author = self.component_mapper.is_by_different_author(author, change, 'UI')
@@ -136,7 +136,7 @@ class Profiler:
             self.component_mapper.update(author, 'JDT-Text')
 
     def get_direct_bug_apis(self, bug_terms):
-        # direct - use the API experience of assignees for the similar bugs
+        # direct - use the API experience of assignees of the similar bugs
         # Jaccard is slightly worse but way faster - I want to see how the rest pans out
         similar_bug_ids = self.top_similar_bugs(bug_terms, bug_similarity_threshold)
 
@@ -148,16 +148,28 @@ class Profiler:
 
         return list_
 
-    def get_indirect_bug_apis(self, commit_hash):
-        self.builder.execute("SELECT used_apis FROM processed_code WHERE commit_hash LIKE '" + commit_hash + "%'")
-
-        changes = pd.DataFrame(self.builder.fetchall())
+    def get_indirect_bug_apis(self, bug_terms):
+        # in-direct - use the API experience of commit(s) done for the similar bugs
+        # Jaccard is slightly worse but way faster - I want to see how the rest pans out
+        similar_bug_indices = self.top_similar_bugs(bug_terms, bug_similarity_threshold)
 
         list_ = {}
-        for index, change in changes.iterrows():
-            tempest = frequency_to_frequency_list(change[0], None)
-            for i_, api in tempest.items():
-                list_.update({i_: api['frequency'] + list_.get(i_, 0)})
+        for index_ in similar_bug_indices:
+            similar_bug = self.previous_bugs[index_]
+            commit_hash = similar_bug['commit_hash']
+            self.builder.execute("SELECT used_apis "
+                                 "FROM processed_code WHERE commit_hash LIKE '"
+                                 "" + commit_hash + "%'"
+                                 )
+            changes = pd.DataFrame(self.builder.fetchall())
+
+            for i_, change in changes.items():
+                if change[0] == '':
+                    continue
+
+                api_terms = frequency_to_frequency_list(change[0], '')
+                for api_name, api_ in api_terms.items():
+                    list_.update({api_name: api_['frequency'] + list_.get(api_name, 0)})
 
         return list_
 
@@ -179,7 +191,12 @@ class Profiler:
         result = self.calculate_ranks(new_bug)
 
         self.previous = new_bug['report_time']
-        result.append(self.top_similar_bugs(new_bug['bag_of_word_stemmed'].split(), bug_similarity_threshold))
+
+        local_bug_indexes = self.top_similar_bugs(new_bug['bag_of_word_stemmed'].split(), bug_similarity_threshold)
+        if len(local_bug_indexes) == 0:
+            result.append('')
+        else:
+            result.append(self.previous_bugs[local_bug_indexes[0]]['bug_id'])
 
         return result
 
@@ -187,7 +204,7 @@ class Profiler:
         print('BUG:' + str(new_bug['id']))
 
         bug_terms = new_bug['bag_of_word_stemmed'].split()
-        bug_apis = self.get_direct_bug_apis(bug_terms)
+        bug_apis = self.get_indirect_bug_apis(bug_terms)
 
         # TODO: remove 30 most common words from bug reports in VSM
 
