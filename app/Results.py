@@ -59,7 +59,7 @@ def save_proof_of_work(id_, assignees_, authors_, c_, time_, answer_, mode_):
         'author': authors_,
         'report_time': time_,
         'mode': mode_,
-        'similar_bug': ','.join(answer_[6]),
+        'similar_bug': answer_[6],
     }
 
     # check against gold standard and save the result

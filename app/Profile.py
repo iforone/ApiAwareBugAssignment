@@ -24,11 +24,6 @@ def frequency_to_frequency_list(word_str_, date, dampen_weights=True):
     words = word_str_.split(',')
     for word in words:
         sp = word.split(':')
-        # value = sp[1]
-        # # the reason for damping the impact is the count of how many times it has happened with in one file does not matter
-        # if dampen_weights:
-        #     value = 1.0
-        # list_[sp[0]] = {'frequency': float(value), 'date': date}
         list_[sp[0]] = {'frequency': float(sp[1]), 'date': date}
 
     return list_
