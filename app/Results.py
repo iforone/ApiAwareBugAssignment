@@ -60,6 +60,7 @@ def save_proof_of_work(id_, assignees_, authors_, c_, time_, answer_, mode_):
         'report_time': time_,
         'mode': mode_,
         'similar_bug': answer_[6],
+        'similarity_value': answer_[7]
     }
 
     # check against gold standard and save the result
