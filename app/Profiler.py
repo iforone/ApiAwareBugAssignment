@@ -24,8 +24,10 @@ class Profiler:
         self.project = project
         # the beginning of the timeframe in which activities should be considered for update
         self.previous = Timestamp('1999-01-01 00:00:00')
-        # array of known bugs that are already processed at any moment
+        # array of known bugs that are already processed at any moment (test)
         self.previous_bugs = {}
+        # array of known bugs that are already processed at any moment (training and test)
+        self.all_previous_bugs = {}
         # array of known developer profiles at any moment
         self.profiles = {}
         # profiles that contribute to an specific components
@@ -138,7 +140,7 @@ class Profiler:
     def get_direct_bug_apis(self, bug_terms):
         # direct - use the API experience of assignees of the similar bugs
         # Jaccard is slightly worse but way faster - I want to see how the rest pans out
-        similar_bug_ids = self.top_similar_bugs(bug_terms, bug_similarity_threshold)
+        similar_bug_ids = self.top_similar_bugs(bug_terms)
 
         list_ = {}
         for index_ in similar_bug_ids:
@@ -151,11 +153,11 @@ class Profiler:
     def get_indirect_bug_apis(self, bug_terms):
         # in-direct - use the API experience of commit(s) done for the similar bugs
         # Jaccard is slightly worse but way faster - I want to see how the rest pans out
-        similar_bug_indices = self.top_similar_bugs(bug_terms, bug_similarity_threshold)
+        similar_bug_indices = self.top_similar_bugs(bug_terms)
 
         list_ = {}
         for index_ in similar_bug_indices:
-            similar_bug = self.previous_bugs[index_]
+            similar_bug = self.all_previous_bugs[index_]
             commit_hash = similar_bug['commit_hash']
             self.builder.execute("SELECT used_apis "
                                  "FROM processed_code WHERE commit_hash LIKE '"
@@ -174,7 +176,7 @@ class Profiler:
         return list_
 
     # returns index of the most similar bugs based on tf-idf similarity
-    def top_similar_bugs(self, bug_terms, top):
+    def top_similar_bugs(self, bug_terms, with_score=False):
         local_scores = {}
 
         for index_, previous_bug in self.previous_bugs.items():
@@ -185,26 +187,39 @@ class Profiler:
         if len(local_scores) == 0:
             return []
 
-        return sorted(local_scores, key=local_scores.get, reverse=True)[:top]
+        key = sorted(local_scores, key=local_scores.get, reverse=True)[:1]
+
+        if not with_score:
+            return key
+
+        return [key, local_scores[key[0]]]
 
     def rank_developers(self, new_bug):
         result = self.calculate_ranks(new_bug)
 
         self.previous = new_bug['report_time']
 
-        local_bug_indexes = self.top_similar_bugs(new_bug['bag_of_word_stemmed'].split(), bug_similarity_threshold)
+        # saving the similar bug id
+        temp = self.top_similar_bugs(new_bug['bag_of_word_stemmed'].split(), True)
+        local_bug_indexes = temp[0]
+        similarity = temp[1]
         if len(local_bug_indexes) == 0:
             result.append('')
+            result.append(0)
         else:
-            result.append(self.previous_bugs[local_bug_indexes[0]]['bug_id'])
+            result.append(self.all_previous_bugs[local_bug_indexes[0]]['bug_id'])
+            result.append(similarity)
 
         return result
+
+    def after_sync(self, new_bug):
+        self.all_previous_bugs[len(self.previous_bugs)] = new_bug
 
     def calculate_ranks(self, new_bug):
         print('BUG:' + str(new_bug['id']))
 
         bug_terms = new_bug['bag_of_word_stemmed'].split()
-        bug_apis = self.get_indirect_bug_apis(bug_terms)
+        bug_apis = self.get_direct_bug_apis(bug_terms)
 
         # TODO: remove 30 most common words from bug reports in VSM
 
