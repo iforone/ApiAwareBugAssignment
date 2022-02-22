@@ -15,7 +15,7 @@ def write_to_text(file_name, text):
 
 
 class Profiler:
-    def __init__(self, approach, project, builder):
+    def __init__(self, approach, project, builder, apis):
         self.analysis = Analysis()
         print('🍔 running profiler')
         # the approach that is being used for finding the underlying relation between a new bug and previous data
@@ -32,6 +32,8 @@ class Profiler:
         self.profiles = {}
         # profiles that contribute to an specific components
         self.component_mapper = Mapper()
+        # all possible apis
+        self.apis = apis
         # builder for query to projects
         self.builder = builder
         # temporary keep last changes in code between a time frame
@@ -175,6 +177,16 @@ class Profiler:
 
         return list_
 
+    def get_super_indirect_bug_apis(self, bug_terms):
+        list_ = {}
+
+        for name, api_words in self.apis.items():
+            common = list(set(api_words).intersection(bug_terms))
+            if len(common) != 0:
+                list_.update({name: len(common) + list_.get(name, 0)})
+
+        return list_
+
     # returns index of the most similar bugs based on tf-idf similarity
     def top_similar_bugs(self, bug_terms, with_score=False):
         local_scores = {}
@@ -219,7 +231,7 @@ class Profiler:
         print('BUG:' + str(new_bug['id']))
 
         bug_terms = new_bug['bag_of_word_stemmed'].split()
-        bug_apis = self.get_direct_bug_apis(bug_terms)
+        bug_apis = self.get_super_indirect_bug_apis(bug_terms)
 
         # TODO: remove 30 most common words from bug reports in VSM
 

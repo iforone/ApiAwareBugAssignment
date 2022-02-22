@@ -179,7 +179,7 @@ code_scanner = CodeScanner()
 code_scanner.analyze_codes(project, builder, database)
 
 # create profiles for users
-profiler = Profiler(approach, project, builder)
+profiler = Profiler(approach, project, builder, scanner.export_all_apis())
 response = find_response(profiler, bugs, project, approach, formula)
 database.close()
 export_to_csv(response, approach, project)
