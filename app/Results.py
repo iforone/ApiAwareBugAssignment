@@ -29,6 +29,7 @@ def find_response(profiler, bugs, project, approach, formula):
             bug['report_time'] = bug['report_time'].tz_localize(pytz.timezone('EST5EDT'))
             bug['report_time'] = bug['report_time'].tz_convert(pytz.timezone('UTC'))
             bug['report_time'] = bug['report_time'].tz_localize(None)
+            bug['bag_of_word_stemmed_split'] = bug['bag_of_word_stemmed'].split()
 
             profiler.sync_profiles(bug, mode_)
 
@@ -42,6 +43,8 @@ def find_response(profiler, bugs, project, approach, formula):
                     profiler.rank_developers(bug),
                     mode_
                 )
+
+            profiler.after_sync(bug)
 
             counter += 1
             print('processed: ' + str(counter) + '/' + str(len(bugs)))
@@ -60,6 +63,7 @@ def save_proof_of_work(id_, assignees_, authors_, c_, time_, answer_, mode_):
         'report_time': time_,
         'mode': mode_,
         'similar_bug': answer_[6],
+        'jaccard_score': answer_[7],
     }
 
     # check against gold standard and save the result
