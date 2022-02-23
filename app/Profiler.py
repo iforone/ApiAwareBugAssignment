@@ -46,6 +46,7 @@ class Profiler:
             self.sync_history(bug, mode)
         elif not self.locked:
             self.sync_history(bug, mode)
+            self.sync_all_direct_apis()
             self.locked = True
             print('okay locked now!', bug['bug_id'])
 
@@ -93,8 +94,6 @@ class Profiler:
         for assignee in assignees:
             if assignee in self.profiles:
                 self.profiles[assignee].update_history(last_bug_terms_f)
-                temp_api_dict = self.profiles[assignee].api.copy()
-                self.previous_bugs[len(self.previous_bugs) - 1]['direct_apis'] = temp_api_dict
             else:
                 self.profiles[assignee] = Profile(assignee, last_bug_terms_f, {}, {})
             self.component_mapper.update(assignee, last_bug['component'])
@@ -187,11 +186,15 @@ class Profiler:
 
         return list_
 
+    # TODO: time-aware jaccard
     # returns index of the most similar bugs based on tf-idf similarity
     def top_similar_bugs(self, bug_terms, with_score=False):
         local_scores = {}
 
         for index_, previous_bug in self.previous_bugs.items():
+            #if previous_bug['assignees'].startswith('JDT') or previous_bug['assignees'].startswith('Platform') \
+            #        or previous_bug['assignees'] == 'Unknown User':
+            #    continue
             score = self.jaccard(previous_bug['bag_of_word_stemmed_split'], bug_terms)
             if 0 < score:
                 local_scores[index_] = score
@@ -380,3 +383,11 @@ class Profiler:
 
         return 0.4 + (0.6 * term_frequency / profile_frequency)
         # return math.log2(1 + term_frequency)
+
+    def sync_all_direct_apis(self):
+        for i_, bug in self.previous_bugs.items():
+            assignee = bug['assignees']
+            if assignee in self.profiles:
+                temp_api_dict = self.profiles[assignee].api.copy()
+                self.previous_bugs[i_]['direct_apis'] = temp_api_dict
+        print('OKAY now all direct apis are done')
