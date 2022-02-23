@@ -231,7 +231,7 @@ class Profiler:
         print('BUG:' + str(new_bug['id']))
 
         bug_terms = new_bug['bag_of_word_stemmed'].split()
-        bug_apis = self.get_super_indirect_bug_apis(bug_terms)
+        bug_apis = self.get_direct_bug_apis(bug_terms)
 
         # TODO: remove 30 most common words from bug reports in VSM
 
@@ -313,7 +313,11 @@ class Profiler:
                 else:
                     recency = (1 / self.dev_count(bug_term, module)) + (1 / damped_difference_in_days)
 
-                time_tf_idf = tfidf * recency * weights.get(bug_term, 1)
+                w = 1
+                if bug_term in weights:
+                    w = math.log2(1 + weights.get(bug_term))
+
+                time_tf_idf = tfidf * recency * w
                 expertise += time_tf_idf
 
         return expertise
