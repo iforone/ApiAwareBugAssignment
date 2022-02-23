@@ -192,9 +192,9 @@ class Profiler:
         local_scores = {}
 
         for index_, previous_bug in self.previous_bugs.items():
-            #if previous_bug['assignees'].startswith('JDT') or previous_bug['assignees'].startswith('Platform') \
-            #        or previous_bug['assignees'] == 'Unknown User':
-            #    continue
+            if previous_bug['assignees'].startswith('JDT') or previous_bug['assignees'].startswith('Platform') \
+                    or previous_bug['assignees'] == 'Unknown User':
+                continue
             score = self.jaccard(previous_bug['bag_of_word_stemmed_split'], bug_terms)
             if 0 < score:
                 local_scores[index_] = score
