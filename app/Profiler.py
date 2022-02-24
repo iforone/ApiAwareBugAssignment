@@ -141,7 +141,7 @@ class Profiler:
     def get_direct_bug_apis(self, bug_terms):
         # direct - use the API experience of assignees of the similar bugs
         # Jaccard is slightly worse but way faster - I want to see how the rest pans out
-        similar_bug_ids = self.top_similar_bugs(bug_terms)
+        [similar_bug_ids, score] = self.top_similar_bugs(bug_terms, True)
 
         list_ = {}
         for index_ in similar_bug_ids:
@@ -149,7 +149,7 @@ class Profiler:
             for i_, api in apis.items():
                 list_.update({i_: api['frequency'] + list_.get(i_, 0)})
 
-        return list_
+        return [list_, score]
 
     def get_indirect_bug_apis(self, bug_terms):
         # in-direct - use the API experience of commit(s) done for the similar bugs
@@ -234,7 +234,7 @@ class Profiler:
         print('BUG:' + str(new_bug['id']))
 
         bug_terms = new_bug['bag_of_word_stemmed'].split()
-        bug_apis = self.get_direct_bug_apis(bug_terms)
+        [bug_apis, confidence] = self.get_direct_bug_apis(bug_terms)
 
         # TODO: remove 30 most common words from bug reports in VSM
 
@@ -278,10 +278,14 @@ class Profiler:
             api_scores.loc[len(api_scores)] = [profile.name, api_experience]
 
         # add fallback of the project as Inbox
-        code_scores.loc[len(code_scores)] = [self.project.upper() + '-' + new_bug['component'] + '-' + 'Inbox', 0]
-        api_scores.loc[len(api_scores)] = [self.project.upper() + '-' + new_bug['component'] + '-' + 'Inbox', 0]
+        if 'Platform' in new_bug['component']:
+            code_scores.loc[len(code_scores)] = [new_bug['component'] + '-' + 'Inbox', 0]
+            api_scores.loc[len(api_scores)] = [new_bug['component'] + '-' + 'Inbox', 0]
+        else:
+            code_scores.loc[len(code_scores)] = [self.project.upper() + '-' + new_bug['component'] + '-' + 'Inbox', 0]
+            api_scores.loc[len(api_scores)] = [self.project.upper() + '-' + new_bug['component'] + '-' + 'Inbox', 0]
 
-        alternate_scores = self.analysis.find_alternative_scores(history_scores, code_scores, api_scores)
+        alternate_scores = self.analysis.find_alternative_scores(history_scores, code_scores, api_scores, confidence)
 
         return [
             alternate_scores.sort_values(by='score', ascending=False)['developer'].tolist(),

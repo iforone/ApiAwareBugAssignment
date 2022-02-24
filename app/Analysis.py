@@ -2,7 +2,7 @@ import pandas as pd
 
 
 class Analysis:
-    def find_alternative_scores(self, history_scores, code_scores, api_scores):
+    def find_alternative_scores(self, history_scores, code_scores, api_scores, confidence):
         # top 10 with each measure is chosen
         history_scores = history_scores.sort_values(by='score', ascending=False).head(10)
         code_scores = code_scores.sort_values(by='score', ascending=False).head(10)
@@ -37,16 +37,7 @@ class Analysis:
                 if str(value) == 'nan' or total_scores['code'] <= 0:
                     scores[developer] = scores.get(developer, 0) + 0
                 else:
-                    scores[developer] = scores.get(developer, 0) + (value * 100 / total_scores['code'])
-
-        # for index, row in api_scores.iterrows():
-        #     value = row['score']
-        #     developer = row['developer']
-        #     if str(developer) != 'nan':
-        #         if str(value) == 'nan' or total_scores['api'] <= 0:
-        #             scores[developer] = scores.get(developer, 0) + 0
-        #         else:
-        #             scores[developer] = scores.get(developer, 0) + (value * 100 / total_scores['api'])
+                    scores[developer] = scores.get(developer, 0) + (confidence * value * 100 / total_scores['code'])
 
         df = pd.DataFrame(columns=['developer', 'score'])
         for i, v in scores.items():
