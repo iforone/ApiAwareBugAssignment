@@ -292,8 +292,8 @@ class Profiler:
             local_scores.sort_values(by='score', ascending=False)['developer'].tolist(),
             history_scores.sort_values(by='score', ascending=False),
             fix_scores.sort_values(by='score', ascending=False),
-            code_scores[code_scores['score'] != 0].sort_values(by='score', ascending=False),
-            api_scores[api_scores['score'] != 0].sort_values(by='score', ascending=False),
+            code_scores.sort_values(by='score', ascending=False),
+            api_scores.sort_values(by='score', ascending=False),
         ]
 
     def time_based_tfidf_original(self, profile_terms, profile_frequency, bug_terms, bug_time, module):
