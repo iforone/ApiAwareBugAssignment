@@ -3,6 +3,8 @@ import collections
 import os
 import re
 import json
+
+from nltk import PorterStemmer
 from nltk.tokenize import word_tokenize
 import mysql.connector
 import pandas as pd
@@ -106,7 +108,7 @@ class APIScanner:
         self.make_api_table()
         self.make_scanner_table()
         self.with_cleaning = with_cleaning
-
+        self.stemmer = PorterStemmer()
         # java keywords are base stopwords
         stopwords_file = open(input_directory + 'java_stopwords.txt')
         self.stop_words = [line.rstrip() for line in stopwords_file.readlines()]
@@ -561,7 +563,8 @@ class APIScanner:
                 for api_token in all_api_tokens:
                     if api_token in filtered_words:
                         api_usage_counts[api_name].update({
-                            api_token: (filtered_words_collection[api_token] / all_tokens_collection[api_token]) + api_usage_counts[api_name].get(api_token, 0)
+                            api_token: (filtered_words_collection[api_token] / all_tokens_collection[api_token]) +
+                                       api_usage_counts[api_name].get(api_token, 0)
                         })
 
             api_true_counts = []
@@ -603,3 +606,24 @@ class APIScanner:
                 c = each_import.split(':')[1]
                 all_imports[n] = float(c) + all_imports.get(n, 0)
         print(all_imports)
+
+    def export_all_apis(self):
+        self.builder.execute('''
+                           SELECT api, CONCAT(classifiers, ',',  methods, ',', constants, ',')
+                           FROM scans
+        ''')
+        scans = pd.DataFrame(self.builder.fetchall())
+        apis = {}
+        for i_, scan in scans.iterrows():
+            api = scan[0]
+            words = set([self.quick_stem(word) for word in scan[1].split(',') if word not in ['', None, ' ']])
+
+            if api not in apis:
+                apis[api] = words
+            else:
+                apis[api].update(words)
+        return apis
+
+    def quick_stem(self, word):
+        word = word.lower()
+        return self.stemmer.stem(word)

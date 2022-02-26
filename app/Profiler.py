@@ -15,7 +15,7 @@ def write_to_text(file_name, text):
 
 
 class Profiler:
-    def __init__(self, approach, project, builder):
+    def __init__(self, approach, project, builder, apis):
         self.analysis = Analysis()
         print('🍔 running profiler')
         # the approach that is being used for finding the underlying relation between a new bug and previous data
@@ -24,12 +24,16 @@ class Profiler:
         self.project = project
         # the beginning of the timeframe in which activities should be considered for update
         self.previous = Timestamp('1999-01-01 00:00:00')
-        # array of known bugs that are already processed at any moment
+        # array of known bugs that are already processed at any moment (test)
         self.previous_bugs = {}
+        # array of known bugs that are already processed at any moment (training and test)
+        self.all_previous_bugs = {}
         # array of known developer profiles at any moment
         self.profiles = {}
         # profiles that contribute to an specific components
         self.component_mapper = Mapper()
+        # all possible apis
+        self.apis = apis
         # builder for query to projects
         self.builder = builder
         # temporary keep last changes in code between a time frame
@@ -42,6 +46,7 @@ class Profiler:
             self.sync_history(bug, mode)
         elif not self.locked:
             self.sync_history(bug, mode)
+            self.sync_all_direct_apis()
             self.locked = True
             print('okay locked now!', bug['bug_id'])
 
@@ -89,8 +94,6 @@ class Profiler:
         for assignee in assignees:
             if assignee in self.profiles:
                 self.profiles[assignee].update_history(last_bug_terms_f)
-                temp_api_dict = self.profiles[assignee].api.copy()
-                self.previous_bugs[len(self.previous_bugs) - 1]['direct_apis'] = temp_api_dict
             else:
                 self.profiles[assignee] = Profile(assignee, last_bug_terms_f, {}, {})
             self.component_mapper.update(assignee, last_bug['component'])
@@ -138,7 +141,7 @@ class Profiler:
     def get_direct_bug_apis(self, bug_terms):
         # direct - use the API experience of assignees of the similar bugs
         # Jaccard is slightly worse but way faster - I want to see how the rest pans out
-        similar_bug_ids = self.top_similar_bugs(bug_terms, bug_similarity_threshold)
+        [similar_bug_ids, score] = self.top_similar_bugs(bug_terms, True)
 
         list_ = {}
         for index_ in similar_bug_ids:
@@ -146,16 +149,16 @@ class Profiler:
             for i_, api in apis.items():
                 list_.update({i_: api['frequency'] + list_.get(i_, 0)})
 
-        return list_
+        return [list_, score]
 
     def get_indirect_bug_apis(self, bug_terms):
         # in-direct - use the API experience of commit(s) done for the similar bugs
         # Jaccard is slightly worse but way faster - I want to see how the rest pans out
-        similar_bug_indices = self.top_similar_bugs(bug_terms, bug_similarity_threshold)
+        similar_bug_indices = self.top_similar_bugs(bug_terms)
 
         list_ = {}
         for index_ in similar_bug_indices:
-            similar_bug = self.previous_bugs[index_]
+            similar_bug = self.all_previous_bugs[index_]
             commit_hash = similar_bug['commit_hash']
             self.builder.execute("SELECT used_apis "
                                  "FROM processed_code WHERE commit_hash LIKE '"
@@ -173,8 +176,19 @@ class Profiler:
 
         return list_
 
+    def get_super_indirect_bug_apis(self, bug_terms):
+        list_ = {}
+
+        for name, api_words in self.apis.items():
+            common = list(set(api_words).intersection(bug_terms))
+            if len(common) != 0:
+                list_.update({name: len(common) + list_.get(name, 0)})
+
+        return list_
+
+    # TODO: time-aware jaccard
     # returns index of the most similar bugs based on tf-idf similarity
-    def top_similar_bugs(self, bug_terms, top):
+    def top_similar_bugs(self, bug_terms, with_score=False):
         local_scores = {}
 
         for index_, previous_bug in self.previous_bugs.items():
@@ -185,26 +199,39 @@ class Profiler:
         if len(local_scores) == 0:
             return []
 
-        return sorted(local_scores, key=local_scores.get, reverse=True)[:top]
+        key = sorted(local_scores, key=local_scores.get, reverse=True)[:1]
+
+        if not with_score:
+            return key
+
+        return [key, local_scores[key[0]]]
 
     def rank_developers(self, new_bug):
         result = self.calculate_ranks(new_bug)
 
         self.previous = new_bug['report_time']
 
-        local_bug_indexes = self.top_similar_bugs(new_bug['bag_of_word_stemmed'].split(), bug_similarity_threshold)
+        # saving the similar bug id
+        temp = self.top_similar_bugs(new_bug['bag_of_word_stemmed'].split(), True)
+        local_bug_indexes = temp[0]
+        similarity = temp[1]
         if len(local_bug_indexes) == 0:
             result.append('')
+            result.append(0)
         else:
-            result.append(self.previous_bugs[local_bug_indexes[0]]['bug_id'])
+            result.append(self.all_previous_bugs[local_bug_indexes[0]]['bug_id'])
+            result.append(similarity)
 
         return result
+
+    def after_sync(self, new_bug):
+        self.all_previous_bugs[len(self.previous_bugs)] = new_bug
 
     def calculate_ranks(self, new_bug):
         print('BUG:' + str(new_bug['id']))
 
         bug_terms = new_bug['bag_of_word_stemmed'].split()
-        bug_apis = self.get_indirect_bug_apis(bug_terms)
+        [bug_apis, confidence] = self.get_direct_bug_apis(bug_terms)
 
         # TODO: remove 30 most common words from bug reports in VSM
 
@@ -248,18 +275,22 @@ class Profiler:
             api_scores.loc[len(api_scores)] = [profile.name, api_experience]
 
         # add fallback of the project as Inbox
-        code_scores.loc[len(code_scores)] = [self.project.upper() + '-' + new_bug['component'] + '-' + 'Inbox', 0]
-        api_scores.loc[len(api_scores)] = [self.project.upper() + '-' + new_bug['component'] + '-' + 'Inbox', 0]
+        if 'Platform' in new_bug['component']:
+            code_scores.loc[len(code_scores)] = [new_bug['component'] + '-' + 'Inbox', 0]
+            api_scores.loc[len(api_scores)] = [new_bug['component'] + '-' + 'Inbox', 0]
+        else:
+            code_scores.loc[len(code_scores)] = [self.project.upper() + '-' + new_bug['component'] + '-' + 'Inbox', 0]
+            api_scores.loc[len(api_scores)] = [self.project.upper() + '-' + new_bug['component'] + '-' + 'Inbox', 0]
 
-        alternate_scores = self.analysis.find_alternative_scores(history_scores, code_scores, api_scores)
+        alternate_scores = self.analysis.find_alternative_scores(history_scores, code_scores, api_scores, confidence)
 
         return [
             alternate_scores.sort_values(by='score', ascending=False)['developer'].tolist(),
             local_scores.sort_values(by='score', ascending=False)['developer'].tolist(),
             history_scores.sort_values(by='score', ascending=False),
             fix_scores.sort_values(by='score', ascending=False),
-            code_scores[code_scores['score'] != 0].sort_values(by='score', ascending=False),
-            api_scores[api_scores['score'] != 0].sort_values(by='score', ascending=False),
+            code_scores.sort_values(by='score', ascending=False),
+            api_scores.sort_values(by='score', ascending=False),
         ]
 
     def time_based_tfidf_original(self, profile_terms, profile_frequency, bug_terms, bug_time, module):
@@ -286,7 +317,11 @@ class Profiler:
                 else:
                     recency = (1 / self.dev_count(bug_term, module)) + (1 / damped_difference_in_days)
 
-                time_tf_idf = tfidf * recency * weights.get(bug_term, 1)
+                w = 1
+                if bug_term in weights:
+                    w = math.log2(1 + weights.get(bug_term))
+
+                time_tf_idf = tfidf * recency * w
                 expertise += time_tf_idf
 
         return expertise
@@ -349,3 +384,18 @@ class Profiler:
 
         return 0.4 + (0.6 * term_frequency / profile_frequency)
         # return math.log2(1 + term_frequency)
+
+    def sync_all_direct_apis(self):
+        for i_, bug in self.previous_bugs.items():
+            assignee = bug['assignees']
+
+            if self.is_unreal_user(assignee):
+                assignee = bug['authors']
+
+            if assignee in self.profiles:
+                temp_api_dict = self.profiles[assignee].api.copy()
+                self.previous_bugs[i_]['direct_apis'] = temp_api_dict
+        print('✅ all direct apis are synced')
+
+    def is_unreal_user(self, name):
+        return name.startswith('JDT') or name.startswith('Platform') or name == 'Unknown User'
