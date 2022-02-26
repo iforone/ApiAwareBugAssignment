@@ -192,9 +192,6 @@ class Profiler:
         local_scores = {}
 
         for index_, previous_bug in self.previous_bugs.items():
-            if previous_bug['assignees'].startswith('JDT') or previous_bug['assignees'].startswith('Platform') \
-                    or previous_bug['assignees'] == 'Unknown User':
-                continue
             score = self.jaccard(previous_bug['bag_of_word_stemmed_split'], bug_terms)
             if 0 < score:
                 local_scores[index_] = score
@@ -391,7 +388,14 @@ class Profiler:
     def sync_all_direct_apis(self):
         for i_, bug in self.previous_bugs.items():
             assignee = bug['assignees']
+
+            if self.is_unreal_user(assignee):
+                assignee = bug['authors']
+
             if assignee in self.profiles:
                 temp_api_dict = self.profiles[assignee].api.copy()
                 self.previous_bugs[i_]['direct_apis'] = temp_api_dict
-        print('OKAY now all direct apis are done')
+        print('✅ all direct apis are synced')
+
+    def is_unreal_user(self, name):
+        return name.startswith('JDT') or name.startswith('Platform') or name == 'Unknown User'
