@@ -144,7 +144,7 @@ class Profiler:
     def get_direct_bug_apis(self, bug_terms):
         # direct - use the API experience of assignees of the similar bugs
         # Jaccard is slightly worse but way faster - I want to see how the rest pans out
-        similar_bug_ids = self.top_similar_bugs(bug_terms, bug_similarity_threshold)[0]
+        similar_bug_ids = self.top_similar_bugs(bug_terms, bug_similarity_threshold)
 
         list_ = {}
         for index_ in similar_bug_ids:
@@ -157,7 +157,7 @@ class Profiler:
     def get_indirect_bug_apis(self, bug_terms):
         # in-direct - use the API experience of commit(s) done for the similar bugs
         # Jaccard is slightly worse but way faster - I want to see how the rest pans out
-        similar_bug_indices = self.top_similar_bugs(bug_terms, bug_similarity_threshold)[0]
+        similar_bug_indices = self.top_similar_bugs(bug_terms, bug_similarity_threshold)
 
         list_ = {}
         for index_ in similar_bug_indices:
@@ -194,25 +194,20 @@ class Profiler:
                 local_scores[index_] = score
 
         if len(local_scores) == 0:
-            return [[], 0]
+            return []
 
-        s = sorted(local_scores, key=local_scores.get, reverse=True)[:top]
-
-        return [s, local_scores[s[0]]]
+        return sorted(local_scores, key=local_scores.get, reverse=True)[:top]
 
     def rank_developers(self, new_bug):
         result = self.calculate_ranks(new_bug)
 
         self.previous = new_bug['report_time']
 
-        temp = self.top_similar_bugs(new_bug['bag_of_word_stemmed'].split(), bug_similarity_threshold)
-        local_bug_indexes = temp[0]
+        local_bug_indexes = self.top_similar_bugs(new_bug['bag_of_word_stemmed'].split(), bug_similarity_threshold)
         if len(local_bug_indexes) == 0:
-            result.append('')
             result.append('')
         else:
             result.append(self.previous_bugs[local_bug_indexes[0]]['bug_id'])
-            result.append(temp[1])
 
         return result
 
