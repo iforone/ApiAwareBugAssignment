@@ -197,7 +197,9 @@ class Profiler:
                 local_scores[index_] = score
 
         if len(local_scores) == 0:
-            return []
+            if not with_score:
+                return ''
+            return ['', 0]
 
         key = sorted(local_scores, key=local_scores.get, reverse=True)[:1]
 
@@ -211,7 +213,7 @@ class Profiler:
 
         self.previous = new_bug['report_time']
 
-        # saving the similar bug id
+        # saving the similar bug id and confidence
         temp = self.top_similar_bugs(new_bug['bag_of_word_stemmed'].split(), True)
         local_bug_indexes = temp[0]
         similarity = temp[1]
@@ -243,8 +245,8 @@ class Profiler:
 
         for index_, profile in self.profiles.items():
             # not that much effective but good enough
-            if index_ not in self.component_mapper.get_component_authors(new_bug['component']):
-                continue
+            # if index_ not in self.component_mapper.get_component_authors(new_bug['component']):
+            #    continue
 
             history_experience = self.time_based_tfidf_original(
                 profile.history,
