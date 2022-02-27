@@ -248,7 +248,7 @@ class Profiler:
             # if index_ not in self.component_mapper.get_component_authors(new_bug['component']):
             #    continue
 
-            history_experience = self.time_based_tfidf_original(
+            history_experience = self.time_based_tfidf(
                 profile.history,
                 profile.h_f,
                 bug_terms,
@@ -264,7 +264,7 @@ class Profiler:
                 'code'
             )
 
-            api_experience = self.time_based_tfidf_original(
+            api_experience = self.time_based_tfidf(
                 profile.api,
                 profile.get_max_frequency('api'),
                 bug_apis,
@@ -295,39 +295,6 @@ class Profiler:
             api_scores.sort_values(by='score', ascending=False),
         ]
 
-    def time_based_tfidf_original(self, profile_terms, profile_frequency, bug_terms, bug_time, module):
-        expertise = 0
-
-        if type(bug_terms) is dict:
-            weights = bug_terms.copy()
-            bug_terms = bug_terms.keys()
-        else:
-            weights = {}
-
-        for bug_term in bug_terms:
-            if bug_term in profile_terms:
-                temp = profile_terms[bug_term]
-                tf = math.log2(1 + temp['frequency'])
-                tfidf = tf * math.log10(len(self.profiles) / self.dev_count(bug_term, module))
-
-                difference_in_seconds = (bug_time - temp['date']).total_seconds()
-                difference_in_days = difference_in_seconds / SECONDS_IN_A_DAY
-
-                damped_difference_in_days = math.sqrt(difference_in_days)
-                if difference_in_days == 0:
-                    recency = float('inf')
-                else:
-                    recency = (1 / self.dev_count(bug_term, module)) + (1 / damped_difference_in_days)
-
-                w = 1
-                if bug_term in weights:
-                    w = math.log2(1 + weights.get(bug_term))
-
-                time_tf_idf = tfidf * recency * w
-                expertise += time_tf_idf
-
-        return expertise
-
     # A time-based approach to automatic bug report assignment
     # Ramin Shokripoura, John Anvik, Zarinah M. Kasiruna, Sima Zamania
     def time_based_tfidf(self, profile_terms, profile_frequency, bug_terms, bug_time, module):
@@ -344,7 +311,11 @@ class Profiler:
             if bug_term in profile_terms:
                 temp = profile_terms[bug_term]
                 # different: this is due to difference in length of documents to normalize the frequencies
-                tf = self.calculate_tf(temp['frequency'], profile_frequency)
+                if module == 'code':
+                    tf = self.calculate_maxim_tf(temp['frequency'], profile_frequency)
+                else:  # history and api
+                    tf = math.log2(1 + temp['frequency'])
+
                 tfidf = tf * math.log10(len(self.profiles) / self.dev_count(bug_term, module))
 
                 difference_in_seconds = (bug_time - temp['date']).total_seconds()
@@ -357,7 +328,11 @@ class Profiler:
                 else:
                     recency = (1 / self.dev_count(bug_term, module)) + (1 / damped_difference_in_days)
 
-                time_tf_idf = tfidf * recency * weights.get(bug_term, 1)
+                w = 1
+                if bug_term in weights:
+                    w = math.log2(1 + weights.get(bug_term))
+
+                time_tf_idf = tfidf * recency * w
                 expertise += time_tf_idf
 
         return expertise
@@ -380,7 +355,7 @@ class Profiler:
         union = (len(list1) + len(list2)) - intersection
         return float(intersection) / union
 
-    def calculate_tf(self, term_frequency, profile_frequency):
+    def calculate_maxim_tf(self, term_frequency, profile_frequency):
         if term_frequency == 0:
             return 0
 
