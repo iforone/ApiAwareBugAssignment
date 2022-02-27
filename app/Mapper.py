@@ -1,34 +1,50 @@
+from Profile import Profile
+
+
 class Mapper:
     def __init__(self):
         self.components = {}
+        # Platform-XXX
+        # JDT-Text
+        # JDT-UI and everything else
 
-    def update(self, author, component):
-        if component not in self.components:
-            self.components[component] = set()
+    def get_meaningful_component(self, original):
+        if original == 'Platform-UI':
+            return original
+        if original == 'Platform-Doc':
+            return original
+        if original == 'JDT-Core':
+            return original
+        if original == 'JDT-APT':
+            return original
+        if original == 'JDT-Text':
+            return original
 
-        self.components[component].add(author)
+        return 'JDT-UI'
 
-    # this set is updated all the time
-    # author are only considering contributing authors up to the given moment
-    def get_component_authors(self, component):
-        if component not in self.components:
-            return set()
+    def update_profile(self, assignee, component, module, terms):
+        c = self.get_meaningful_component(component)
 
-        return self.components[component]
+        if c not in self.components:
+            self.components[c] = {}
 
-    def is_by_different_author(self, author, change, component):
-        if component != 'UI':
-            return author
+        profiles = self.components[c]
 
-        commit_message = change['commit_bag_of_words'].split(',')
-        if 'review' in commit_message:
-            return author
+        if assignee not in profiles:
+            self.components[c][assignee] = Profile(assignee, {}, {}, {})
 
-        for potential_author in self.get_component_authors(component):
-            parts = potential_author.split()
-            for part in parts:
-                if part.lower() in commit_message:
-                    print(potential_author)
-                    return potential_author
+        # update module
+        if module == 'history':
+            self.components[c][assignee].update_history(terms)
+        if module == 'code':
+            self.components[c][assignee].update_code(terms)
+        if module == 'api':
+            self.components[c][assignee].update_api(terms)
 
-        return author
+    def get_profiles(self, component):
+        c = self.get_meaningful_component(component)
+
+        if c not in self.components:
+            return {}
+        else:
+            return self.components[c]
