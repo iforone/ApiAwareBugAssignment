@@ -26,8 +26,6 @@ class Profiler:
         self.previous = Timestamp('1999-01-01 00:00:00')
         # array of known bugs that are already processed at any moment (test)
         self.previous_bugs = {}
-        # array of known bugs that are already processed at any moment (training and test)
-        self.all_previous_bugs = {}
         # profiles that contribute to an specific components
         self.mapper = Mapper()
         # all possible apis
@@ -134,42 +132,6 @@ class Profiler:
 
         return [list_, score]
 
-    def get_indirect_bug_apis(self, bug_terms):
-        pass
-        # # in-direct - use the API experience of commit(s) done for the similar bugs
-        # # Jaccard is slightly worse but way faster - I want to see how the rest pans out
-        # similar_bug_indices = self.top_similar_bugs(bug_terms)
-        #
-        # list_ = {}
-        # for index_ in similar_bug_indices:
-        #     similar_bug = self.all_previous_bugs[index_]
-        #     commit_hash = similar_bug['commit_hash']
-        #     self.builder.execute("SELECT used_apis "
-        #                          "FROM processed_code WHERE commit_hash LIKE '"
-        #                          "" + commit_hash + "%'"
-        #                          )
-        #     changes = pd.DataFrame(self.builder.fetchall())
-        #
-        #     for i_, change in changes.items():
-        #         if change[0] == '':
-        #             continue
-        #
-        #         api_terms = frequency_to_frequency_list(change[0], '')
-        #         for api_name, api_ in api_terms.items():
-        #             list_.update({api_name: api_['frequency'] + list_.get(api_name, 0)})
-        #
-        # return list_
-
-    def get_super_indirect_bug_apis(self, bug_terms):
-        list_ = {}
-
-        for name, api_words in self.apis.items():
-            common = list(set(api_words).intersection(bug_terms))
-            if len(common) != 0:
-                list_.update({name: len(common) + list_.get(name, 0)})
-
-        return list_
-
     # returns index of the most similar bugs based on tf-idf similarity
     def top_similar_bugs(self, bug_terms, with_score=False):
         local_scores = {}
@@ -208,9 +170,6 @@ class Profiler:
             result.append(similarity)
 
         return result
-
-    def after_sync(self, new_bug):
-        self.all_previous_bugs[len(self.previous_bugs)] = new_bug
 
     def calculate_ranks(self, new_bug):
         print('BUG:' + str(new_bug['id']))
@@ -346,7 +305,6 @@ class Profiler:
             return 0
 
         return 0.4 + (0.6 * term_frequency / profile_frequency)
-        # return math.log2(1 + term_frequency)
 
     def sync_all_direct_apis(self):
         for i_, bug in self.previous_bugs.items():

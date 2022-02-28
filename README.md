@@ -290,3 +290,43 @@ x = datetime.datetime.strptime('1998-12-28 12:00:00', '%Y-%m-%d %H:%M:%S')
 # -
 #     '''
 # )
+
+--- 
+Other API analysis works:
+
+
+    def get_indirect_bug_apis(self, bug_terms):
+        pass
+        # # in-direct - use the API experience of commit(s) done for the similar bugs
+        # # Jaccard is slightly worse but way faster - I want to see how the rest pans out
+        # similar_bug_indices = self.top_similar_bugs(bug_terms)
+        #
+        # list_ = {}
+        # for index_ in similar_bug_indices:
+        #     similar_bug = self.all_previous_bugs[index_]
+        #     commit_hash = similar_bug['commit_hash']
+        #     self.builder.execute("SELECT used_apis "
+        #                          "FROM processed_code WHERE commit_hash LIKE '"
+        #                          "" + commit_hash + "%'"
+        #                          )
+        #     changes = pd.DataFrame(self.builder.fetchall())
+        #
+        #     for i_, change in changes.items():
+        #         if change[0] == '':
+        #             continue
+        #
+        #         api_terms = frequency_to_frequency_list(change[0], '')
+        #         for api_name, api_ in api_terms.items():
+        #             list_.update({api_name: api_['frequency'] + list_.get(api_name, 0)})
+        #
+        # return list_
+
+    def get_super_indirect_bug_apis(self, bug_terms):
+        list_ = {}
+
+        for name, api_words in self.apis.items():
+            common = list(set(api_words).intersection(bug_terms))
+            if len(common) != 0:
+                list_.update({name: len(common) + list_.get(name, 0)})
+
+        return list_

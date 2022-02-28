@@ -44,8 +44,6 @@ def find_response(profiler, bugs, project, approach, formula):
                     mode_
                 )
 
-            profiler.after_sync(bug)
-
             counter += 1
             print('processed: ' + str(counter) + '/' + str(len(bugs)))
 
