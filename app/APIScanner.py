@@ -516,7 +516,8 @@ class APIScanner:
             api_usage_counts = {}  # count of each api token
             # this can be a float number when a token is shared between multiple APIs
             # reservie : is the key we use for apis with CONSIDER anyways note
-            apis = {}  # all true apis not imports but due imports
+            packages_ = {}  # regular package data
+            apis = {}  # true apis
             all_tokens = []  # all tokens are used for duplicate suppression
 
             # prepare:
@@ -530,7 +531,7 @@ class APIScanner:
                 if result is None:
                     continue
                 # make a row for each IMPORTIE
-                apis[importie] = {
+                packages_[importie] = {
                     'name': result[0],
                     'jar': result[2],
                     'note': (result[2] == 'CONSIDER' or (result[3] is not None and 'CONSIDER' in result[3])),
@@ -538,32 +539,39 @@ class APIScanner:
 
                 }
 
+                if packages_[importie]['name'] not in apis:
+                    apis[packages_[importie]['name']] = []
+                apis[packages_[importie]['name']].extend(packages_[importie]['all_api_tokens'])
+
                 # make a count row for each API
-                if apis[importie]['name'] not in api_usage_counts:
-                    api_usage_counts[apis[importie]['name']] = {}
+                if packages_[importie]['name'] not in api_usage_counts:
+                    api_usage_counts[packages_[importie]['name']] = {}
 
-                # add all elements of API to a full list to count and suppress repeated elements
-                all_tokens.extend(apis[importie]['all_api_tokens'])
-
+            # add all elements of API to a full list to count and suppress repeated elements
             # count all tokens between imports
+            for key, words in apis.items():
+                all_tokens.extend(set(words))
             all_tokens_collection = collections.Counter(all_tokens)
 
             # process:
             for importie in imports:
-                if importie not in apis:
+                if importie not in packages_:
                     continue
 
-                api_name = apis[importie]['name']
-                all_api_tokens = apis[importie]['all_api_tokens']
-                if apis[importie]['note']:
+                api_name = packages_[importie]['name']
+                all_api_tokens = packages_[importie]['all_api_tokens']
+                if packages_[importie]['note']:
                     api_usage_counts[api_name].update({
                         'reservie': 1 + api_usage_counts[api_name].get('reservie', 0)
                     })
 
                 for api_token in all_api_tokens:
                     if api_token in filtered_words:
+                        if 1 < all_tokens_collection[api_token]:
+                            continue
+
                         api_usage_counts[api_name].update({
-                            api_token: (filtered_words_collection[api_token] / all_tokens_collection[api_token]) +
+                            api_token: (filtered_words_collection[api_token]) +
                                        api_usage_counts[api_name].get(api_token, 0)
                         })
 
