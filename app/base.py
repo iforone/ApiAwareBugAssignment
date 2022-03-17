@@ -49,8 +49,6 @@ jdt_fixable_names = {
     'jszurszewski': 'Joe Szurszewski'
 }
 
-jdt_fallback_account = 'JDT-Text-Inbox'
-
 # modes
 LEARN = 'LEARN'
 TEST = 'TEST'

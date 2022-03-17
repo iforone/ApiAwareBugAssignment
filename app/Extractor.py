@@ -17,6 +17,7 @@ def get_imports(path, file, fallback):
 def get_packages(imports, as_string=False):
     # why -import to import? reason: because sometimes we have code instead of original then it has + or - in the text
     # beginning and it can only be negative because the code is deleted
+    # the negative only happens in fallback string of get_imports
     imports = [w.replace('-import', 'import').replace('import', '', 1).replace(' static', '', 1).replace(' ', '').replace(';', '') for w in imports]
     if as_string:
         return ','.join(imports)

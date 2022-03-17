@@ -5,7 +5,6 @@ import re
 import json
 
 from nltk import PorterStemmer
-from nltk.tokenize import word_tokenize
 import mysql.connector
 import pandas as pd
 import subprocess
@@ -61,8 +60,7 @@ def clean_imports(project_name, builder_, db_, changes, all_imports):
         # change[1] === packages
         # change[2] === cleaned_packages
         # strangely, some of the imports required further cleanup
-        temp_imports = change[1].replace('"', '').replace(')', '').replace('(', '').replace('\\n', '').split(
-            ',')
+        temp_imports = change[1].replace('"', '').replace(')', '').replace('(', '').replace('\\n', '').split(',')
         for temp_import in temp_imports:
             if temp_import == '':
                 continue
@@ -172,6 +170,7 @@ class APIScanner:
         if self.with_cleaning == 'yes':
             clean_imports(project_name, builder_, db_, changes, all_imports)
         else:
+            # works only if data is already cleaned
             for index_, change in changes.iterrows():
                 corrected_imports_split = change[2].split(',')
                 for s in corrected_imports_split:
@@ -496,7 +495,7 @@ class APIScanner:
         builder_.execute("""
             SELECT id, codes, cleaned_packages, used_apis
             FROM   processed_code
-            WHERE  cleaned_packages != '' and is_extractable = 1  and id != 122458
+            WHERE  cleaned_packages != '' and is_extractable = 1
         """)
         changes = pd.DataFrame(builder_.fetchall())
         # 0 - id
@@ -515,6 +514,7 @@ class APIScanner:
 
             api_usage_counts = {}  # count of each api token
             # this can be a float number when a token is shared between multiple APIs
+            # update- this can not be float any more due ignorant api scanner
             # reservie : is the key we use for apis with CONSIDER anyways note
             packages_ = {}  # regular package data
             apis = {}  # true apis

@@ -158,6 +158,7 @@ class Profiler:
 
         self.previous = new_bug['report_time']
 
+        # for export only:
         # saving the similar bug id and confidence
         temp = self.top_similar_bugs(new_bug['bag_of_word_stemmed'].split(), True)
         local_bug_indexes = temp[0]

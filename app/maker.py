@@ -5,7 +5,7 @@ import os.path
 from DeepProcess import DeepProcessor
 from APIScanner import APIScanner
 from CodeScanner import CodeScanner
-from base import output_folder, ks, exportable_keys
+from base import output_folder
 from Results import export_to_csv, find_response
 
 
@@ -15,13 +15,14 @@ def project_selector():
     questions = [
         inquirer.List('project',
                       message="Which project should be selected?",
-                      choices=['jdt', 'swt', 'birt', 'eclipse_platform_ui'],
+                      choices=['jdt', 'swt', 'birt - not used', 'eclipse_platform_ui - not used'],
                       ),
     ]
     answers = inquirer.prompt(questions)
     return answers['project']
 
 
+# @deprecated : we do not use in-direct any more
 def approach_selector():
     import inquirer
     questions = [
@@ -43,7 +44,7 @@ def formula_selector():
     questions = [
         inquirer.List('formula',
                       message="Which formula should be used for training-testing?",
-                      choices=['similar to BSBA', 'similar to TNBA', 'similiar to L2R and L2R+'],
+                      choices=['similar to BSBA', 'similar to L2R', 'similiar to L2R+'],
                       ),
     ]
     answers = inquirer.prompt(questions)
@@ -73,6 +74,7 @@ def mysql_connection(project_name):
     )
 
 
+# we create the processed_code table within the databases provided by L2R+ work
 def make_process_table(builder_):
     builder_.execute('''
     CREATE TABLE IF NOT EXISTS `processed_code` (
@@ -142,13 +144,16 @@ def deep_process(bugs_list, project_name, builder_, db_):
 
 print('Running maker')
 project = project_selector()
-approach = approach_selector()
+approach = 'direct'  # approach_selector()
 formula = formula_selector()
 
 # database work
 database = mysql_connection(project)
 builder = database.cursor()
 make_process_table(builder)
+
+# get all bug reports
+
 builder.execute("""
     SELECT bug_and_files.*, assginee_mapper.assignees,
            assginee_mapper.authors, assginee_mapper.commit_hash, concat(product, '-', component) AS component
@@ -180,6 +185,20 @@ code_scanner.analyze_codes(project, builder, database)
 
 # create profiles for users
 profiler = Profiler(approach, project, builder, scanner.export_all_apis())
+
+# builder.execute("""
+# SELECT * FROM bug_commit
+# where status in ('VERIFIED FIXED', 'RESOLVED FIXED', 'CLOSED FIXED')
+# and '2001-10-01 00:00:00' <=  report_time and report_time <= '2014-01-01 00:00:00'
+# group by bug_id
+# """)
+#
+# bugs = pd.DataFrame(builder.fetchall())
+# bugs.columns = builder.column_names
+
 response = find_response(profiler, bugs, project, approach, formula)
 database.close()
+
+# export the results to the database
+print('✅ exporting the results')
 export_to_csv(response, approach, project)

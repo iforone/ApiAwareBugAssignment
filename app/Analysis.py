@@ -2,6 +2,11 @@ import pandas as pd
 
 
 class Analysis:
+    # first select the top 10 choice of each algorithm
+    # then normalize the scores of each module to a value from 0 to 100
+    # add-up score of all developers
+    # additional: for api score there is also a confidence ration involved in scoring
+    # sort developers based on their total score
     def find_alternative_scores(self, history_scores, code_scores, api_scores, confidence):
         # top 10 with each measure is chosen
         history_scores = history_scores.sort_values(by='score', ascending=False).head(10)

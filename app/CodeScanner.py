@@ -46,21 +46,21 @@ class CodeScanner:
 
         self.english_stop_words = set(stopwords.words('english'))
 
-    def link_commit_message_and_bug(self, all_text_):
-        # TODO: check for the bug ids pattern
-        pattern_bug_ids = re.compile(r"\[(\d+)\]")
-        pattern_bug_ids_mentioning_bug = re.compile(r"\[Bug (\d+)\]")
-
-        id_matches = pattern_bug_ids.findall(all_text_)
-        id_matches.extend(pattern_bug_ids_mentioning_bug.findall(all_text_))
-        id_matches = set(id_matches)
-
-        # SAVE ALL 3 to database and this part is done
-        # another note is adding more patterns based on the data
-        # How many developers in total in code?
-        # Hoe many developers in bug reports?
-
-        return id_matches
+    # def link_commit_message_and_bug(self, all_text_):
+    #     # TODO: check for the bug ids pattern
+    #     pattern_bug_ids = re.compile(r"\[(\d+)\]")
+    #     pattern_bug_ids_mentioning_bug = re.compile(r"\[Bug (\d+)\]")
+    #
+    #     id_matches = pattern_bug_ids.findall(all_text_)
+    #     id_matches.extend(pattern_bug_ids_mentioning_bug.findall(all_text_))
+    #     id_matches = set(id_matches)
+    #
+    #     # SAVE ALL 3 to database and this part is done
+    #     # another note is adding more patterns based on the data
+    #     # How many developers in total in code?
+    #     # Hoe many developers in bug reports?
+    #
+    #     return id_matches
 
     def analyze_commit_message(self, all_text_):
         return self.analyze_code(all_text_, True, True)

@@ -12,9 +12,7 @@ def array_to_frequency_list(words, date):
     return list_
 
 
-# if dampen_weights is True it ignores the counts within one commit it is either 0 or 1
-# one means such api is used in this file change and 0 is no basically
-def frequency_to_frequency_list(word_str_, date, dampen_weights=True):
+def frequency_to_frequency_list(word_str_, date):
     if word_str_ is None or word_str_ == '':
         return {}
     if pandas.isnull(word_str_):
@@ -43,6 +41,7 @@ def guess_correct_author_name(name, project):
 class Profile:
     def __init__(self, name, history, code, api):
         self.name = name
+
         self.history = history
         self.code = code
         self.api = api

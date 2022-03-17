@@ -84,7 +84,8 @@ class DeepProcessor:
     def find_commits_between(self, end_, start_):
         initial = 'cd ./data/input/' + self.project
         subprocess.run(initial + ';git checkout master', capture_output=True, shell=True)
-        # my machine is UTC - git is UTC
+        # my machine is UTC = git is UTC
+        # bug reports are EDT
         # EDT + 5:00 == UTC
         command = initial + ';git log --after="' + str(start_) + '+05:00" --before="' + str(end_) + '+05:00"'
         process = subprocess.run(command, capture_output=True, shell=True)

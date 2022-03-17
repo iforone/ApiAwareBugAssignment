@@ -1,3 +1,4 @@
+import mysql.connector
 import pandas as pd
 import pytz
 from base import ks, exportable_keys, LEARN, TEST
@@ -79,13 +80,6 @@ def save_proof_of_work(id_, assignees_, authors_, c_, time_, answer_, mode_):
         counter__ += 1
         proof['history_at_' + str(counter__)] = row_['developer']
         proof['history_at_' + str(counter__) + '_v'] = row_['score']
-
-    # 3 is fix
-    counter__ = 0
-    for x, row_ in answer_[3].head(10).iterrows():
-        counter__ += 1
-        proof['fix_at_' + str(counter__)] = row_['developer']
-        proof['fix_at_' + str(counter__) + '_v'] = row_['score']
 
     # 4 is code
     counter__ = 0
