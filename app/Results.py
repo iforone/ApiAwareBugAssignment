@@ -1,8 +1,10 @@
-import mysql.connector
+import math
+
+import numpy as np
 import pandas as pd
 import pytz
+from Profiler import Profiler
 from base import ks, exportable_keys, LEARN, TEST
-from datetime import datetime
 
 
 def export_to_csv(data, approach, project_name, extra=''):
@@ -12,41 +14,83 @@ def export_to_csv(data, approach, project_name, extra=''):
     tempest[exportable_keys].to_csv('./data/output/' + project_name + '_' + approach + extra + '.csv')
 
 
-def find_response(profiler, bugs, project, approach, formula):
-    response = {}
+def split_data_for_l2r(bugs, experiment, split=10):
+    splits = np.array_split(bugs, split)
+    chosen_bugs = pd.DataFrame(data=None, columns=bugs.columns)
 
+    # training range
+    for training_range in range(0, 5):
+        splits[training_range + experiment]['mode_'] = LEARN
+        chosen_bugs = chosen_bugs.append(splits[training_range + experiment])
+
+    # testing range
+    splits[5 + experiment]['mode_'] = TEST
+    chosen_bugs = chosen_bugs.append(splits[5 + experiment])
+
+    return chosen_bugs
+
+
+def split_data_for_bsba(bugs, threshold):
+    counter = 0
+    for index, bug in bugs.iterrows():
+        mode_ = LEARN
+        if len(bugs) - counter <= threshold:
+            mode_ = TEST
+        bugs.at[index, 'mode_'] = mode_
+        counter += 1
+    return bugs
+
+
+def find_response(bugs, project, approach, formula, builder, scanner):
     # 🔥 IDEA 1
     # this is the similar approach to what BSBA used
     # last 600 -> testing
     # the rest -> learning
     if formula == 'similar to BSBA':
-        counter = 0
-        test_threshold = 600
-        for index, bug in bugs.iterrows():
-            mode_ = LEARN
-            if len(bugs) - counter <= test_threshold:
-                mode_ = TEST
+        profiler = Profiler(approach, project, builder, scanner.export_all_apis())
+        chosen_bugs = split_data_for_bsba(bugs, 600)
+        response = do_experiment(chosen_bugs, profiler)
+        export_to_csv(response, approach, project)
+        return
 
-            bug['report_time'] = bug['report_time'].tz_localize(pytz.timezone('EST5EDT'))
-            bug['report_time'] = bug['report_time'].tz_convert(pytz.timezone('UTC'))
-            bug['report_time'] = bug['report_time'].tz_localize(None)
-            bug['bag_of_word_stemmed_split'] = bug['bag_of_word_stemmed'].split()
+    # 🧊 IDEA 2
+    # this is the similar approach to what L2R and L2R+ used
+    # 10-fold
+    # 5 experiments  1<= k <= 5
+    # training: fold_k -- fold_k+4
+    # testing: fold_k+5
+    if formula == 'similar to L2R':
+        for experiment in range(0, 5):
+            profiler = Profiler(approach, project, builder, scanner.export_all_apis())
+            chosen_bugs = split_data_for_l2r(bugs, experiment, 10)
+            response = do_experiment(chosen_bugs, profiler)
+            export_to_csv(response, approach, project, '_' + str(experiment) + '_')
+        return
 
-            profiler.sync_profiles(bug, mode_)
 
-            if mode_ == TEST:
-                response[index] = save_proof_of_work(
-                    bug['bug_id'],
-                    bug['assignees'],
-                    bug['authors'],
-                    bug['component'],
-                    bug['report_time'],
-                    profiler.rank_developers(bug),
-                    mode_
-                )
+def do_experiment(bugs_, profiler_):
+    response = {}
 
-            counter += 1
-            print('processed: ' + str(counter) + '/' + str(len(bugs)))
+    for index, bug in bugs_.iterrows():
+        mode_ = bug['mode_']
+        bug['report_time'] = bug['report_time'].tz_localize(pytz.timezone('EST5EDT'))
+        bug['report_time'] = bug['report_time'].tz_convert(pytz.timezone('UTC'))
+        bug['report_time'] = bug['report_time'].tz_localize(None)
+        bug['bag_of_word_stemmed_split'] = bug['bag_of_word_stemmed'].split()
+        profiler_.sync_profiles(bug, mode_)
+        if mode_ == TEST:
+            response[index] = save_proof_of_work(
+                bug['bug_id'],
+                bug['assignees'],
+                bug['authors'],
+                bug['component'],
+                bug['report_time'],
+                profiler_.rank_developers(bug),
+                mode_
+            )
+        print('processing: ' + str(bug['bug_id']))
+
+    print('✅ done experimenting')
 
     return response
 

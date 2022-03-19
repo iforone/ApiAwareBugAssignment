@@ -1,12 +1,11 @@
 import mysql.connector
 import pandas as pd
-from Profiler import Profiler
 import os.path
 from DeepProcess import DeepProcessor
 from APIScanner import APIScanner
 from CodeScanner import CodeScanner
 from base import output_folder
-from Results import export_to_csv, find_response
+from Results import find_response
 
 
 # select which project to check
@@ -183,9 +182,6 @@ scanner.count_used_apis(builder)
 code_scanner = CodeScanner()
 code_scanner.analyze_codes(project, builder, database)
 
-# create profiles for users
-profiler = Profiler(approach, project, builder, scanner.export_all_apis())
-
 # builder.execute("""
 # SELECT * FROM bug_commit
 # where status in ('VERIFIED FIXED', 'RESOLVED FIXED', 'CLOSED FIXED')
@@ -196,9 +192,5 @@ profiler = Profiler(approach, project, builder, scanner.export_all_apis())
 # bugs = pd.DataFrame(builder.fetchall())
 # bugs.columns = builder.column_names
 
-response = find_response(profiler, bugs, project, approach, formula)
+find_response(bugs, project, approach, formula, builder, scanner)
 database.close()
-
-# export the results to the database
-print('✅ exporting the results')
-export_to_csv(response, approach, project)
