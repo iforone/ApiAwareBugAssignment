@@ -83,6 +83,7 @@ def do_experiment(bugs_, profiler_):
             response[index] = save_proof_of_work(
                 bug['bug_id'],
                 bug['assignees'],
+                bug['assignees_copy'],
                 bug['authors'],
                 bug['component'],
                 bug['report_time'],
@@ -96,13 +97,14 @@ def do_experiment(bugs_, profiler_):
     return response
 
 
-def save_proof_of_work(id_, assignees_, authors_, c_, time_, answer_, mode_):
+def save_proof_of_work(id_, assignees_, assignees_copy_, authors_, c_, time_, answer_, mode_):
     ranked_developers_ = answer_[0]
     proof = {
         'bug_id': id_,
         'component': c_,
         'chosen': answer_[0][0],
         'assignees': assignees_,
+        'assignees_copy': assignees_copy_,
         'author': authors_,
         'report_time': time_,
         'mode': mode_,
