@@ -44,7 +44,7 @@ def formula_selector():
     questions = [
         inquirer.List('formula',
                       message="Which formula should be used for training-testing?",
-                      choices=['similar to BSBA', 'similar to L2R', 'similiar to L2R+'],
+                      choices=['similar to BSBA', 'similar to L2R and L2R+'],
                       ),
     ]
     answers = inquirer.prompt(questions)
@@ -185,8 +185,11 @@ code_scanner.analyze_codes(project, builder, database)
 
 # correct the naming mistakes before using it
 for index, bug in bugs.iterrows():
+    bugs.at[index, 'assignees_copy'] = guess_correct_author_name(bug['assignees'], project)
     bugs.at[index, 'assignees'] = guess_correct_author_name(bug['assignees'], project)
     bugs.at[index, 'authors'] = guess_correct_author_name(bug['authors'], project)
+    if formula == 'similar to L2R and L2R+':
+        bugs.at[index, 'assignees'] = bugs.at[index, 'authors']
 
 find_response(bugs, project, approach, formula, builder, scanner)
 database.close()

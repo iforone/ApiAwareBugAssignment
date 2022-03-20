@@ -59,10 +59,11 @@ def find_response(bugs, project, approach, formula, builder, scanner):
     # 5 experiments  1<= k <= 5
     # training: fold_k -- fold_k+4
     # testing: fold_k+5
-    if formula == 'similar to L2R':
+    if formula == 'similar to L2R and L2R+':
         for experiment in range(0, 5):
             profiler = Profiler(approach, project, builder, scanner.export_all_apis())
             chosen_bugs = split_data_for_l2r(bugs, experiment, 10)
+            # chosen_bugs.to_csv('./data/output/' + project + '_' + str(experiment) + '.csv')
             response = do_experiment(chosen_bugs, profiler)
             export_to_csv(response, approach, project, '_' + str(experiment) + '_')
         return
