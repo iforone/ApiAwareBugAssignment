@@ -6,6 +6,7 @@ class Mapper:
         self.components = {}
 
     def get_meaningful_component(self, original):
+        # for tuning
         # everything that has more than 10
         if original == 'Platform-UI':
             return original
