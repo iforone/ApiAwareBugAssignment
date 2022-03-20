@@ -46,7 +46,10 @@ jdt_fixable_names = {
     'Kai Maetzel': 'Kai-Uwe Maetzel',
     'dspringgay': 'Grant Gayed',
     'mhuebscher': 'Markus Huebscher',
-    'jszurszewski': 'Joe Szurszewski'
+    'jszurszewski': 'Joe Szurszewski',
+    'teicher': 'Tom Hofmann',
+    'Tom Eicher': 'Tom Hoffmann'
+    # https://projects.eclipse.org/content/tom-hofmann-nee-eicher-committer-ui
 }
 
 # modes

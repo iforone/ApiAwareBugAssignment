@@ -4,21 +4,26 @@ from Profile import Profile
 class Mapper:
     def __init__(self):
         self.components = {}
-        # Platform-XXX
-        # JDT-Text
-        # JDT-UI and everything else
 
     def get_meaningful_component(self, original):
+        # everything that has more than 10
         if original == 'Platform-UI':
             return original
         if original == 'Platform-Doc':
+            return original
+        if original == 'Platform-Search':
+            return original
+        if original == 'Platform-SWT':
+            return original
+        # all JDTs:
+        if original == 'JDT-Debug':
             return original
         if original == 'JDT-Core':
             return original
         if original == 'JDT-APT':
             return original
-        if original == 'JDT-Text':
-            return original
+        if original == 'JDT-Text' or original == 'Platform-Text':
+            return 'JDT-Text'
 
         return 'JDT-UI'
 

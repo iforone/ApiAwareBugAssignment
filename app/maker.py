@@ -4,6 +4,7 @@ import os.path
 from DeepProcess import DeepProcessor
 from APIScanner import APIScanner
 from CodeScanner import CodeScanner
+from Profile import guess_correct_author_name
 from base import output_folder
 from Results import find_response
 
@@ -182,15 +183,10 @@ scanner.count_used_apis(builder)
 code_scanner = CodeScanner()
 code_scanner.analyze_codes(project, builder, database)
 
-# builder.execute("""
-# SELECT * FROM bug_commit
-# where status in ('VERIFIED FIXED', 'RESOLVED FIXED', 'CLOSED FIXED')
-# and '2001-10-01 00:00:00' <=  report_time and report_time <= '2014-01-01 00:00:00'
-# group by bug_id
-# """)
-#
-# bugs = pd.DataFrame(builder.fetchall())
-# bugs.columns = builder.column_names
+# correct the naming mistakes before using it
+for index, bug in bugs.iterrows():
+    bugs.at[index, 'assignees'] = guess_correct_author_name(bug['assignees'], project)
+    bugs.at[index, 'authors'] = guess_correct_author_name(bug['authors'], project)
 
 find_response(bugs, project, approach, formula, builder, scanner)
 database.close()
