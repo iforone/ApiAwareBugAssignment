@@ -27,7 +27,7 @@ class Profiler:
         # array of known bugs that are already processed at any moment (test)
         self.previous_bugs = {}
         # profiles that contribute to an specific components
-        self.mapper = Mapper()
+        self.mapper = Mapper(project)
         # all possible apis
         self.apis = apis
         # builder for query to projects

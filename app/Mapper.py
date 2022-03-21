@@ -2,31 +2,57 @@ from Profile import Profile
 
 
 class Mapper:
-    def __init__(self):
+    def __init__(self, project):
         self.components = {}
+        self.project = project
 
+    # v3: includes all major components
     def get_meaningful_component(self, original):
-        # for tuning
-        # everything that has more than 10
-        if original == 'Platform-UI':
-            return original
-        if original == 'Platform-Doc':
-            return original
-        if original == 'Platform-Search':
-            return original
-        if original == 'Platform-SWT':
-            return original
-        # all JDTs:
-        if original == 'JDT-Debug':
-            return original
-        if original == 'JDT-Core':
-            return original
-        if original == 'JDT-APT':
-            return original
-        if original == 'JDT-Text' or original == 'Platform-Text':
-            return 'JDT-Text'
+        if self.project == 'JDT':
+            # all major components of the JDT project
+            if original == 'JDT-Debug':
+                return original
+            if original == 'Platform-UI':
+                return original
+            if original == 'Platform-Search':
+                return original
+            if original == 'JDT-Core':
+                return original
+            if original == ' Platform-Text' or original == 'Platform-Text':  # Platform-Text or JDT-Text
+                return 'JDT-Text'
 
-        return 'JDT-UI'
+            return 'JDT-UI'
+
+        return 'NONE'
+
+    # # V1: problem? does not cover all majors
+    # if original == 'Platform-UI':
+    #     return original
+    # if original == 'Platform-Doc':
+    #     return original
+    # if original == 'JDT-Core':
+    #     return original
+    # if original == 'JDT-APT':
+    #     return original
+    # if original == 'JDT-Text':
+    #     return original
+
+    # # V2: problem? is unrealistically detailed
+    # if original.startswith('Platform'):
+    #     return original
+    # if not original.startswith('JDT'):
+    #     return original
+    # if original == 'JDT-Debug':
+    #     return original
+    # if original == 'JDT-Core':
+    #     return original
+    # if original == 'JDT-APT':
+    #     return original
+    # if original == 'JDT-Text':
+    #     return original
+    # if original == 'JDT-Doc':
+    #     return original
+    # return 'JDT-UI'
 
     def update_profile(self, assignee, component, module, terms):
         c = self.get_meaningful_component(component)
