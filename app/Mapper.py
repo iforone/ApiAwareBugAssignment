@@ -8,22 +8,10 @@ class Mapper:
 
     # v3: includes all major components
     def get_meaningful_component(self, original):
-        if self.project == 'JDT':
-            # all major components of the JDT project
-            if original == 'JDT-Debug':
-                return original
-            if original == 'Platform-UI':
-                return original
-            if original == 'Platform-Search':
-                return original
-            if original == 'JDT-Core':
-                return original
-            if original == ' Platform-Text' or original == 'Platform-Text':  # Platform-Text or JDT-Text
-                return 'JDT-Text'
+        if original == 'JDT-Text':
+            return original
+        return 'JDT-UI'
 
-            return 'JDT-UI'
-
-        return 'NONE'
 
     # # V1: problem? does not cover all majors
     # if original == 'Platform-UI':
