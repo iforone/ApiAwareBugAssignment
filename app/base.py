@@ -3,6 +3,7 @@ main_dir = './'
 data_folder = 'data'
 input_directory = data_folder + '/' + 'input/'
 output_folder = data_folder + '/' + 'output/'
+tuning_folder = output_folder + 'tuning/'
 javase_directory = input_directory + 'javase/'
 javaee_directory = input_directory + 'javaee/'
 javase_tree_file = 'javase.txt'
@@ -47,8 +48,8 @@ jdt_fixable_names = {
     'dspringgay': 'Grant Gayed',
     'mhuebscher': 'Markus Huebscher',
     'jszurszewski': 'Joe Szurszewski',
-    # 'teicher': 'Tom Hofmann',
-    # 'Tom Eicher': 'Tom Hoffmann',
+    'teicher': 'Tom Hofmann',
+    'Tom Eicher': 'Tom Hoffmann',
     # https://projects.eclipse.org/content/tom-hofmann-nee-eicher-committer-ui
 }
 
