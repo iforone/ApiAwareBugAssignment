@@ -12,7 +12,8 @@ parameter_range = [0, 0.05, 0.1, 0.2, 0.25, 0.3, 0.4, 0.5, 0.55, 0.6, 0.7, 0.75,
 file = '../../data/output/jdt_direct-best-mapper.csv'
 # project name:
 project = 'jdt'
-
+# approach of the api
+approach = 'direct'
 
 # get stat for -old or new and then compare
 def get_stat_for(file_, style_, time_a=1, time_b=1, time_c=1):
@@ -114,7 +115,7 @@ for style in ['only-bsba', 'confidence', 'without-confidence', 'descending-confi
                     answer[key] = value
 
     # output the results
-    f = open(project + style + ".txt", "w")
+    f = open('../../data/output/tuning/' + project + "_" + approach + "_" + style + ".txt", "w")
     for k in answer.keys():
-        f.write("'{}':'{}'\n".format(k, answer[k]))
+        f.write("{}:{}\n".format(k, answer[k]))
     f.close()
