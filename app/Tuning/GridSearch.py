@@ -104,13 +104,13 @@ for style in ['only-bsba', 'confidence', 'without-confidence', 'descending-confi
             if style == 'only-bsba':
                 key = str(history_score) + '_' + str(code_score) + '_' + str(0)
                 value = get_stat_for(file, style, history_score, code_score, 0)
-                print('done: ' + key)
+                print('✅: ' + key + "==" + str(value))
                 answer[key] = value
             else:
                 for api_score in parameter_range:
                     key = str(history_score) + '_' + str(code_score) + '_' + str(api_score)
                     value = get_stat_for(file, style, history_score, code_score, api_score)
-                    print('done: ' + key)
+                    print('✅: ' + key + "==" + str(value))
                     answer[key] = value
 
     # output the results
