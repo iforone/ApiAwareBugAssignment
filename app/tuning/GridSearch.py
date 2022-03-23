@@ -15,6 +15,7 @@ project = 'jdt'
 # approach of the api
 approach = 'direct'
 
+
 # get stat for -old or new and then compare
 def get_stat_for(file_, style_, time_a=1, time_b=1, time_c=1):
     df = pd.read_csv(file_)
@@ -105,13 +106,13 @@ for style in ['only-bsba', 'confidence', 'without-confidence', 'descending-confi
             if style == 'only-bsba':
                 key = str(history_score) + '_' + str(code_score) + '_' + str(0)
                 value = get_stat_for(file, style, history_score, code_score, 0)
-                print( key + "==" + str(value))
+                print(key + "==" + str(value))
                 answer[key] = value
             else:
                 for api_score in parameter_range:
                     key = str(history_score) + '_' + str(code_score) + '_' + str(api_score)
                     value = get_stat_for(file, style, history_score, code_score, api_score)
-                    print( key + "==" + str(value))
+                    print(key + "==" + str(value))
                     answer[key] = value
 
     # output the results
