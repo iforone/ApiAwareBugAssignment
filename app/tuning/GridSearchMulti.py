@@ -108,9 +108,8 @@ for style in ['only-bsba', 'confidence', 'without-confidence', 'descending-confi
 
                 ave = 0
                 for x in range(0, 5):
-                    answer = get_stat_for(folder + 'jdt_direct_' + str(x) + '_.csv', style, history_score, code_score,
-                                          0)
-                    print(answer)
+                    answer = get_stat_for(folder + 'jdt_direct_' + str(x) + '_.csv', style,
+                                          history_score, code_score, 0)
                     ave += answer
                 value = ave / 5
                 print(key + "==" + str(value))
@@ -121,9 +120,8 @@ for style in ['only-bsba', 'confidence', 'without-confidence', 'descending-confi
 
                     ave = 0
                     for x in range(0, 5):
-                        answer = get_stat_for(folder + 'jdt_direct_' + str(x) + '_.csv', style, history_score,
-                                              code_score, api_score)
-                        print(answer)
+                        answer = get_stat_for(folder + 'jdt_direct_' + str(x) + '_.csv', style,
+                                              history_score, code_score, api_score)
                         ave += answer
                     value = ave / 5
 
