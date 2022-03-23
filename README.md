@@ -22,7 +22,12 @@ Observations:
 
 1- none of the bug reports in JDT have more than one assignee so this is technically one assignee
 
-
+----- 
+Install a package in jupyter:
+```
+import sys
+!{sys.executable} -m pip install plotly
+```
 
 -----
 
