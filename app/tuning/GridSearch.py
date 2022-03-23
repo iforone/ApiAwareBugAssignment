@@ -9,7 +9,7 @@ import math
 # range of the tuning for each of the 3 parameters
 parameter_range = [0, 0.05, 0.1, 0.2, 0.25, 0.3, 0.4, 0.5, 0.55, 0.6, 0.7, 0.75, 0.8, 0.9, 0.99, 0.999, 1]
 # file name:
-file = '../data/output/jdt_direct-best-mapper.csv'
+file = '../../data/output/jdt_direct-best-mapper.csv'
 # project name:
 project = 'jdt'
 
@@ -104,13 +104,13 @@ for style in ['only-bsba', 'confidence', 'without-confidence', 'descending-confi
             if style == 'only-bsba':
                 key = str(history_score) + '_' + str(code_score) + '_' + str(0)
                 value = get_stat_for(file, style, history_score, code_score, 0)
-                print('✅: ' + key + "==" + str(value))
+                print( key + "==" + str(value))
                 answer[key] = value
             else:
                 for api_score in parameter_range:
                     key = str(history_score) + '_' + str(code_score) + '_' + str(api_score)
                     value = get_stat_for(file, style, history_score, code_score, api_score)
-                    print('✅: ' + key + "==" + str(value))
+                    print( key + "==" + str(value))
                     answer[key] = value
 
     # output the results
