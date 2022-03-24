@@ -108,9 +108,8 @@ for style in ['only-bsba', 'confidence', 'without-confidence', 'descending-confi
 
                 ave = 0
                 for x in range(0, 5):
-                    answer = get_stat_for(folder + 'jdt_direct_' + str(x) + '_.csv', style,
-                                          history_score, code_score, 0)
-                    ave += answer
+                    ave += get_stat_for(folder + 'jdt_direct_' + str(x) + '_.csv', style,
+                                        history_score, code_score, 0)
                 value = ave / 5
                 print(key + "==" + str(value))
                 answer[key] = value
@@ -120,13 +119,12 @@ for style in ['only-bsba', 'confidence', 'without-confidence', 'descending-confi
 
                     ave = 0
                     for x in range(0, 5):
-                        answer = get_stat_for(folder + 'jdt_direct_' + str(x) + '_.csv', style,
-                                              history_score, code_score, api_score)
-                        ave += answer
+                        ave += get_stat_for(folder + 'jdt_direct_' + str(x) + '_.csv', style,
+                                            history_score, code_score, api_score)
                     value = ave / 5
 
                     print(key + "==" + str(value))
-                    answer[key] = value
+                    answer[key] = str(value)
 
     # output the results
     f = open('../../data/output/tuning/' + project + "_" + approach + "_" + style + ".txt", "w")
