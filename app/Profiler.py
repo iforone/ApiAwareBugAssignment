@@ -1,4 +1,5 @@
 import collections
+import json
 import math
 from pandas import Timestamp
 from Profile import array_to_frequency_list, frequency_to_frequency_list, guess_correct_author_name
@@ -116,8 +117,26 @@ class Profiler:
             api_terms = frequency_to_frequency_list(change['used_apis'], change['committed_at'])
 
             self.mapper.update_profile(author, 'JDT-UI', 'api', api_terms)
-            #if 'text' in change['file_name'].lower():
+            # if 'text' in change['file_name'].lower():
             self.mapper.update_profile(author, 'JDT-Text', 'api', api_terms)
+
+    def match_bug_apis(self, bug_terms):
+        list_ = {}
+        for bug_term in bug_terms:
+            chosen_api = []
+            for api_name, api_words in self.apis.items():
+                if bug_term in api_words:
+                    chosen_api.append(api_name)
+
+                if len(chosen_api) > 2:
+                    break
+
+            if len(chosen_api) == 1:
+                api = chosen_api[0]
+                new_count = 1 + list_.get(api, 0)
+                list_.update({api: new_count})
+
+        return [list_, 1]
 
     def get_direct_bug_apis(self, bug_terms):
         # direct - use the API experience of assignees of the similar bugs
@@ -170,13 +189,17 @@ class Profiler:
             result.append(self.previous_bugs[local_bug_indexes[0]]['bug_id'])
             result.append(similarity)
 
+        result.append(json.dumps(new_bug['relevant_apis']))
+
         return result
 
     def calculate_ranks(self, new_bug):
         print('BUG:' + str(new_bug['id']))
 
         bug_terms = new_bug['bag_of_word_stemmed'].split()
-        [bug_apis, confidence] = self.get_direct_bug_apis(bug_terms)
+        [bug_apis, confidence] = self.match_bug_apis(bug_terms)
+
+        new_bug['relevant_apis'] = bug_apis
 
         # TODO: remove 30 most common words from bug reports in VSM
 
@@ -187,7 +210,6 @@ class Profiler:
         api_scores = pd.DataFrame(columns=['developer', 'score'])
 
         for index_, profile in self.mapper.get_profiles(new_bug['component']).items():
-
             history_experience = self.time_based_tfidf(
                 profile.history,
                 profile.h_f,

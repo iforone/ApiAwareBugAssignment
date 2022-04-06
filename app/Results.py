@@ -110,6 +110,7 @@ def save_proof_of_work(id_, assignees_, assignees_copy_, authors_, c_, time_, an
         'mode': mode_,
         'similar_bug': answer_[6],
         'jaccard_score': answer_[7],
+        'relevant_apis': answer_[8],
     }
 
     # check against gold standard and save the result

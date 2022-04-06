@@ -614,6 +614,7 @@ class APIScanner:
                 c = each_import.split(':')[1]
                 all_imports[n] = float(c) + all_imports.get(n, 0)
         print(all_imports)
+        print('count of all used apis:' + str(len(all_imports)))
 
     def export_all_apis(self):
         self.builder.execute('''

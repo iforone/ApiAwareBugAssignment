@@ -20,6 +20,7 @@ ks = [1, 2, 3, 4, 5, 10]
 
 exportable_keys = ['bug_id', 'at_1', 'at_2', 'at_3', 'at_4', 'at_5', 'at_10',
                    'component', 'assignees', 'assignees_copy', 'author', 'chosen', 'similar_bug', 'jaccard_score',
+                   'relevant_apis',
                    # 'similar_bug_report_time',
                    'history_at_1', 'history_at_2', 'history_at_3', 'history_at_4', 'history_at_5', 'history_at_6',
                    'history_at_7', 'history_at_8', 'history_at_9', 'history_at_10',
