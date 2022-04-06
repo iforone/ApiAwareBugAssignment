@@ -15,22 +15,22 @@ def project_selector():
     questions = [
         inquirer.List('project',
                       message="Which project should be selected?",
-                      choices=['jdt', 'swt', 'birt - not used', 'eclipse_platform_ui - not used'],
+                      choices=['jdt', 'swt'],
                       ),
     ]
     answers = inquirer.prompt(questions)
     return answers['project']
 
 
-# @deprecated : we do not use in-direct any more
 def approach_selector():
     import inquirer
     questions = [
         inquirer.List('approach',
                       message="Select extraction approach?",
                       choices=[
-                          'direct - we use top APIs from developers that were assigned to similar bug reports',
-                          'indirect - we use top APIs extracted from commits that solved similar bug reports',
+                          'direct',
+                          'indirect',
+                          'ml',
                       ],
                       ),
     ]
@@ -144,7 +144,7 @@ def deep_process(bugs_list, project_name, builder_, db_):
 
 print('Running maker')
 project = project_selector()
-approach = 'direct'  # approach_selector()
+approach = approach_selector()
 formula = formula_selector()
 
 # database work

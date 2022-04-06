@@ -140,7 +140,8 @@ class CodeScanner:
             tokenized_code = self.analyze_code(change[1], False, False)
             tokenized_message = self.analyze_commit_message(change[2])
 
-            builder_.execute("""UPDATE processed_code SET codes_bag_of_words = %s , commit_bag_of_words = %s WHERE id = %s """,
+            builder_.execute("""UPDATE processed_code SET codes_bag_of_words = %s , commit_bag_of_words = %s WHERE id 
+            = %s """,
                              [','.join(tokenized_code), ','.join(tokenized_message), change[0]])
             db_.commit()
         # lock the scanner

@@ -116,10 +116,9 @@ class Profiler:
             api_terms = frequency_to_frequency_list(change['used_apis'], change['committed_at'])
 
             self.mapper.update_profile(author, 'JDT-UI', 'api', api_terms)
-            #if 'text' in change['file_name'].lower():
             self.mapper.update_profile(author, 'JDT-Text', 'api', api_terms)
 
-    def get_direct_bug_apis(self, bug_terms):
+    def get_ml_bug_apis(self, bug_terms):
         # direct - use the API experience of assignees of the similar bugs
         # Jaccard is slightly worse but way faster - I want to see how the rest pans out
         [similar_bug_ids, score] = self.top_similar_bugs(bug_terms, True)
@@ -130,6 +129,12 @@ class Profiler:
             for i_, api in apis.items():
                 list_.update({i_: api['frequency'] + list_.get(i_, 0)})
 
+        return [list_, score]
+
+    def get_indirect_bug_apis(self, bug_terms):
+        return [list_, score]
+
+    def get_direct_bug_apis(self, bug_terms):
         return [list_, score]
 
     # returns index of the most similar bugs based on tf-idf similarity
@@ -174,9 +179,14 @@ class Profiler:
 
     def calculate_ranks(self, new_bug):
         print('BUG:' + str(new_bug['id']))
-
         bug_terms = new_bug['bag_of_word_stemmed'].split()
-        [bug_apis, confidence] = self.get_direct_bug_apis(bug_terms)
+
+        if self.approach == 'direct':
+            [bug_apis, confidence] = self.get_direct_bug_apis(bug_terms)
+        if self.approach == 'indirect':
+            [bug_apis, confidence] = self.get_indirect_bug_apis(bug_terms)
+        if self.approach == 'ml':
+            [bug_apis, confidence] = self.get_ml_bug_apis(bug_terms)
 
         # TODO: remove 30 most common words from bug reports in VSM
 

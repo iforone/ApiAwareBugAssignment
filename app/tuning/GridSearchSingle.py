@@ -13,7 +13,7 @@ file = '../../data/output/jdt_direct-best-base-and-best-mapper.csv'
 # project name:
 project = 'jdt'
 # approach of the api
-approach = 'direct'
+approach = 'ml'
 
 
 # get stat for -old or new and then compare

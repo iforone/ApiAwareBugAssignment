@@ -13,7 +13,7 @@ folder = '../../data/output/'
 # project name:
 project = 'jdt'
 # approach of the api
-approach = 'direct'
+approach = 'ml'
 
 
 # get stat for -old or new and then compare
