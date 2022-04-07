@@ -44,6 +44,7 @@ class Analysis:
                 else:
                     scores[developer] = scores.get(developer, 0) + float(value * 100 / total_scores['code'])
 
+        counter = 1
         for index, row in api_scores.iterrows():
             value = row['score']
             developer = row['developer']
@@ -51,8 +52,11 @@ class Analysis:
                 if str(value) == 'nan' or total_scores['api'] <= 0:
                     scores[developer] = scores.get(developer, 0) + 0
                 else:
-                    scores[developer] = scores.get(developer, 0) +\
-                                        (confidence * float(value * 100 / total_scores['api']))
+                    confidence = confidence * 2 / counter
+                    v = (confidence * float(value * 100 / total_scores['api']))
+                    scores[developer] = scores.get(developer, 0) + v
+
+            counter += 1
 
         df = pd.DataFrame(columns=['developer', 'score'])
         for i, v in scores.items():

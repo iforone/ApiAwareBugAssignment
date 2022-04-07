@@ -222,7 +222,6 @@ class Profiler:
 
         local_scores = pd.DataFrame(columns=['developer', 'score'])
         history_scores = pd.DataFrame(columns=['developer', 'score'])
-        fix_scores = pd.DataFrame(columns=['developer', 'score'])
         code_scores = pd.DataFrame(columns=['developer', 'score'])
         api_scores = pd.DataFrame(columns=['developer', 'score'])
 
@@ -272,7 +271,7 @@ class Profiler:
             alternate_scores.sort_values(by='score', ascending=False)['developer'].tolist(),
             local_scores.sort_values(by='score', ascending=False)['developer'].tolist(),
             history_scores.sort_values(by='score', ascending=False),
-            fix_scores.sort_values(by='score', ascending=False),
+            pd.DataFrame(columns=['developer', 'score']).sort_values(by='score', ascending=False),
             code_scores.sort_values(by='score', ascending=False),
             api_scores.sort_values(by='score', ascending=False),
         ]
