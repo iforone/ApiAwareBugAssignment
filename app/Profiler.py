@@ -6,12 +6,30 @@ import pandas as pd
 from base import SECONDS_IN_A_DAY, LEARN
 from Analysis import Analysis
 from Mapper import Mapper
+import json
 
 
 def write_to_text(file_name, text):
     text_file = open(file_name, 'w')
     text_file.write(text)
     text_file.close()
+
+
+def is_unreal_user(name):
+    return name.startswith('JDT') or name.startswith('Platform') or name == 'Unknown User'
+
+
+def jaccard(list1, list2):
+    intersection = len(list(set(list1).intersection(list2)))
+    union = (len(list1) + len(list2)) - intersection
+    return float(intersection) / union
+
+
+def calculate_maxim_tf(term_frequency, profile_frequency):
+    if term_frequency == 0:
+        return 0
+
+    return 0.4 + (0.6 * term_frequency / profile_frequency)
 
 
 class Profiler:
@@ -42,7 +60,7 @@ class Profiler:
             self.sync_history(bug, mode)
         elif not self.locked:
             self.sync_history(bug, mode)
-            self.sync_all_direct_apis()
+            self.sync_all_ml_apis()
             self.locked = True
             print('okay locked now!', bug['bug_id'])
 
@@ -118,62 +136,74 @@ class Profiler:
             self.mapper.update_profile(author, 'JDT-UI', 'api', api_terms)
             self.mapper.update_profile(author, 'JDT-Text', 'api', api_terms)
 
+    # <--- API mapping styles -->
     def get_ml_bug_apis(self, bug_terms):
         # direct - use the API experience of assignees of the similar bugs
         # Jaccard is slightly worse but way faster - I want to see how the rest pans out
-        [similar_bug_ids, score] = self.top_similar_bugs(bug_terms, True)
+        [similar_bug_index, score] = self.top_similar_bugs(bug_terms)
 
         list_ = {}
-        for index_ in similar_bug_ids:
-            apis = self.previous_bugs[index_]['direct_apis']
-            for i_, api in apis.items():
-                list_.update({i_: api['frequency'] + list_.get(i_, 0)})
+        apis = self.previous_bugs[similar_bug_index]['direct_apis']
+        for i_, api in apis.items():
+            list_.update({i_: api['frequency'] + list_.get(i_, 0)})
 
-        return [list_, score]
-
-    def get_indirect_bug_apis(self, bug_terms):
-        return [list_, score]
-
-    def get_direct_bug_apis(self, bug_terms):
         return [list_, score]
 
     # returns index of the most similar bugs based on tf-idf similarity
-    def top_similar_bugs(self, bug_terms, with_score=False):
+    def top_similar_bugs(self, bug_terms):
         local_scores = {}
 
         for index_, previous_bug in self.previous_bugs.items():
-            score = self.jaccard(previous_bug['bag_of_word_stemmed_split'], bug_terms)
+            score = jaccard(previous_bug['bag_of_word_stemmed_split'], bug_terms)
             if 0 < score:
                 local_scores[index_] = score
 
         if len(local_scores) == 0:
-            if not with_score:
-                return ''
             return ['', 0]
 
-        key = sorted(local_scores, key=local_scores.get, reverse=True)[:1]
+        keys = sorted(local_scores, key=local_scores.get, reverse=True)[:1]
 
-        if not with_score:
-            return key
+        return [keys[0], local_scores[keys[0]]]
 
-        return [key, local_scores[key[0]]]
+    def get_direct_bug_apis(self, bug_terms):
+        # match bug report tokens with tokens of each api
+        list_ = {}
+        for bug_term in bug_terms:
+            chosen_api = []
+            for api_name, api_words in self.apis.items():
+                if bug_term in api_words:
+                    chosen_api.append(api_name)
+
+                if len(chosen_api) > 2:
+                    break
+
+            # words that are shared between APIs are ignored
+            if len(chosen_api) == 1:
+                api = chosen_api[0]
+                new_count = 1 + list_.get(api, 0)
+                list_.update({api: new_count})
+
+        return [list_, 1]
+
+    def get_indirect_bug_apis(self, commit_hash):
+        self.builder.execute("SELECT used_apis FROM processed_code WHERE commit_hash like '" + commit_hash + "%'")
+        relevant_apis = pd.DataFrame(self.builder.fetchall())
+        list_ = {}
+        for id__, row in relevant_apis.iterrows():
+            api_terms = frequency_to_frequency_list(row[0], '')
+            for api_term, data in api_terms.items():
+                v = list_.get(api_term, 0) + data['frequency']
+                list_.update({api_term: v})
+
+        return [list_, 1]
+
+    # <--- API mapping styles -->
 
     def rank_developers(self, new_bug):
         result = self.calculate_ranks(new_bug)
+        result = self.attach_additional_data(result, new_bug)
 
         self.previous = new_bug['report_time']
-
-        # for export only:
-        # saving the similar bug id and confidence
-        temp = self.top_similar_bugs(new_bug['bag_of_word_stemmed'].split(), True)
-        local_bug_indexes = temp[0]
-        similarity = temp[1]
-        if len(local_bug_indexes) == 0:
-            result.append('')
-            result.append(0)
-        else:
-            result.append(self.previous_bugs[local_bug_indexes[0]]['bug_id'])
-            result.append(similarity)
 
         return result
 
@@ -183,9 +213,9 @@ class Profiler:
 
         if self.approach == 'direct':
             [bug_apis, confidence] = self.get_direct_bug_apis(bug_terms)
-        if self.approach == 'indirect':
-            [bug_apis, confidence] = self.get_indirect_bug_apis(bug_terms)
-        if self.approach == 'ml':
+        elif self.approach == 'indirect':
+            [bug_apis, confidence] = self.get_indirect_bug_apis(new_bug['commit_hash'])
+        else:  # self.approach == 'ml':
             [bug_apis, confidence] = self.get_ml_bug_apis(bug_terms)
 
         # TODO: remove 30 most common words from bug reports in VSM
@@ -197,7 +227,6 @@ class Profiler:
         api_scores = pd.DataFrame(columns=['developer', 'score'])
 
         for index_, profile in self.mapper.get_profiles(new_bug['component']).items():
-
             history_experience = self.time_based_tfidf(
                 profile.history,
                 profile.h_f,
@@ -266,7 +295,7 @@ class Profiler:
 
                 if module == 'code':
                     # this is due to difference in length of documents to normalize the frequencies
-                    tf = self.calculate_maxim_tf(temp['frequency'], profile_frequency)
+                    tf = calculate_maxim_tf(temp['frequency'], profile_frequency)
                 else:
                     # for history and api
                     tf = math.log2(1 + temp['frequency'])
@@ -305,23 +334,11 @@ class Profiler:
 
         return counter
 
-    # formula of jaccard similarity  -- used anymore for bug similarity
-    def jaccard(self, list1, list2):
-        intersection = len(list(set(list1).intersection(list2)))
-        union = (len(list1) + len(list2)) - intersection
-        return float(intersection) / union
-
-    def calculate_maxim_tf(self, term_frequency, profile_frequency):
-        if term_frequency == 0:
-            return 0
-
-        return 0.4 + (0.6 * term_frequency / profile_frequency)
-
-    def sync_all_direct_apis(self):
+    def sync_all_ml_apis(self):
         for i_, bug in self.previous_bugs.items():
             assignee = bug['assignees']
 
-            if self.is_unreal_user(assignee):
+            if is_unreal_user(assignee):
                 assignee = bug['authors']
 
             if assignee in self.mapper.get_profiles(bug['component']):
@@ -329,5 +346,20 @@ class Profiler:
                 self.previous_bugs[i_]['direct_apis'] = temp_api_dict
         print('✅ all direct apis are synced')
 
-    def is_unreal_user(self, name):
-        return name.startswith('JDT') or name.startswith('Platform') or name == 'Unknown User'
+    def attach_additional_data(self, result, new_bug):
+        if self.approach == 'direct':
+            [api_list, confidence] = self.get_direct_bug_apis(new_bug['bag_of_word_stemmed'].split())
+            result.append(json.dumps(api_list))
+        elif self.approach == 'indirect':
+            [api_list, confidence] = self.get_indirect_bug_apis(new_bug['commit_hash'])
+            result.append(json.dumps(api_list))
+        else:  # self.approach == 'ml':
+            [local_bug_index, confidence] = self.top_similar_bugs(new_bug['bag_of_word_stemmed'].split())
+            if local_bug_index == '':
+                result.append('')
+            else:
+                result.append(self.previous_bugs[local_bug_index]['bug_id'])
+
+        result.append(confidence)
+
+        return result
