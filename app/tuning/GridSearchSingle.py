@@ -9,7 +9,7 @@ import math
 # range of the tuning for each of the 3 parameters
 parameter_range = [0, 0.05, 0.1, 0.2, 0.25, 0.3, 0.4, 0.5, 0.55, 0.6, 0.7, 0.75, 0.8, 0.9, 0.99, 0.999, 1]
 # file name:
-file = '../../data/output/jdt_direct-best-base-and-best-mapper.csv'
+file = '../../data/output/api-mapping/jdt_ml.csv'
 # project name:
 project = 'jdt'
 # approach of the api
@@ -67,12 +67,12 @@ def get_stat_for(file_, style_, time_a=1, time_b=1, time_c=1):
                     if style_ == 'only-bsba':
                         x = 0
                     if style == 'confidence':
-                        x = row['jaccard_score']
+                        x = row['confidence']
                     if style == 'without-confidence':
                         x = 1
                     if style == 'descending-confidence':
-                        row['jaccard_score'] = row['jaccard_score'] * 2 / i
-                        x = row['jaccard_score']
+                        row['confidence'] = row['confidence'] * 2 / i
+                        x = row['confidence']
 
                     scores[a_developer] = scores.get(a_developer, []) + [
                         time_c * x * float(a * 100 / total_scores['api'])]

@@ -63,19 +63,19 @@ def get_stat_for(file_, style_, time_a=1, time_b=1, time_c=1):
                 if str(a) == 'nan' or a == 0 or total_scores['api'] <= 0:
                     scores[a_developer] = scores.get(a_developer, []) + [0]
                 else:
-                    x = None
+                    xxx = None
                     if style_ == 'only-bsba':
-                        x = 0
+                        xxx = 0
                     if style == 'confidence':
-                        x = row['jaccard_score']
+                        xxx = row['confidence']
                     if style == 'without-confidence':
-                        x = 1
+                        xxx = 1
                     if style == 'descending-confidence':
-                        row['jaccard_score'] = row['jaccard_score'] * 2 / i
-                        x = row['jaccard_score']
+                        row['confidence'] = row['confidence'] * 2 / i
+                        xxx = row['confidence']
 
                     scores[a_developer] = scores.get(a_developer, []) + [
-                        time_c * x * float(a * 100 / total_scores['api'])]
+                        time_c * xxx * float(a * 100 / total_scores['api'])]
                     pass
 
         # calculate the total
