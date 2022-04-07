@@ -626,17 +626,7 @@ class APIScanner:
         for i_, scan in scans.iterrows():
             api = scan[0]
 
-            all_words = list()
-            for word in scan[1].split(','):
-                # identifier decomposition - based on BSBA - this is basically 1-shingling
-                decomposed = camel_case_decomposed_list(word)
-                # w-shingling: 2-shingling
-                shingles = w_shingles(' '.join(decomposed), 2)
-                temp_tokens = {word}
-                temp_tokens.update(decomposed)
-                temp_tokens.update(shingles)
-                temp_tokens = set(temp_tokens)
-                all_words.extend(temp_tokens)
+            all_words = scan[1].split(',')
 
             words = set([self.quick_stem(word) for word in all_words if word not in ['', None, ' ']])
 
