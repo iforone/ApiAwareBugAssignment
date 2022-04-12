@@ -129,6 +129,7 @@ def deep_process(bugs_list, project_name, builder_, db_):
         deep_processor = DeepProcessor(project_name, builder_, db_)
         # loop through each bug report
         for index_, bug_ in bugs_list.iterrows():
+            print(str(bug_['bug_id']))
             deep_processor.update(bug_)
         # lock the deep process
         file = open(change_file_name, "w")
@@ -171,6 +172,8 @@ bugs.columns = builder.column_names
 
 # deeply explore the files
 deep_process(bugs, project, builder, database)
+
+exit('DEEP PROCESS DONE - LOCKED')
 
 # scan the dependencies/ imports and jars
 scanner = APIScanner(with_cleaning())

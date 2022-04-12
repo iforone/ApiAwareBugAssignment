@@ -151,13 +151,13 @@ class DeepProcessor:
     def memorize(self, new_bug):
         subprocess.run('cd ./data/input/' + self.project + ';git checkout master', capture_output=True, shell=True)
         if 0 != len(self.last_changes):
-            query = '''
+            query_begin_ = '''
             INSERT IGNORE INTO processed_code (file_name, codes, commit_hash, author, username, committed_at, commit_message, packages, is_extractable)
             VALUES
             '''
-            list_ = []
             for x, last_change in self.last_changes.items():
-                query += '(%s,%s, %s, %s, %s, %s, %s, %s, %s),'
+                query = query_begin_ + '(%s,%s, %s, %s, %s, %s, %s, %s, %s),'
+                list_ = []
                 list_.extend([last_change['file'].encode(encoding='UTF-8', errors='xmlcharrefreplace'),
                               last_change['code'].encode(encoding='UTF-8', errors='xmlcharrefreplace'),
                               last_change['hash'],
@@ -168,29 +168,29 @@ class DeepProcessor:
                               last_change['packages'].encode(encoding='UTF-8', errors='xmlcharrefreplace'),
                               last_change['is_extractable'],
                               ])
-            query = query[:-1]
-            try:
-                self.builder.execute(query, list_)
-                self.database.commit()
-            except Exception as e:
-                print(str(e))
-                f = open("query.txt", "a")
-                f.write(query)
-                f.close()
-                print(new_bug)
-                f = open("values.txt", "a")
-                f.write(','.join(list_))
-                f.close()
-                exit(-1)
-            except:
-                print('query failed -- why?')
-                f = open("query.txt", "a")
-                f.write(query)
-                f.close()
-                print(new_bug)
-                f = open("values.txt", "a")
-                f.write(','.join(list_))
-                f.close()
-                exit(-1)
+                query = query[:-1]
+                try:
+                    self.builder.execute(query, list_)
+                    self.database.commit()
+                except Exception as e:
+                    print(str(e))
+                    f = open("query.txt", "a")
+                    f.write(query)
+                    f.close()
+                    print(new_bug)
+                    f = open("values.txt", "a")
+                    f.write(','.join(list_))
+                    f.close()
+                    exit(-1)
+                except:
+                    print('query failed -- why?')
+                    f = open("query.txt", "a")
+                    f.write(query)
+                    f.close()
+                    print(new_bug)
+                    f = open("values.txt", "a")
+                    f.write(','.join(list_))
+                    f.close()
+                    exit(-1)
         self.last_changes = {}
         self.previous = new_bug['report_time']  # now the present is the past
