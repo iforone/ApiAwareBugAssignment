@@ -173,11 +173,10 @@ bugs.columns = builder.column_names
 # deeply explore the files
 deep_process(bugs, project, builder, database)
 
-exit('DEEP PROCESS DONE - LOCKED')
-
 # scan the dependencies/ imports and jars
 scanner = APIScanner(with_cleaning())
 scanner.clean_and_process_imports(project, builder, database)
+exit('DONE FOR NOW')
 scanner.update_apis()
 scanner.mark_api_usage_in_code(project, builder, database)
 scanner.count_used_apis(builder)
