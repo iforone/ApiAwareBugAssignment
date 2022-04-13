@@ -178,7 +178,6 @@ class APIScanner:
                     all_imports.add(s)
 
         self.process_imports(all_imports)
-
         # lock the scanner
         file = open(change_file_name, "w")
         file.write('locked')
