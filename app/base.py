@@ -40,6 +40,7 @@ exportable_keys = ['bug_id', 'at_1', 'at_2', 'at_3', 'at_4', 'at_5', 'at_10',
                    ]
 
 jdt_fixable_names = {
+    # in JDT
     'cknaus': 'Claude Knaus',
     'Andrew Weinand': 'Andre Weinand',
     'Thomas Maeder': 'Thomas Mäder',
@@ -51,6 +52,15 @@ jdt_fixable_names = {
     'teicher': 'Tom Hofmann',
     'Tom Eicher': 'Tom Hoffmann',
     # https://projects.eclipse.org/content/tom-hofmann-nee-eicher-committer-ui
+
+    # in SWT:
+    'Arun Kumar Thondapu': 'Arun Thondapu',
+    'ggayed': 'Grant Gayed',
+    'y29cheng': 'George Cheng',
+    'steve': 'Steve Northover',
+    'Silenio': 'Silenio Quarti',
+    'rdowdall': 'Rodney Dowdall',
+    'Lynn Kues': 'Lynne Kues',
 }
 
 # modes
