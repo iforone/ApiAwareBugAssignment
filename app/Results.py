@@ -46,9 +46,15 @@ def find_response(bugs, project, approach, formula, builder, scanner):
     # this is the similar approach to what BSBA used
     # last 600 -> testing
     # the rest -> learning
+
+    if project == 'swt':
+        project_threshold = 400
+    if project == 'jdt':
+        project_threshold = 600
+
     if formula == 'similar to BSBA':
         profiler = Profiler(approach, project, builder, scanner.export_all_apis())
-        chosen_bugs = split_data_for_bsba(bugs, 600)
+        chosen_bugs = split_data_for_bsba(bugs, project_threshold)
         response = do_experiment(chosen_bugs, profiler)
         export_to_csv(response, approach, project)
         return
