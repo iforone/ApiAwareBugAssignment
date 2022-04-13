@@ -186,6 +186,7 @@ class APIScanner:
 
     def process_imports(self, all_imports):
         for each_import in all_imports:
+            print('processing : ' + each_import)
             # empty import
             if each_import == '':
                 continue
@@ -459,6 +460,7 @@ class APIScanner:
     def make_request_for_missing_import(self, each_import_):
         link = 'https://www.findjar.com/search?query=' + each_import_ + '&more=false'
         download_link = 'https://www.findjar.com/class/' + each_import_.replace('.*', '').replace('.', '/') + '.html'
+        print('🔥🔥🔥' + each_import_)
         self.builder.execute('INSERT INTO import_to_jar (importie, link, download_link) VALUE (%s, %s, %s)',
                              [each_import_, link, download_link])
         self.database.commit()
