@@ -61,6 +61,9 @@ jdt_fixable_names = {
     'Silenio': 'Silenio Quarti',
     'rdowdall': 'Rodney Dowdall',
     'Lynn Kues': 'Lynne Kues',
+    'Anatoly Spektor': 'Arun Thondapu',
+    'Praveen Innamuri': 'Praveen',
+    'SWT-Community-Hudson-Inbox': 'Community-Hudson',
 }
 
 # modes

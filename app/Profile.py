@@ -34,6 +34,9 @@ def guess_correct_author_name(name, project):
     if project == 'jdt':
         if name in jdt_fixable_names.keys():
             return jdt_fixable_names[name]
+    if project == 'swt':
+        if name in jdt_fixable_names.keys():
+            return jdt_fixable_names[name]
     return name
 
 
