@@ -1,10 +1,5 @@
 # The task here is to find the history, code and api weights using grid search
 import pandas as pd
-import numpy as np
-import math
-import statistics
-from pandas import Timestamp
-import math
 
 # range of the tuning for each of the 3 parameters
 parameter_range = [0, 0.05, 0.1, 0.2, 0.25, 0.3, 0.4, 0.5, 0.55, 0.6, 0.7, 0.75, 0.8, 0.9, 0.99, 0.999, 1]
