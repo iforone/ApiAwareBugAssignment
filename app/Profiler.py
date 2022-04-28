@@ -124,8 +124,12 @@ class Profiler:
 
             code_terms = array_to_frequency_list(tempest, change['committed_at'])
 
-            self.mapper.update_profile(author, 'JDT-UI', 'code', code_terms)
-            self.mapper.update_profile(author, 'JDT-Text', 'code', code_terms)
+            if self.project == 'jdt':
+                self.mapper.update_profile(author, 'JDT-UI', 'code', code_terms)
+                self.mapper.update_profile(author, 'JDT-Text', 'code', code_terms)
+            else:
+                self.mapper.update_profile(author, 'Platform-SWT', 'code', code_terms)
+                self.mapper.update_profile(author, 'Platform-UI', 'code', code_terms)
 
     def sync_api(self):
         for index, change in self.temp_changes.iterrows():
@@ -133,8 +137,13 @@ class Profiler:
 
             api_terms = frequency_to_frequency_list(change['used_apis'], change['committed_at'])
 
-            self.mapper.update_profile(author, 'JDT-UI', 'api', api_terms)
-            self.mapper.update_profile(author, 'JDT-Text', 'api', api_terms)
+            # self-note: if you have no component mapping this means twice the usage
+            if self.project == 'jdt':
+                self.mapper.update_profile(author, 'JDT-UI', 'api', api_terms)
+                self.mapper.update_profile(author, 'JDT-Text', 'api', api_terms)
+            else:
+                self.mapper.update_profile(author, 'Platform-SWT', 'api', api_terms)
+                self.mapper.update_profile(author, 'Platform-UI', 'api', api_terms)
 
     # <--- API mapping styles -->
     def get_ml_bug_apis(self, bug_terms):
