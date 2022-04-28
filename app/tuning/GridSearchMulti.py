@@ -20,6 +20,7 @@ approach = 'ml'
 def get_stat_for(file_, style_, time_a=1, time_b=1, time_c=1):
     df = pd.read_csv(file_)
 
+
     count = 0
     total = 0
     for (index, row) in df.iterrows():
