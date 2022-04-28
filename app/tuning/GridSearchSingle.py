@@ -9,9 +9,9 @@ import math
 # range of the tuning for each of the 3 parameters
 parameter_range = [0, 0.05, 0.1, 0.2, 0.25, 0.3, 0.4, 0.5, 0.55, 0.6, 0.7, 0.75, 0.8, 0.9, 0.99, 0.999, 1]
 # file name:
-file = '../../data/output/api-mapping/jdt_ml.csv'
+file = '../../data/output/other-results/swt_ml-no-compo.csv'
 # project name:
-project = 'jdt'
+project = 'swt'
 # approach of the api
 approach = 'ml'
 
