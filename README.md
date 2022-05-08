@@ -29,6 +29,31 @@ import sys
 !{sys.executable} -m pip install plotly
 ```
 
+
+----- 
+
+Output all APIs in to csv: 
+
+
+```python
+import csv
+
+jdt = {'java.util': 471339.0, 'org.w3c.dom': 3502.0, 'java.lang': 5272.0, 'java.text': 5585.0, 'java.io': 72849.0, 'org.xml.sax': 1361.0, 'javax.xml': 2089.0, 'org.apache.xml': 243.0, 'java.net': 5175.0, 'junit.framework': 27285.0, 'sun.awt': 8.0, 'junit.extensions': 463.0, 'org.eclipse.core': 374.0, 'org.eclipse.jface': 300.0, 'org.eclipse.swt': 598.0, 'com.sun.jdi': 473.0, 'org.eclipse.ui': 99.0, 'junit.textui': 344.0, 'java.awt': 814.0, 'junit.util': 6.0, 'javax.swing': 380.0, 'java.security': 98.0, 'javax.naming': 1.0, 'org.omg.CORBA': 6.0, 'org.eclipse.debug': 23.0, 'sun.security': 16.0, 'org.apache.xerces': 6.0, 'org.eclipse.search': 3.0, 'java.beans': 1.0, 'java.math': 46.0, 'java.applet': 2.0, 'java.x': 43.0, 'javax.servlet': 10.0, 'org.apache.jasper': 189.0, 'junit.awtui': 27.0, 'org.osgi.framework': 684.0, 'java.sql': 381.0, 'java.nio': 81.0, 'org.osgi.service': 105.0, 'com.ibm.icu': 650.0, 'org.junit.runner': 230.0, 'junit.runner': 593.0, 'junit.tests': 23.0, 'org.junit.runners': 64.0, 'org.junit.Test': 34.0, 'org.junit.Ignore': 2.0, 'org.junit.Assert': 289.0, 'org.springframework.core': 20.0, 'org.apache.commons': 33.0, 'org.junit.Before': 2.0}
+
+with open('swt_apis.csv', 'w') as f:  
+    writer = csv.writer(f)
+    for k, v in jdt.items():
+       writer.writerow([k, v])
+        
+swt= {'java.util': 133702.0, 'java.io': 25535.0, 'java.text': 844.0, 'java.awt': 2055.0, 'sun.awt': 133.0, 'java.net': 1067.0, 'java.lang': 2373.0, 'junit.framework': 30521.0, 'junit.textui': 781.0, 'org.eclipse.core': 22.0, 'org.eclipse.debug': 38.0, 'sun.dc': 4.0, 'org.apache.tools': 60.0, 'javax.swing': 265.0, 'org.osgi.framework': 29.0, 'java.applet': 8.0, 'org.lwjgl.opengl': 11.0, 'org.lwjgl.LWJGLException': 18.0, 'javax.media': 20.0, 'com.sun.org': 36.0, 'org.w3c.dom': 4032.0, 'javax.xml': 46.0, 'org.xml.sax': 14.0, 'org.lwjgl.util': 5.0, 'java.nio': 7.0, 'com.trolltech.qt': 40420.0, 'java.beans': 30.0, 'org.junit.Assert': 553.0}
+
+with open('swt_apis.csv', 'w') as f:  
+    writer = csv.writer(f)
+    for k, v in swt.items():
+       writer.writerow([k, v])
+        
+```
+
 -----
 
 🆘 Helpful notes (for me):
