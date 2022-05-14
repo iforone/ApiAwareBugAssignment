@@ -1,4 +1,4 @@
-# ApiAwareBugAssignment
+# Api-aware (A-BSBA) Bug Assignment
 API-aware Bug Assignment is a novel developer assigner technique inspired by BSBA, L2R and L2R+. This project is my master's degree in Web Science in University of Koblenz. Here, I investigate the role of APIs in assigning bug reports to appropriate developers.
 
 You can check-out the thesis here:
