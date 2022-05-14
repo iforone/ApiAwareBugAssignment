@@ -20,7 +20,7 @@ zsh boot.sh
 
 Observations:
 
-1- none of the bug reports in JDT have more than one assignee so this is technically one assignee
+1- none of the bug reports in JDT have more than one assignee so this is technically one assignee. The part of code that considers assignees is never used because the dataset did not have multi-assignees.
 
 ----- 
 Install a package in jupyter:
