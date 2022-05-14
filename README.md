@@ -1,6 +1,33 @@
 # ApiAwareBugAssignment
 API-aware Bug Assignment is a novel developer assigner technique inspired by BSBA, L2R and L2R+
 
+This project is my master's degree. Here, I investigate the role of APIs in assigning bug reports to appropriate developers.
+
+You can check-out the thesis here:
+<link>
+
+Futher information:
+https://olat.vcrp.de/auth/RepositoryEntry/2946663103/CourseNode/102851717515556/Message/3250259273
+
+I thank Professor Dr. Ralf Lämmel and members of the Software Languages Team for supporting me in this thesis.
+
+
+If you are a researcher or just interested in the topic and needed access to further resources (jar files, datasets, etc.) let me know.
+
+---
+
+# 📞 Contact:
+
+Amir Dashti:  https://www.linkedin.com/in/amir-reza-javaher-dashti-b347bb114/
+
+(via email: javaher@uni-koblenz.de, javaher21@gmail.com)
+
+Professor Lämmel: 
+https://www.uni-koblenz-landau.de/de/koblenz/fb4/ifi/AGLaemmel/staff/ralf-laemmel
+
+----
+# 👩‍💻 Technical Notes:
+
 This work is uses Python environment and Docker.
 
 You need Python 3.9 installed and Docker running.
