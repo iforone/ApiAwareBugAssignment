@@ -18,9 +18,9 @@ zsh boot.sh
 # if it asks permission or questions allow accordingly
 ```
 
-Observations:
+Interesting observations:
 
-1- none of the bug reports in JDT have more than one assignee so this is technically one assignee. The part of code that considers assignees is never used because the dataset did not have multi-assignees.
+None of the bug reports in JDT have more than one assignee so this is technically one assignee. The part of code that considers assignees is never used because the dataset did not have multi-assignees.
 
 
 -----
