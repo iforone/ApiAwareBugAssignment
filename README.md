@@ -58,6 +58,9 @@ zsh boot.sh
 # if it asks permission or questions allow accordingly
 ```
 
+Visualizations of results are available at "[Results.ipynb](https://github.com/iforone/ApiAwareBugAssignment/blob/different-path2/app/Results.ipynb)".
+
+
 Interesting observations:
 
 None of the bug reports in JDT have more than one assignee so this is technically one assignee. The part of code that considers assignees is never used because the dataset did not have multi-assignees.
