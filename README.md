@@ -22,8 +22,20 @@ Observations:
 
 1- none of the bug reports in JDT have more than one assignee so this is technically one assignee. The part of code that considers assignees is never used because the dataset did not have multi-assignees.
 
+
+-----
+
+🆘 Helpful notes (for me):
+
+- Freeze requirements of a virtual python:
+
+```python
+pip3 freeze > requirements.txt
+```
+
+
 ----- 
-Install a package in jupyter:
+- Install a package in jupyter:
 ```
 import sys
 !{sys.executable} -m pip install plotly
@@ -32,7 +44,7 @@ import sys
 
 ----- 
 
-Output all APIs in to csv: 
+- Output all APIs in to csv: 
 
 
 ```python
@@ -54,15 +66,6 @@ with open('swt_apis.csv', 'w') as f:
         
 ```
 
------
-
-🆘 Helpful notes (for me):
-
-- Freeze requirements of a virtual python:
-
-```python
-pip3 freeze > requirements.txt
-```
 
 - Write a file:
 
