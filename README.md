@@ -22,6 +22,7 @@ Dataset:
 https://github.com/anonymous-programmers/BugReportAssignment
 
 Mysql dump: https://github.com/anonymous-programmers/BugReportAssignment/blob/master/SQL_BugDatabase_Dump.7z
+
 Alternative format: https://figshare.com/articles/dataset/The_dataset_of_six_open_source_Java_projects/951967?file=1656562
 
 
