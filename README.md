@@ -2,18 +2,23 @@
 API-aware Bug Assignment is a novel developer assigner technique inspired by BSBA, L2R and L2R+. This project is my master's degree in Web Science in University of Koblenz. Here, I investigate the role of APIs in assigning bug reports to appropriate developers.
 
 You can check-out the thesis here:
+
 <link>
 
 Futher information:
+
 https://olat.vcrp.de/auth/RepositoryEntry/2946663103/CourseNode/102851717515556/Message/3250259273
 
 My Notion (limited access):
+
 https://www.notion.so/Master-Plan-3c42bc323bf4473da6c8d2dd3ddc5692
 
 My Backups (limited access):
+
 <link>
 
 Dataset:
+
 https://github.com/anonymous-programmers/BugReportAssignment
 
 Mysql dump: https://github.com/anonymous-programmers/BugReportAssignment/blob/master/SQL_BugDatabase_Dump.7z
