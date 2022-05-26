@@ -1,35 +1,47 @@
-# Api-aware (A-BSBA) Bug Assignment
-API-aware Bug Assignment is a novel developer assigner technique inspired by BSBA, L2R and L2R+. This project is my master's degree in Web Science in University of Koblenz. Here, I investigate the role of APIs in assigning bug reports to appropriate developers.
+# 🐞 Api-aware (A-BSBA) Bug Assignment
+API-aware Bug Assignment is a novel developer assignment technique inspired by BSBA, L2R and L2R+.
+This is my master's thesis project as part of the Web Science degree in University of Koblenz (Koblenz-Landau).
+Here, we investigate the influence of APIs in assigning bug reports to appropriate developers. We developed an activity-based approach that considers history, code and API expertise for associating the bugs to profiles of developers in 2 open-source Java projects.
 
-You can check-out the thesis here:
+
+---
+
+You can access the thesis here:
 
 <link>
 
-Futher information:
+The inital Exposé:
+
+
+
+Futher deatails (on Software Languages Group):
 
 https://olat.vcrp.de/auth/RepositoryEntry/2946663103/CourseNode/102851717515556/Message/3250259273
 
-My Notion (limited access):
+Notion Page (limited access):
 
 https://www.notion.so/Master-Plan-3c42bc323bf4473da6c8d2dd3ddc5692
 
-My Backups (limited access):
+My Backups (limited access - on Google Drive):
 
 <link>
 
-Dataset:
+Dataset (open source):
 
 https://github.com/anonymous-programmers/BugReportAssignment
 
-Mysql dump: https://github.com/anonymous-programmers/BugReportAssignment/blob/master/SQL_BugDatabase_Dump.7z
+Mysql dump: 
 
-Alternative format: https://figshare.com/articles/dataset/The_dataset_of_six_open_source_Java_projects/951967?file=1656562
+https://github.com/anonymous-programmers/BugReportAssignment/blob/master/SQL_BugDatabase_Dump.7z
+
+Alternative format: 
+
+https://figshare.com/articles/dataset/The_dataset_of_six_open_source_Java_projects/951967?file=1656562
 
 
 I thank Professor Dr. Ralf Lämmel and members of the Software Languages Team for supporting me in this thesis. If you are a researcher or just interested in the topic and needed access to further resources (jar files, datasets, etc.) let me know.
 
 ---
-
 # 📞 Contact:
 
 Amir Dashti:  https://www.linkedin.com/in/amir-reza-javaher-dashti-b347bb114/
@@ -42,11 +54,23 @@ https://www.uni-koblenz-landau.de/de/koblenz/fb4/ifi/AGLaemmel/staff/ralf-laemme
 ----
 # 👩‍💻 Technical Notes:
 
-This work is uses Python environment and Docker.
+This work is uses Shell, Python, and Docker.
 
-You need Python 3.9 installed and Docker running.
+ℹ️ An installed version of Python 3.9 (Anaconda) and Docker are required for this application.
 
-The rest of work is automatically handled by the boot shell file. This shell will download and create initial files that are needed only once if the database dump or data inputs are already provided to the folder it will ignore them and won't try to remake them. If you want to use a fresh copy again you have to remove contents of ./db and ./data/input folders and docker volumes.
+---
+### 🚀 How to run the project?
+
+1- First, clone this repository to your machine.
+
+2- Download the [database](https://github.com/anonymous-programmers/BugReportAssignment/blob/master/SQL_BugDatabase_Dump.7z), unzip it and put it to "/db" folder
+
+3- Create a virtual Python environment (named ./venv) and connect it to your Python. This step can be done automatically in Pycharm:
+
+
+
+
+4- Run the bootstrapper. The rest of work is automatically handled by the boot shell file. This shell will download and create initial files that are needed only once if the database dump or data inputs are already provided to the folder it will ignore them and won't try to remake them. If you want to use a fresh copy again you have to remove contents of ./db and ./data/input folders and docker volumes.
 
 ```shell
 # step 1: install python with virtualization mode
@@ -59,6 +83,10 @@ zsh boot.sh
 # if it asks permission or questions allow accordingly
 ```
 
+---
+### 📊 Results:
+
+
 Visualizations of results are available at "[Results.ipynb](https://github.com/iforone/ApiAwareBugAssignment/blob/different-path2/app/Results.ipynb)".
 
 
@@ -67,9 +95,8 @@ Interesting observations:
 None of the bug reports in JDT have more than one assignee so this is technically one assignee. The part of code that considers assignees is never used because the dataset did not have multi-assignees.
 
 
------
-
-🆘 Helpful notes (for me):
+----
+### 🆘 Helpful notes and commands:
 
 - Freeze requirements of a virtual python:
 
