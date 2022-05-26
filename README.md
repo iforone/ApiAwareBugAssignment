@@ -14,7 +14,7 @@ LINK
 
 The inital Exposé:
 
-[extra/Expose-API-influence-BA-Amir-Dashti.pdf](extra/Expose-API-influence-BA-Amir-Dashti.pdf)
+[Expose.pdf](extra/Expose-API-influence-BA-Amir-Dashti.pdf)
 
 Futher deatails (on Software Languages Group):
 
@@ -26,7 +26,7 @@ https://www.notion.so/Master-Plan-3c42bc323bf4473da6c8d2dd3ddc5692
 
 My Backups (limited access - on Google Drive):
 
-<link>
+LINK
 
 Dataset (open source):
 
@@ -40,6 +40,8 @@ Alternative format:
 
 https://figshare.com/articles/dataset/The_dataset_of_six_open_source_Java_projects/951967?file=1656562
 
+---
+# 👩‍🎓 Acknowledgment
 
 I thank Professor Dr. Ralf Lämmel and members of the Software Languages Team for supporting me in this thesis. If you are a researcher or just interested in the topic and needed access to further resources (jar files, datasets, etc.) let me know.
 
