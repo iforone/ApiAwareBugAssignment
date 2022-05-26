@@ -136,24 +136,34 @@ None of the bug reports in JDT have more than one assignee so this is technicall
 ----
 ### 🆘 Helpful notes and commands:
 
+- Activating virtual environment:
+
+```python
+# reactivate the env (if forgotten)
+deactivate
+# create environment:
+if [ -d "venv/ez_env/" ]; then
+  echo 'env exists'
+else
+  python -m venv venv/ez_env
+fi
+source venv/ez_env/bin/activate
+```
+
+
 - Freeze requirements of a virtual python:
 
 ```python
 pip3 freeze > requirements.txt
 ```
 
-
------ 
-- Install a package in jupyter:
+- Install a package within jupyter:
 ```
 import sys
 !{sys.executable} -m pip install plotly
 ```
 
-
------ 
-
-- Output all APIs in to csv: 
+- Writing all used APIs in to csv: 
 
 
 ```python
@@ -161,7 +171,7 @@ import csv
 
 jdt = {'java.util': 471339.0, 'org.w3c.dom': 3502.0, 'java.lang': 5272.0, 'java.text': 5585.0, 'java.io': 72849.0, 'org.xml.sax': 1361.0, 'javax.xml': 2089.0, 'org.apache.xml': 243.0, 'java.net': 5175.0, 'junit.framework': 27285.0, 'sun.awt': 8.0, 'junit.extensions': 463.0, 'org.eclipse.core': 374.0, 'org.eclipse.jface': 300.0, 'org.eclipse.swt': 598.0, 'com.sun.jdi': 473.0, 'org.eclipse.ui': 99.0, 'junit.textui': 344.0, 'java.awt': 814.0, 'junit.util': 6.0, 'javax.swing': 380.0, 'java.security': 98.0, 'javax.naming': 1.0, 'org.omg.CORBA': 6.0, 'org.eclipse.debug': 23.0, 'sun.security': 16.0, 'org.apache.xerces': 6.0, 'org.eclipse.search': 3.0, 'java.beans': 1.0, 'java.math': 46.0, 'java.applet': 2.0, 'java.x': 43.0, 'javax.servlet': 10.0, 'org.apache.jasper': 189.0, 'junit.awtui': 27.0, 'org.osgi.framework': 684.0, 'java.sql': 381.0, 'java.nio': 81.0, 'org.osgi.service': 105.0, 'com.ibm.icu': 650.0, 'org.junit.runner': 230.0, 'junit.runner': 593.0, 'junit.tests': 23.0, 'org.junit.runners': 64.0, 'org.junit.Test': 34.0, 'org.junit.Ignore': 2.0, 'org.junit.Assert': 289.0, 'org.springframework.core': 20.0, 'org.apache.commons': 33.0, 'org.junit.Before': 2.0}
 
-with open('swt_apis.csv', 'w') as f:  
+with open('jdt_apis.csv', 'w') as f:  
     writer = csv.writer(f)
     for k, v in jdt.items():
        writer.writerow([k, v])
@@ -175,32 +185,38 @@ with open('swt_apis.csv', 'w') as f:
         
 ```
 
-
-- Write a file:
+- Writing to a file:
 
 ```python
-    f = open('del/data/validations/all_imports-missing.txt', 'w')
+f = open('del/data/validations/all_imports-missing.txt', 'w')
 for index_ in all_imports:
     f.write(index_ + '\n')
 f.close()
 ```
 
-- Running the API scanner for an import:
+- Manually unning the API Scanner _for single import_:
 
 ```python
+from APIScanner import APIScanner
+
+
 s = APIScanner('no')
-# this will automatically find whether it is from a jar or java or is it a subclass, etc
+
+# this will automatically find whether it is from a jar or java or is it a subclass, etc.
 s.process_imports(['xx.xxx.xxxx'])
 ```
 
-- Running the API scanner (separately) for an import from a jar:
+- Manually running the API Scanner _for an import from a jar_:
 
 ```python
+from APIScanner import APIScanner
+
 s = APIScanner('no')
+
 s.scan_jar('org.eclipse.swt.widgets.Table', 'macosx-3.3.0-v3346.jar')
 ```
 
-- Compiling a Java directory:
+- Compiling a Java directory (in Alpine container):
 
 ```shell
 # list all files 
@@ -208,7 +224,8 @@ javac -d build recreation/junit/tests/WasRun.java recreation/junit/util/Version.
 cd build
 jar cvf YourJar.jar *
 ```
-- Compiling single Java file or files in one folder
+
+- Compiling single Java file or files in one folder (in Alpine container):
 
 ```shell
 javac -d ./build *.java
@@ -216,84 +233,29 @@ cd build
 jar cvf recreation .jar *
 ```
 
-- Get all imports in source code (unique) in a file:
+- To obtain APIs, for some packages we consider 2 prefixes and for some 3:
 
-```python
-    # python read all imports old
-old_imports_file = open('del/data/validations/all_imports_old.txt')
-old_imports = [line.rstrip() for line in old_imports_file.readlines()]
-old_imports_file.close()
-f = open('del/data/validations/all_imports-missing.txt', 'w')
-for old_import in old_imports:
-    self.builder.execute("SELECT id FROM scans WHERE importie =  %s", [old_import])
-    result = pd.DataFrame(self.builder.fetchall())
-    if result.empty:
-        f.write(old_import + '\n')
-f.close()
-```
-
-- Some APIs consider 2 levels of import and some consider 3 levels of pacage name as API:
 ```sql
-# 3 levels of pacakge name as API  com.eclipse.jdt.xxx
+# 3 levels: com.eclipse.jdt.xxx
 SELECT FROM scans 
 WHERE not (importie like  'java%' or importie like 'junit%' or importie like  'sun%')
 
-# 2 levels of pacakge name as API : java.sql.xxxx
+# 2 levels: java.sql.xxxx
 SELECT FROM scans 
 WHERE importie like  'java%' or importie like 'junit%' or importie like  'sun%'
 ```
 
-keep this:
-```python
-builder_.execute("""
-            SELECT id, packages, cleaned_packages
-            FROM processed_code
-            WHERE 1
-        """)
-        changes = pd.DataFrame(builder_.fetchall())
-        all_imports = set()
-        for index_, change in changes.iterrows():
-            corrected_imports_split = change[2].split(',')
-            for s in corrected_imports_split:
-                all_imports.add(s)
-        # python read all imports old
-        old_imports_file = open('all_imports_old.txt')
-        old_imports = [line.rstrip() for line in old_imports_file.readlines()]
-        old_imports_file.close()
-        f = open('all_imports-missing.txt', 'w')
-        for old_import in old_imports:
-            self.builder.execute("SELECT id FROM scans WHERE importie =  %s", [old_import])
-            result = pd.DataFrame(self.builder.fetchall())
-            if result.empty:
-                f.write(old_import + '\n')
-        f.close()
-```
-
-Try tokenizer:
+Manually running Tokenizer (not used):
 
 ```python
 tokens = word_tokenize('public static main() { okay(string int =231 ); x= x +1; r!;}')
+
 filtered_words = [word for word in tokens if word not in self.stop_words]
-exit(filtered_words)
+
+print(filtered_words)
 ```
 
-
----
-API usage statistics for Eclipse JDT project:
-
-⚠️ Currently, I calculate the api usage only on code and NOT on the commit message but that might be helpful info as well.
-
-```sql
-SELECT api FROM scans WHERE 1 group by api; # JDT -> we have 51 unique apis from ± 502 imports 
-
-
-
-How many times each api is used only on the codes in JDT?
-
-{'java.util': 278294.1653, 'com.sun.jdi': 436.8666, 'java.io': 43854.46950000001, 'org.w3c.dom': 3816.000400000003, 'java.net': 5863.2192000000005, 'java.lang': 5570.5895999999975, 'java.text': 5353.537999999993, 'org.xml.sax': 1357.6837, 'javax.xml': 2542.9994999999985, 'org.apache.xml': 243.0, 'junit.framework': 28028.110000000044, 'sun.awt': 8.0, 'junit.extensions': 978.5216999999999, 'org.eclipse.jface': 312.9, 'org.eclipse.core': 334.0334, 'org.eclipse.swt': 505.90009999999995, 'org.eclipse.ui': 111.0, 'junit.textui': 398.7926, 'java.awt': 840.6444000000001, 'junit.util': 6.0, 'javax.swing': 463.2278, 'java.security': 139.42860000000002, 'javax.naming': 1.0, 'org.omg.CORBA': 6.0, 'org.eclipse.debug': 23.0, 'sun.security': 16.0, 'org.apache.xerces': 6.0, 'org.eclipse.search': 3.0, 'java.beans': 1.0, 'java.math': 71.49999999999999, 'java.x': 43.0, 'java.applet': 2.0, 'org.apache.jasper': 163.0, 'javax.servlet': 10.0, 'junit.awtui': 27.0, 'org.osgi.framework': 707.7166, 'java.sql': 343.6666, 'java.nio': 90.9834, 'org.osgi.service': 122.49999999999999, 'com.ibm.icu': 821.2001, 'org.junit.runner': 232.0, 'junit.tests': 23.0, 'junit.runner': 469.3429, 'org.junit.runners': 64.0, 'org.junit.Test': 47.0, 'org.junit.Ignore': 2.0, 'org.junit.Assert': 289.0, 'org.springframework.core': 472.5, 'org.apache.commons': 485.5, 'org.junit.Before': 2.0}
-
-```
-❓ Finding assignment and resolution information for each bug based on the curated data by L2R+:
+❓ QUERY: Finding assignment and resolution information for each bug based on the curated data by L2R+:
 
 ```SQL
 SELECT baf.bug_id, *
@@ -301,7 +263,7 @@ FROM bug_commit
 JOIN bug_and_files baf on bug_commit.bug_id = baf.bug_id
 GROUP BY baf.bug_id
 ```
-❓  Authors that are assigned bug but do not have a commit that was merged to master at any point
+❓ QUERY: Authors that are assigned bug but do not have a commit that was merged to master at any point
 for JDT: only one user: mhuebscher
 ```SQL
 SELECT bug_commit.author
@@ -311,7 +273,7 @@ WHERE bug_commit.author not in (SELECT author FROM processed_code group by autho
 GROUP BY author
 ```
 
-Commits that were assigned to a developer:
+❓ QUERY: Commits that were assigned to a developer:
 
 ```SQL
 SELECT bug_commit.*
@@ -320,19 +282,24 @@ JOIN bug_and_files baf on bug_commit.bug_id = baf.bug_id
 WHERE bug_commit.author = 'mhuebscher'
 ```
 
-Verify developer commits:
-ℹ️ Number of recorded file changes ever done by developer in all commits they pushed from the beginning of time until the 
-report time of the last bug.
+❓ QUERY: Developer commits:
+
+The number of recorded file changes ever done by developer in all commits they pushed from the beginning of time until the 
+report time of the last bug:
 ```SQL
 SELECT author, count(*) as number_of_changes, username FROM processed_code group by author
 ```
 
-- Make a log for validating VCS commit history:
+- VCS Log:
+
+```shell
  git log --before='2014-01-05 00:00:00' --after='1999-01-01 00:00:00' >> log.txt
+```
+
  and then use revaluate() function in DeepProcess class to make sure no commit was missed
 
 
-- DeepProcess re-evaluation:
+- Re-evaluate Deep-process (@deprecated):
 ```python
     deep_processor = DeepProcessor(project_name, builder_, db_)
     commits = deep_processor.re_evaluate()
