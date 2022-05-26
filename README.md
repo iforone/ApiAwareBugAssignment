@@ -5,12 +5,18 @@ Here, we investigate the influence of APIs in assigning bug reports to appropria
 
 
 ---
+Official title:
+
+"The influence of API Experience on Bug Assignment"
+
 
 You can access the thesis here:
 
 <link>
 
 The inital Exposé:
+
+
 
 
 
@@ -44,24 +50,33 @@ I thank Professor Dr. Ralf Lämmel and members of the Software Languages Team fo
 ---
 # 📞 Contact:
 
-Amir Dashti:  https://www.linkedin.com/in/amir-reza-javaher-dashti-b347bb114/
+Amir Reza Javaher Dashti:  
+
+https://www.linkedin.com/in/amir-reza-javaher-dashti-b347bb114/
 
 (via email: javaher@uni-koblenz.de, javaher21@gmail.com)
 
-Professor Lämmel: 
+Professor Dr. R. Lämmel: 
+
 https://www.uni-koblenz-landau.de/de/koblenz/fb4/ifi/AGLaemmel/staff/ralf-laemmel
+
+Software Languages Group:
+
+http://softlang.wikidot.com/
 
 ----
 # 👩‍💻 Technical Notes:
 
 This work is uses Shell, Python, and Docker.
 
-ℹ️ An installed version of Python 3.9 (Anaconda) and Docker are required for this application.
+ℹ️ _An installed version of Python 3.9 (Anaconda) and Docker are required for this application._
 
 ---
 ### 🚀 How to run the project?
 
-1- First, clone this repository to your machine.
+0- Install docker, and python (with virtualization mode).
+
+1- Clone this repository to your machine.
 
 2- Download the [database](https://github.com/anonymous-programmers/BugReportAssignment/blob/master/SQL_BugDatabase_Dump.7z), unzip it and put it to "/db" folder
 
@@ -70,18 +85,37 @@ This work is uses Shell, Python, and Docker.
 
 
 
-4- Run the bootstrapper. The rest of work is automatically handled by the boot shell file. This shell will download and create initial files that are needed only once if the database dump or data inputs are already provided to the folder it will ignore them and won't try to remake them. If you want to use a fresh copy again you have to remove contents of ./db and ./data/input folders and docker volumes.
+4- Run the bootstrapper. The rest of work is automatically handled by the boot shell file. 
+
+This shell will download and create initial files that are needed only once if the database dump or data inputs are already provided to the folder it will ignore them and won't try to remake them. If you want to use a fresh copy again you have to remove contents of ./db and ./data/input folders and docker volumes.
 
 ```shell
-# step 1: install python with virtualization mode
-
-# step 2: run docker deamon
-
-# step 3: to initialize and run everything
+# to initialize and run everything
 zsh boot.sh
 
-# if it asks permission or questions allow accordingly
+# if it asks permission or questions allow accordingly:
+
+question 1: Which project should be selected?: jdt OR swt
+
+question 2: Select extraction approach?: direct or indirect or ml
+
+question 3: Which formula should be used for training-testing?: 'similar to BSBA' or 'similar to L2R and L2R+'
+
+question 4: Should clean the imports? (it cleans up the imports in processed_code table): no or yes
+
+# ⚠️ You can lock different parts of the logic (main, api, code, scanner) by putting an empty lock file in the ./input folder
 ```
+
+---
+### 🛼 Minimum Requirements:
+
+Processor: 2,6 GHz 6-Core Intel Core i7 (or any equivalent chip)
+
+RAM: 16GB
+
+Storage: 10GB 
+
+Preferred operating system: Mac OS Monterey v12 or above (there are no OS bindings)
 
 ---
 ### 📊 Results:
