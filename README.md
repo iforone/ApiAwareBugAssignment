@@ -10,7 +10,7 @@ Official title: "The influence of API Experience on Bug Assignment".
 
 You can access the thesis here:
 
-LINK
+LINK - not published yet.
 
 The inital Exposé:
 
@@ -26,7 +26,8 @@ https://www.notion.so/Master-Plan-3c42bc323bf4473da6c8d2dd3ddc5692
 
 My Backups (limited access - on Google Drive):
 
-LINK
+https://drive.google.com/drive/folders/1Ry6aeCSu9hISKNjZd_pl0oG7kx0SlEsN?usp=sharing
+
 
 Dataset (open source):
 
