@@ -11,15 +11,6 @@ services:
       - ./data/input:/input
       - ./data/output:/output
     command: tail -F /temp
-#  theglassfish:
-#    container_name: 'theglassfish'
-#    image: glassfish
-#    ports:
-#      - "8123:81"
-#    volumes:
-#      - ./data/input:/input
-#      - ./data/output:/output
-#    command: bash -c "tail -F /temp && COPY target/application.war $GLASSFISH_HOME/glassfish/domains/domain1/autodeploy/"
   db:
     container_name: 'mysql_db'
     image: mariadb
