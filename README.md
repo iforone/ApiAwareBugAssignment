@@ -73,7 +73,7 @@ This work is uses Shell, Python, and Docker.
 ---
 ### 🚀 How to run the project?
 
-0- Install docker, and python (with virtualization mode).
+0- Please, install docker, and python (with virtualization mode).
 
 1- Clone this repository to your machine.
 
