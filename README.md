@@ -5,20 +5,16 @@ Here, we investigate the influence of APIs in assigning bug reports to appropria
 
 
 ---
-Official title:
-
-"The influence of API Experience on Bug Assignment"
+Official title: "The influence of API Experience on Bug Assignment".
 
 
 You can access the thesis here:
 
-<link>
+LINK
 
 The inital Exposé:
 
-
-
-
+[extra/Expose-API-influence-BA-Amir-Dashti.pdf](extra/Expose-API-influence-BA-Amir-Dashti.pdf)
 
 Futher deatails (on Software Languages Group):
 
@@ -48,7 +44,7 @@ https://figshare.com/articles/dataset/The_dataset_of_six_open_source_Java_projec
 I thank Professor Dr. Ralf Lämmel and members of the Software Languages Team for supporting me in this thesis. If you are a researcher or just interested in the topic and needed access to further resources (jar files, datasets, etc.) let me know.
 
 ---
-# 📞 Contact:
+# 📞 Contact
 
 Amir Reza Javaher Dashti:  
 
@@ -65,7 +61,7 @@ Software Languages Group:
 http://softlang.wikidot.com/
 
 ----
-# 👩‍💻 Technical Notes:
+# 👩‍💻 Technical Notes
 
 This work is uses Shell, Python, and Docker.
 
@@ -82,8 +78,9 @@ This work is uses Shell, Python, and Docker.
 
 3- Create a virtual Python environment (named ./venv) and connect it to your Python. This step can be done automatically in Pycharm:
 
+![Alt text](extra/env.png?raw=true "Overall scheme")
 
-
+ℹ️ see my other [Github project](https://github.com/walkingCommiter/flaky-tests-reproduction) for further help.
 
 4- Run the bootstrapper. The rest of work is automatically handled by the boot shell file. 
 
@@ -109,7 +106,7 @@ question 4: Should clean the imports? (it cleans up the imports in processed_cod
 ---
 ### 🛼 Minimum Requirements:
 
-Processor: 2,6 GHz 6-Core Intel Core i7 (or any equivalent chip)
+Processor: 2.6 GHz 6-Core Intel Core i7 (or any equivalent chip)
 
 RAM: 16GB
 
@@ -128,6 +125,10 @@ Interesting observations:
 
 None of the bug reports in JDT have more than one assignee so this is technically one assignee. The part of code that considers assignees is never used because the dataset did not have multi-assignees.
 
+--- 
+### 🚩 Visualized approach:
+
+![Alt text](extra/approach.png?raw=true "Overall scheme")
 
 ----
 ### 🆘 Helpful notes and commands:
