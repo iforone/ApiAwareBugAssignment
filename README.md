@@ -335,3 +335,61 @@ SELECT author, count(*) as number_of_changes, username FROM processed_code group
             if commit['hash'] not in all_commit_hashes.values:
                 print(commit['hash'])
 ```
+
+❓ Most common API terms:
+
+```
+toString,
+equals,
+hashCode,
+fromNativePointer,
+clone,
+values,
+valueOf,
+value,
+resolve,
+close,
+clear,
+size,
+remove,
+isEmpty,
+getName,
+get,
+run,
+reset,
+event,
+read,
+setText,
+add,
+write,
+nativePointerArray,
+compareTo,
+getType,
+sizeHint,
+flush,
+writeTo,
+contains,
+```
+
+❓ How to get most common terms?
+
+```python
+self.builder.execute('''
+                           SELECT api, CONCAT(classifiers, ',',  methods, ',', constants, ',')
+                           FROM scans
+        ''')
+        scans = pd.DataFrame(self.builder.fetchall())
+        apis = {}
+
+        all_of_the_words = list()
+        for i_, scan in scans.iterrows():
+            all_words = scan[1].split(',')
+            words = [word for word in all_words if word not in ['', None, ' ']]
+            all_of_the_words.extend(words)
+        counter = collections.Counter(all_of_the_words)
+        print(all_of_the_words)
+        print('most common')
+        most_commons = counter.most_common(30)
+        for most_common in most_commons:
+            print(most_common[0] + ',')
+```
