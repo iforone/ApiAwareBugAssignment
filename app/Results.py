@@ -94,7 +94,8 @@ def do_experiment(bugs_, profiler_):
                 bug['component'],
                 bug['report_time'],
                 profiler_.rank_developers(bug),
-                mode_
+                mode_,
+                profiler_.random_choice(bug)
             )
         print('processing: ' + str(bug['bug_id']))
 
@@ -103,12 +104,12 @@ def do_experiment(bugs_, profiler_):
     return response
 
 
-def save_proof_of_work(id_, assignees_, assignees_copy_, authors_, c_, time_, answer_, mode_):
+def save_proof_of_work(id_, assignees_, assignees_copy_, authors_, c_, time_, answer_, mode_, random):
     ranked_developers_ = answer_[0]
     proof = {
         'bug_id': id_,
         'component': c_,
-        'chosen': answer_[0][0],
+        'chosen': random,
         'assignees': assignees_,
         'assignees_copy': assignees_copy_,
         'author': authors_,

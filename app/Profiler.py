@@ -1,5 +1,7 @@
 import collections
 import math
+
+from numpy import random
 from pandas import Timestamp
 from Profile import array_to_frequency_list, frequency_to_frequency_list, guess_correct_author_name
 import pandas as pd
@@ -371,3 +373,9 @@ class Profiler:
         result.append(confidence)
 
         return result
+
+    def random_choice(self, bug):
+        choices = self.mapper.get_profiles(bug['component']).keys()
+        random_dev = random.choice(list(choices))
+        return random_dev
+
